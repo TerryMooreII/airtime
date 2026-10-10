@@ -1,11 +1,19 @@
 import { supabase } from '@/lib/supabase'
 import type { Episode, UpcomingEpisode } from '@/types/domain'
 
-export async function fetchUpcomingEpisodes(days = 14, limit = 200): Promise<UpcomingEpisode[]> {
-  const { data, error } = await supabase.rpc('my_upcoming_episodes', {
-    p_days: days,
-    p_limit: limit,
-  })
+/**
+ * Upcoming episodes for the signed-in user's shows. Dropped and muted shows are
+ * left out unless `includeAll` is set (the Library's next-air badges want them).
+ */
+export async function fetchUpcomingEpisodes(
+  days = 14,
+  limit = 200,
+  includeAll = false,
+): Promise<UpcomingEpisode[]> {
+  const { data, error } = await supabase.rpc(
+    includeAll ? 'my_upcoming_episodes_all' : 'my_upcoming_episodes',
+    { p_days: days, p_limit: limit },
+  )
   if (error) throw error
   return (data ?? []) as UpcomingEpisode[]
 }

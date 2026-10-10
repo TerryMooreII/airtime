@@ -72,7 +72,7 @@ watch(view, (v) => {
 onMounted(async () => {
   await library.load()
   try {
-    const eps = await fetchUpcomingEpisodes(30, 500)
+    const eps = await fetchUpcomingEpisodes(30, 500, true)
     const map = new Map<number, UpcomingEpisode>()
     for (const e of eps) if (!map.has(e.show_id)) map.set(e.show_id, e)
     nextByShow.value = map

@@ -767,6 +767,21 @@ export type Database = {
         Args: { p_tvmaze_id: number }
         Returns: undefined
       }
+      my_upcoming_episodes_all: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: {
+          airstamp: string
+          episode_id: number
+          episode_name: string
+          number: number
+          runtime: number
+          season: number
+          show_id: number
+          show_image: string
+          show_name: string
+          status: Database["public"]["Enums"]["user_show_status"]
+        }[]
+      }
       my_upcoming_episodes: {
         Args: { p_days?: number; p_limit?: number }
         Returns: {
