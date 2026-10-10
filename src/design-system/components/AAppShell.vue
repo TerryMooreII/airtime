@@ -92,7 +92,7 @@ const emit = defineEmits<{ toggleTheme: [] }>()
 <style scoped>
 .a-shell {
   display: flex;
-  height: 100%;
+  align-items: flex-start;
   min-height: 100vh;
   background: var(--bg);
 }
@@ -105,9 +105,12 @@ const emit = defineEmits<{ toggleTheme: [] }>()
   padding: 22px 14px 16px;
   gap: 28px;
   overflow: auto;
+  /* Pinned to the viewport while the page scrolls. */
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
+  align-self: flex-start;
 }
 .a-shell__brand {
   display: flex;
