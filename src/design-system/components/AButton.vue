@@ -16,6 +16,8 @@ const props = withDefaults(
     block?: boolean
     round?: boolean
     to?: RouteLocationRaw
+    /** External link: renders an anchor that opens in a new tab. */
+    href?: string
   }>(),
   {
     variant: 'primary',
@@ -42,6 +44,16 @@ const isDisabled = computed(() => props.disabled || props.loading)
     <AIcon v-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" />
     <slot />
   </RouterLink>
+  <a
+    v-else-if="href && !isDisabled"
+    :href="href"
+    target="_blank"
+    rel="noopener noreferrer"
+    :class="classes"
+  >
+    <AIcon v-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" />
+    <slot />
+  </a>
   <button
     v-else
     :type="type"

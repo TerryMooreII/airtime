@@ -38,6 +38,11 @@ export const ICON_PATHS = {
     'M9 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7',
   activity: 'M3 12h4l3-8 4 16 3-8h4',
   star: 'M12 3l2.7 6.2 6.8.6-5.1 4.5 1.5 6.7L12 17.5 6.1 21l1.5-6.7L2.5 9.8l6.8-.6z',
+  globe:
+    'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2c3 3.3 3 16.7 0 20M12 2c-3 3.3-3 16.7 0 20',
+  database:
+    'M12 8c5 0 8-1.3 8-3s-3-3-8-3-8 1.3-8 3 3 3 8 3zM4 5v14c0 1.7 3 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3 3 8 3s8-1.3 8-3',
+  film: 'M4 4h16v16H4zM4 9h16M4 15h16M9 4v16M15 4v16',
 } as const
 
 export type IconName = keyof typeof ICON_PATHS

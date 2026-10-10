@@ -11,6 +11,8 @@ import {
   APoster,
   ASkeleton,
   AStarRating,
+  AIcon,
+  type IconName,
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
@@ -157,16 +159,27 @@ const meta = computed(() => {
 })
 const tvmazeRating = computed(() => ratings.value.find((r) => r.provider === 'tvmaze'))
 const otherRatings = computed(() => ratings.value.filter((r) => r.provider !== 'tvmaze'))
-const links = computed(() =>
-  [
-    show.value?.tvmaze_url ? { label: 'TVmaze', href: show.value.tvmaze_url } : null,
-    ...externalIds.value.map((x) => {
-      const href = externalLink(x.provider, x.external_id)
-      return href ? { label: RATING_PROVIDER_LABELS[x.provider] ?? x.provider, href } : null
-    }),
-    show.value?.official_site ? { label: 'Official site', href: show.value.official_site } : null,
-  ].filter((l): l is { label: string; href: string } => !!l),
-)
+interface ShowLink {
+  label: string
+  href: string
+  icon: IconName
+}
+const links = computed<ShowLink[]>(() => {
+  const out: ShowLink[] = []
+  if (show.value?.tvmaze_url) out.push({ label: 'TVmaze', href: show.value.tvmaze_url, icon: 'tv' })
+  for (const x of externalIds.value) {
+    const href = externalLink(x.provider, x.external_id)
+    if (!href) continue
+    out.push({
+      label: RATING_PROVIDER_LABELS[x.provider] ?? x.provider,
+      href,
+      icon: x.provider === 'imdb' ? 'film' : 'database',
+    })
+  }
+  if (show.value?.official_site)
+    out.push({ label: 'Official site', href: show.value.official_site, icon: 'globe' })
+  return out
+})
 
 async function setRating(rating: number | null) {
   if (!show.value) return
@@ -289,15 +302,16 @@ function isFuture(e: Episode): boolean {
             {{ stripHtml(show.summary_html) || 'No synopsis available.' }}
           </p>
           <div v-if="links.length" class="about__links">
-            <a
+            <AButton
               v-for="l in links"
               :key="l.href"
               :href="l.href"
-              target="_blank"
-              rel="noopener"
-              class="about__link"
-              >{{ l.label }} ↗</a
+              variant="outline"
+              size="sm"
+              :icon="l.icon"
             >
+              {{ l.label }}<AIcon name="external" :size="13" class="about__ext" />
+            </AButton>
           </div>
         </div>
         <div class="about__side">
@@ -495,13 +509,13 @@ function isFuture(e: Episode): boolean {
 }
 .about__links {
   display: flex;
-  gap: 14px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin-top: 6px;
 }
-.about__link {
-  font-size: 13.5px;
-  font-weight: 500;
+.about__ext {
+  color: var(--muted);
+  margin-left: -2px;
 }
 .about__side {
   display: flex;

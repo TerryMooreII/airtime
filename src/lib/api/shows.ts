@@ -50,6 +50,7 @@ export const RATING_PROVIDER_LABELS: Record<string, string> = {
   rotten_tomatoes: 'Rotten Tomatoes',
   metacritic: 'Metacritic',
   tmdb: 'TMDB',
+  thetvdb: 'TheTVDB',
 }
 
 export function externalLink(provider: string, id: string): string | null {
