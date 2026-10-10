@@ -242,7 +242,7 @@ const railList = computed<Rail[]>(() => {
             :following="library.byShowId.has(s.id)"
             :follow-loading="follow.pending(s.id)"
             width="156px"
-            @follow="follow.toggle(s.id, s.tvmaze_id, s.name)"
+            @follow="(status) => follow.toggle(s.id, s.tvmaze_id, s.name, status)"
           />
         </div>
       </section>

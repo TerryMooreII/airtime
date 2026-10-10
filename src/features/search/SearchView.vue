@@ -73,7 +73,7 @@ function meta(s: SearchResult): string {
         :meta="meta(s)"
         :following="follow.isFollowing(s.id)"
         :follow-loading="follow.pending(s.id)"
-        @follow="follow.toggle(s.id, s.tvmaze_id)"
+        @follow="(status) => follow.toggle(s.id, s.tvmaze_id, s.name, status)"
       />
     </div>
 

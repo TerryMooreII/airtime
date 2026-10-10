@@ -3,6 +3,7 @@ import { reactive } from 'vue'
 import { errorMessage } from '@/composables/useAsync'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
+import type { UserShowStatus } from '@/types/domain'
 
 /** Follow / unfollow a show with per-show pending state and toasts. */
 export function useFollow() {
@@ -17,7 +18,12 @@ export function useFollow() {
     return pendingIds.has(showId)
   }
 
-  async function toggle(showId: number, tvmazeId?: number, name?: string): Promise<void> {
+  async function toggle(
+    showId: number,
+    tvmazeId?: number,
+    name?: string,
+    status: UserShowStatus = 'watching',
+  ): Promise<void> {
     if (pendingIds.has(showId)) return
     pendingIds.add(showId)
     try {
@@ -25,7 +31,7 @@ export function useFollow() {
         await library.untrack(showId)
         ui.toast(name ? `Removed ${name} from your library` : 'Removed from your library')
       } else {
-        await library.track(showId, tvmazeId)
+        await library.track(showId, tvmazeId, status)
         ui.success(name ? `Following ${name}` : 'Added to your library')
       }
     } catch (err) {

@@ -138,7 +138,10 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
             :meta="roleLabel(c)"
             :following="follow.isFollowing(localIds.get(c.showTvmazeId)!)"
             :follow-loading="follow.pending(localIds.get(c.showTvmazeId)!)"
-            @follow="follow.toggle(localIds.get(c.showTvmazeId)!, c.showTvmazeId, c.showName)"
+            @follow="
+              (status) =>
+                follow.toggle(localIds.get(c.showTvmazeId)!, c.showTvmazeId, c.showName, status)
+            "
           />
         </div>
         <template v-if="elsewhere.length">
