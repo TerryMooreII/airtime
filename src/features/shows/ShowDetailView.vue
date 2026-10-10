@@ -315,7 +315,7 @@ function isFuture(e: Episode): boolean {
               size="sm"
               :icon="l.icon"
             >
-              <template v-if="l.brand" #icon><ABrandIcon :brand="l.brand" :size="16" /></template>
+              <template v-if="l.brand" #icon><ABrandIcon :brand="l.brand" :size="18" /></template>
               {{ l.label }}<AIcon name="external" :size="13" class="about__ext" />
             </AButton>
           </div>
