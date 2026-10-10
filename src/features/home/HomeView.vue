@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import {
@@ -12,6 +12,7 @@ import {
   ASkeleton,
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
+import { useBreakpoint } from '@/composables/useBreakpoint'
 import { fetchUpcomingEpisodes } from '@/lib/api/episodes'
 import { dayKey, episodeCode, formatAirTime, formatRuntime, relativeDayLabel } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
@@ -20,11 +21,30 @@ import type { UpcomingEpisode } from '@/types/domain'
 
 const auth = useAuthStore()
 const library = useLibraryStore()
+const { isMobile } = useBreakpoint()
 
 const episodes = ref<UpcomingEpisode[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 const range = ref<7 | 14 | 30>(14)
+type Layout = 'agenda' | 'calendar'
+const LAYOUT_KEY = 'airtime:guide-layout'
+const layout = ref<Layout>(readLayout())
+function readLayout(): Layout {
+  try {
+    return localStorage.getItem(LAYOUT_KEY) === 'calendar' ? 'calendar' : 'agenda'
+  } catch {
+    return 'agenda'
+  }
+}
+watch(layout, (v) => {
+  try {
+    localStorage.setItem(LAYOUT_KEY, v)
+  } catch {
+    /* ignore */
+  }
+})
+const selectedDay = ref<string | null>(null)
 const now = ref(Date.now())
 setInterval(() => (now.value = Date.now()), 30_000)
 
@@ -90,6 +110,55 @@ const groups = computed<DayGroup[]>(() => {
   return [...map.values()]
 })
 
+/** One entry per calendar day in the range, including empty days, for the calendar layout. */
+interface CalendarDay {
+  key: string
+  dow: string
+  num: number
+  monthLabel: string
+  isToday: boolean
+  items: UpcomingEpisode[]
+}
+const calendarDays = computed<CalendarDay[]>(() => {
+  const byKey = new Map<string, UpcomingEpisode[]>()
+  for (const e of episodes.value) {
+    const key = dayKey(e.airstamp, tz.value)
+    byKey.set(key, [...(byKey.get(key) ?? []), e])
+  }
+  const todayKey = dayKey(new Date().toISOString(), tz.value)
+  const out: CalendarDay[] = []
+  for (let d = 0; d < range.value; d++) {
+    const date = new Date(Date.now() + d * 86_400_000)
+    const key = dayKey(date.toISOString(), tz.value)
+    const parts = new Intl.DateTimeFormat(undefined, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      timeZone: tz.value,
+    }).formatToParts(date)
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
+    out.push({
+      key,
+      dow: get('weekday'),
+      num: Number(get('day')),
+      monthLabel: get('month'),
+      isToday: key === todayKey,
+      items: byKey.get(key) ?? [],
+    })
+  }
+  return out
+})
+const calendarWeeks = computed(() => {
+  const weeks: CalendarDay[][] = []
+  for (let i = 0; i < calendarDays.value.length; i += 7)
+    weeks.push(calendarDays.value.slice(i, i + 7))
+  return weeks
+})
+const selectedCalendarDay = computed(
+  () =>
+    calendarDays.value.find((d) => d.key === selectedDay.value) ?? calendarDays.value[0] ?? null,
+)
+
 const subtitle = computed(() => {
   if (loading.value) return 'Loading your schedule…'
   const shows = new Set(upcoming.value.map((e) => e.show_id)).size
@@ -109,6 +178,14 @@ const subtitle = computed(() => {
         ]"
         aria-label="Range"
         @update:model-value="load"
+      />
+      <ASegmented
+        v-model="layout"
+        :options="[
+          { value: 'agenda', label: 'Agenda' },
+          { value: 'calendar', label: 'Calendar' },
+        ]"
+        aria-label="Layout"
       />
     </APageHeader>
 
@@ -159,7 +236,7 @@ const subtitle = computed(() => {
         </div>
       </div>
 
-      <div v-if="groups.length" class="agenda">
+      <div v-if="groups.length && layout === 'agenda'" class="agenda">
         <section v-for="g in groups" :key="g.key" class="agenda__day">
           <div class="agenda__head">
             <span class="agenda__label">{{ g.label }}</span>
@@ -198,6 +275,95 @@ const subtitle = computed(() => {
           </RouterLink>
         </section>
       </div>
+
+      <template v-else-if="groups.length && layout === 'calendar'">
+        <!-- Desktop: week rows of seven day columns -->
+        <div v-if="!isMobile" class="cal">
+          <div v-for="(week, wi) in calendarWeeks" :key="wi" class="cal__week">
+            <div v-for="d in week" :key="d.key" class="cal__col">
+              <div class="cal__head" :class="{ 'cal__head--today': d.isToday }">
+                <span class="cal__dow">{{ d.dow }}</span>
+                <span class="cal__num">{{ d.num }}</span>
+              </div>
+              <RouterLink
+                v-for="e in d.items.slice(0, 8)"
+                :key="e.episode_id"
+                :to="{ name: 'show', params: { id: e.show_id } }"
+                class="cal__item"
+                :class="{ 'cal__item--past': endOf(e) < now }"
+              >
+                <APoster :src="e.show_image" radius="sm" class="cal__img" />
+                <span class="cal__text">
+                  <span class="cal__time">{{ formatAirTime(e.airstamp, tz) }}</span>
+                  <span class="cal__name">{{ e.show_name }}</span>
+                  <span class="cal__code">{{ episodeCode(e.season, e.number) }}</span>
+                </span>
+              </RouterLink>
+              <span v-if="d.items.length > 8" class="cal__more"
+                >+{{ d.items.length - 8 }} more</span
+              >
+              <div v-if="!d.items.length" class="cal__empty">Nothing new</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile: day strip + that day's list -->
+        <div v-else class="strip-view">
+          <div class="strip">
+            <button
+              v-for="d in calendarDays"
+              :key="d.key"
+              type="button"
+              class="strip__day"
+              :class="{ 'strip__day--on': d.key === selectedCalendarDay?.key }"
+              @click="selectedDay = d.key"
+            >
+              <span class="strip__dow">{{ d.dow }}</span>
+              <span class="strip__num">{{ d.num }}</span>
+              <span class="strip__dot" :class="{ 'strip__dot--on': d.items.length }" />
+            </button>
+          </div>
+          <div v-if="selectedCalendarDay" class="agenda__day">
+            <div class="agenda__head">
+              <span class="agenda__label">{{
+                selectedCalendarDay.isToday ? 'Today' : selectedCalendarDay.dow
+              }}</span>
+              <span class="agenda__sub"
+                >{{ selectedCalendarDay.monthLabel }} {{ selectedCalendarDay.num }}</span
+              >
+              <span class="agenda__count"
+                >{{ selectedCalendarDay.items.length }} ep{{
+                  selectedCalendarDay.items.length === 1 ? '' : 's'
+                }}</span
+              >
+            </div>
+            <RouterLink
+              v-for="e in selectedCalendarDay.items"
+              :key="e.episode_id"
+              :to="{ name: 'show', params: { id: e.show_id } }"
+              class="row"
+              :class="{ 'row--past': endOf(e) < now }"
+            >
+              <span class="row__time t-mono">{{ formatAirTime(e.airstamp, tz) }}</span>
+              <APoster :src="e.show_image" radius="sm" />
+              <span class="row__text">
+                <span class="row__title"
+                  ><span class="row__name truncate">{{ e.show_name }}</span></span
+                >
+                <span class="row__ep truncate"
+                  ><span class="t-mono row__code">{{ episodeCode(e.season, e.number) }}</span> ·
+                  {{ e.episode_name ?? 'TBA' }}</span
+                >
+              </span>
+            </RouterLink>
+            <AEmptyState
+              v-if="!selectedCalendarDay.items.length"
+              title="Nothing new on this day"
+              compact
+            />
+          </div>
+        </div>
+      </template>
 
       <AEmptyState
         v-else
@@ -434,6 +600,150 @@ const subtitle = computed(() => {
   font-size: 12.5px;
   color: var(--primary-text);
   white-space: nowrap;
+}
+.cal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cal__week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+.cal__col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.cal__head {
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface2);
+  color: var(--fg);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+}
+.cal__head--today {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.cal__dow {
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cal__num {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.cal__item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--fg);
+  transition: border-color var(--dur-fast);
+}
+.cal__item:hover {
+  border-color: var(--line2);
+}
+.cal__item--past {
+  opacity: 0.5;
+}
+.cal__img {
+  width: 30px;
+}
+.cal__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cal__time {
+  font: 600 11.5px var(--font-mono);
+  color: var(--primary-text);
+}
+.cal__name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cal__code {
+  font: 400 11.5px var(--font-mono);
+  color: var(--muted);
+}
+.cal__more {
+  font: 500 11.5px var(--font-mono);
+  color: var(--muted);
+  padding: 0 4px;
+}
+.cal__empty {
+  border: 1px dashed var(--line2);
+  border-radius: var(--radius-md);
+  padding: 18px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.strip-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.strip__day {
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 0;
+  min-height: 60px;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--fg);
+}
+.strip__day--on {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.strip__dow {
+  font: 600 10.5px var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.strip__num {
+  font-size: 18px;
+  font-weight: 700;
+}
+.strip__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: transparent;
+}
+.strip__dot--on {
+  background: var(--primary);
+}
+.strip__day--on .strip__dot--on {
+  background: var(--on-primary);
 }
 @media (max-width: 759px) {
   .hero-grid {
