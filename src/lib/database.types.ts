@@ -86,6 +86,32 @@ export type Database = {
         }
         Relationships: []
       }
+      discover_cache: {
+        Row: {
+          computed_at: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          computed_at?: string
+          payload: Json
+          user_id: string
+        }
+        Update: {
+          computed_at?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discover_cache_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       episode_ratings: {
         Row: {
           episode_id: number
@@ -761,6 +787,7 @@ export type Database = {
         Args: { p_episode_ids: number[] }
         Returns: number
       }
+      compute_discover_rails: { Args: never; Returns: Json }
       discover_rails: { Args: never; Returns: Json }
       enqueue_nightly_sync: { Args: never; Returns: undefined }
       enqueue_sync_job: {
