@@ -55,13 +55,24 @@ const model = defineModel<T>({ required: true })
 .a-pill--mono {
   font: 600 12.5px var(--font-mono);
 }
-.a-pill:hover {
+.a-pill:not(.a-pill--on):hover {
   background: var(--hover);
+  border-color: var(--fg);
 }
 .a-pill--on {
   background: var(--fg);
   color: var(--bg);
   border-color: var(--fg);
+}
+.a-pill--on:hover {
+  background: var(--fg);
+  color: var(--bg);
+  opacity: 0.88;
+}
+.a-pill:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-pill);
 }
 .a-pill__count {
   font: 500 11.5px var(--font-mono);

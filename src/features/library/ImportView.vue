@@ -8,6 +8,7 @@ import {
   AButton,
   ACard,
   AEmptyState,
+  AIcon,
   AFileDrop,
   APageHeader,
   APoster,
@@ -39,7 +40,7 @@ interface ReviewRow {
 const library = useLibraryStore()
 const ui = useUiStore()
 
-const step = ref<'upload' | 'review' | 'done'>('upload')
+const step = ref<'upload' | 'review' | 'summary' | 'done'>('upload')
 const pasted = ref('')
 const parsed = ref<CsvParseResult | null>(null)
 const fileName = ref('')
@@ -155,7 +156,20 @@ function skip() {
 function advance() {
   manualQuery.value = ''
   manualResults.value = []
-  if (index.value < rows.value.length - 1) index.value++
+  const wasLast = index.value >= rows.value.length - 1
+  if (wasLast || counts.value.pending === 0) {
+    step.value = 'summary'
+    return
+  }
+  index.value++
+}
+function reviewRow(r: ReviewRow) {
+  step.value = 'review'
+  goTo(rows.value.indexOf(r))
+}
+function backToReview() {
+  step.value = 'review'
+  jumpToNextPending(-1)
 }
 function jumpToNextPending(from: number) {
   const next = rows.value.findIndex((r, i) => i > from && r.decision === 'pending')
@@ -175,7 +189,8 @@ function confirmAllExact() {
     }
   }
   ui.toast(`Confirmed ${n} exact match${n === 1 ? '' : 'es'}`)
-  jumpToNextPending(-1)
+  if (counts.value.pending === 0) step.value = 'summary'
+  else jumpToNextPending(-1)
 }
 function useManual(result: SearchResult) {
   const row = current.value
@@ -247,7 +262,9 @@ function meta(c: MatchCandidate): string {
           ? 'Upload a CSV of show names and your 1–5 ratings. You confirm every match before anything is saved.'
           : step === 'review'
             ? `Reviewed ${reviewed} of ${rows.length}`
-            : 'Import finished'
+            : step === 'summary'
+              ? 'Review complete. Nothing is saved until you import.'
+              : 'Import finished'
       "
     >
       <AButton variant="ghost" size="sm" icon="back" :to="{ name: 'library' }">Library</AButton>
@@ -371,10 +388,9 @@ function meta(c: MatchCandidate): string {
                 <APoster :src="c.image_medium" radius="md" />
                 <span class="cand__name truncate">{{ c.name }}</span>
                 <span class="cand__meta truncate">{{ meta(c) }}</span>
-                <ABadge v-if="c.is_exact" variant="success" class="cand__tag">exact</ABadge>
-                <ABadge v-else variant="muted" class="cand__tag"
-                  >{{ Math.round(c.score * 100) }}%</ABadge
-                >
+                <span class="cand__tag" :class="{ 'cand__tag--exact': c.is_exact }">{{
+                  c.is_exact ? 'Exact match' : `${Math.round(c.score * 100)}% similar`
+                }}</span>
               </button>
             </div>
           </div>
@@ -454,23 +470,91 @@ function meta(c: MatchCandidate): string {
               </button>
             </li>
           </ol>
-          <AButton
-            size="lg"
-            block
-            :loading="importing"
-            :disabled="!counts.confirmed"
-            @click="finish"
-          >
-            Import {{ counts.confirmed }} show{{ counts.confirmed === 1 ? '' : 's'
-            }}<template v-if="counts.pending">
-              ({{ counts.pending }} unreviewed will be skipped)</template
-            >
+          <AButton size="lg" block variant="outline" icon="check" @click="step = 'summary'">
+            Finish review
           </AButton>
         </aside>
       </div>
     </template>
 
-    <!-- Step 3 ---------------------------------------------------------- -->
+    <!-- Step 3: summary before import ---------------------------------- -->
+    <template v-else-if="step === 'summary'">
+      <div class="summary">
+        <ACard padding="lg" radius="2xl" class="summary__card">
+          <div class="summary__hero">
+            <span class="summary__check"
+              ><AIcon name="check" :size="26" :stroke-width="2.6"
+            /></span>
+            <div>
+              <h2 class="summary__title">All {{ rows.length }} rows reviewed</h2>
+              <p class="t-sub">
+                {{ counts.confirmed }} ready to import · {{ counts.skipped }} skipped ·
+                {{ counts.unknown }} not found<template v-if="counts.pending">
+                  · {{ counts.pending }} still undecided (will be skipped)</template
+                >
+              </p>
+            </div>
+          </div>
+          <div class="summary__status">
+            <span class="t-label">Import as</span>
+            <ASegmented
+              v-model="importStatus"
+              :options="USER_SHOW_STATUSES"
+              aria-label="Status for imported shows"
+            />
+          </div>
+          <div class="summary__actions">
+            <AButton
+              size="lg"
+              icon="library"
+              :loading="importing"
+              :disabled="!counts.confirmed"
+              @click="finish"
+            >
+              Import {{ counts.confirmed }} show{{ counts.confirmed === 1 ? '' : 's' }}
+            </AButton>
+            <AButton size="lg" variant="outline" icon="back" @click="backToReview"
+              >Back to review</AButton
+            >
+          </div>
+        </ACard>
+
+        <ACard v-if="confirmedRows.length" padding="lg">
+          <span class="t-label">Will be imported ({{ confirmedRows.length }})</span>
+          <ul class="summary__list">
+            <li v-for="r in confirmedRows" :key="r.line">
+              <APoster :src="r.selected?.image_medium" radius="sm" class="summary__img" />
+              <span class="summary__text">
+                <span class="summary__name truncate">{{ r.selected?.name }}</span>
+                <span
+                  v-if="r.selected && r.selected.name.toLowerCase() !== r.name.trim().toLowerCase()"
+                  class="t-muted summary__from truncate"
+                  >from “{{ r.name }}”</span
+                >
+              </span>
+              <span class="summary__stars">{{ r.rating ? '★'.repeat(r.rating) : '—' }}</span>
+              <AButton variant="ghost" size="sm" @click="reviewRow(r)">Change</AButton>
+            </li>
+          </ul>
+        </ACard>
+        <ACard v-if="unknownRows.length || skippedRows.length" padding="lg">
+          <span class="t-label">Not importing ({{ unknownRows.length + skippedRows.length }})</span>
+          <ul class="summary__list summary__list--plain">
+            <li v-for="r in [...unknownRows, ...skippedRows]" :key="r.line">
+              <span class="summary__text"
+                ><span class="summary__name truncate">{{ r.name }}</span></span
+              >
+              <ABadge :variant="r.candidates.length ? 'muted' : 'warning'">{{
+                r.candidates.length ? 'skipped' : 'not found'
+              }}</ABadge>
+              <AButton variant="ghost" size="sm" @click="reviewRow(r)">Review</AButton>
+            </li>
+          </ul>
+        </ACard>
+      </div>
+    </template>
+
+    <!-- Step 4 ---------------------------------------------------------- -->
     <template v-else-if="step === 'done'">
       <div class="done">
         <AAlert variant="success" title="Import complete">
@@ -663,9 +747,22 @@ function meta(c: MatchCandidate): string {
   color: var(--muted);
 }
 .cand__tag {
-  position: absolute;
-  top: 10px;
-  left: 10px;
+  align-self: flex-start;
+  font: 600 10.5px var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--muted);
+}
+.cand__tag--exact {
+  background: var(--success);
+  color: #0a0a0b;
+}
+.cand--on .cand__tag:not(.cand__tag--exact) {
+  background: var(--primary);
+  color: var(--on-primary);
 }
 .manual {
   display: flex;
@@ -791,6 +888,89 @@ kbd {
 .list__match {
   color: var(--muted);
   font: 500 11.5px var(--font-mono);
+}
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 820px;
+}
+.summary__card {
+  gap: 18px;
+}
+.summary__hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.summary__check {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--success-soft);
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.summary__title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.summary__status {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.summary__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.summary__list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.summary__list li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.summary__list--plain li {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+.summary__list li:last-child {
+  border-bottom: 0;
+}
+.summary__img {
+  width: 32px;
+}
+.summary__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.summary__name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.summary__from {
+  font-size: 12px;
+}
+.summary__stars {
+  color: var(--star);
+  font-size: 14px;
+  letter-spacing: 1px;
 }
 .done {
   display: flex;
