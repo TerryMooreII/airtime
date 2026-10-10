@@ -85,18 +85,7 @@ export interface AdminShowRow {
   followers: number
 }
 export async function searchAdminShows(query: string, limit = 40): Promise<AdminShowRow[]> {
-  let q = supabase
-    .from('shows')
-    .select(
-      'id, tvmaze_id, name, status, premiered, image_medium, episodes_synced_at, synced_at, tvmaze_updated_at, user_shows(count)',
-    )
-    .order('weight', { ascending: false })
-    .limit(limit)
-  if (query.trim()) q = q.ilike('name', `%${query.trim()}%`)
-  const { data, error } = await q
+  const { data, error } = await supabase.rpc('admin_shows', { p_query: query, p_limit: limit })
   if (error) throw error
-  return (data ?? []).map((r: Record<string, unknown>) => ({
-    ...(r as unknown as Omit<AdminShowRow, 'followers'>),
-    followers: ((r.user_shows as { count: number }[] | undefined)?.[0]?.count ?? 0) as number,
-  }))
+  return (data ?? []) as AdminShowRow[]
 }

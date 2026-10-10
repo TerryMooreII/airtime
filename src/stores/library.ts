@@ -8,6 +8,13 @@ const LIBRARY_SELECT =
   'user_id, show_id, status, rating, notes, notify, added_at, updated_at, show:shows(id, tvmaze_id, name, status, image_medium, genres, premiered, type)'
 
 /** The signed-in user's tracked shows, cached for fast "is tracked?" lookups. */
+async function currentUserId(): Promise<string> {
+  const { data } = await supabase.auth.getUser()
+  const id = data.user?.id
+  if (!id) throw new Error('not signed in')
+  return id
+}
+
 export const useLibraryStore = defineStore('library', () => {
   const entries = ref<LibraryEntry[]>([])
   const loaded = ref(false)
@@ -30,9 +37,13 @@ export const useLibraryStore = defineStore('library', () => {
     if ((loaded.value && !force) || loading.value) return
     loading.value = true
     try {
+      // Always scope to the signed-in user: admins can read other users' rows
+      // through RLS (for follower counts), so RLS alone is not a filter here.
+      const userId = await currentUserId()
       const { data, error } = await supabase
         .from('user_shows')
         .select(LIBRARY_SELECT)
+        .eq('user_id', userId)
         .order('updated_at', { ascending: false })
       if (error) throw error
       entries.value = (data ?? []) as unknown as LibraryEntry[]
@@ -51,10 +62,7 @@ export const useLibraryStore = defineStore('library', () => {
     tvmazeId: number,
     status: UserShowStatus = 'watching',
   ): Promise<void> {
-    const { data: userData } = await supabase.auth.getUser()
-    const userId = userData.user?.id
-    if (!userId) throw new Error('not signed in')
-
+    const userId = await currentUserId()
     const { data, error } = await supabase
       .from('user_shows')
       .upsert({ user_id: userId, show_id: showId, status }, { onConflict: 'user_id,show_id' })
@@ -79,10 +87,7 @@ export const useLibraryStore = defineStore('library', () => {
     patch: Partial<Pick<UserShow, 'status' | 'rating' | 'notes' | 'notify'>>,
     tvmazeId?: number,
   ): Promise<void> {
-    const { data: userData } = await supabase.auth.getUser()
-    const userId = userData.user?.id
-    if (!userId) throw new Error('not signed in')
-
+    const userId = await currentUserId()
     const existed = byShowId.value.has(showId)
     const { data, error } = await supabase
       .from('user_shows')
@@ -102,7 +107,12 @@ export const useLibraryStore = defineStore('library', () => {
   }
 
   async function untrack(showId: number): Promise<void> {
-    const { error } = await supabase.from('user_shows').delete().eq('show_id', showId)
+    const userId = await currentUserId()
+    const { error } = await supabase
+      .from('user_shows')
+      .delete()
+      .eq('user_id', userId)
+      .eq('show_id', showId)
     if (error) throw error
     entries.value = entries.value.filter((e) => e.show_id !== showId)
   }

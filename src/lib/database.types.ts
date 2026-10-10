@@ -666,6 +666,21 @@ export type Database = {
         }
         Returns: number
       }
+      admin_shows: {
+        Args: { p_limit?: number; p_query?: string }
+        Returns: {
+          episodes_synced_at: string
+          followers: number
+          id: number
+          image_medium: string
+          name: string
+          premiered: string
+          status: string
+          synced_at: string
+          tvmaze_id: number
+          tvmaze_updated_at: string
+        }[]
+      }
       admin_set_role: {
         Args: {
           p_role: Database["public"]["Enums"]["app_role"]
