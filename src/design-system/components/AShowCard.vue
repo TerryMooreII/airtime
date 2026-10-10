@@ -96,7 +96,7 @@ const rating = defineModel<number | null>('rating', { default: null })
             type="button"
             role="menuitem"
             class="a-show-card__panel-item"
-            :style="{ transitionDelay: menuOpen ? `${90 + i * 45}ms` : '0ms' }"
+            :style="{ '--stagger': menuOpen ? `${90 + i * 45}ms` : '0ms' }"
             :tabindex="menuOpen ? 0 : -1"
             @click="choose(o.value, $event)"
           >
@@ -183,7 +183,7 @@ const rating = defineModel<number | null>('rating', { default: null })
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 44px 6px 6px;
+  padding: 0 6px 6px;
   border-radius: 17px;
   background: rgba(20, 20, 22, 0.92);
   backdrop-filter: blur(10px);
@@ -197,12 +197,18 @@ const rating = defineModel<number | null>('rating', { default: null })
   clip-path: circle(230px at calc(100% - 17px) 17px);
   pointer-events: auto;
 }
+/* Sits on the same row as the plus / x, which occupies the right 34px. */
 .a-show-card__panel-title {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 40px 0 10px;
+  margin-bottom: 2px;
   font: 600 10.5px var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(243, 243, 241, 0.6);
-  padding: 2px 10px 4px;
+  white-space: nowrap;
 }
 .a-show-card__panel-item {
   border: 0;
@@ -216,10 +222,12 @@ const rating = defineModel<number | null>('rating', { default: null })
   white-space: nowrap;
   opacity: 0;
   transform: translateX(8px);
+  /* Entrance is staggered per item; hover colors switch together with no delay. */
   transition:
-    opacity 220ms var(--ease),
-    transform 220ms var(--ease),
-    background 120ms;
+    opacity 220ms var(--ease) var(--stagger, 0ms),
+    transform 220ms var(--ease) var(--stagger, 0ms),
+    background-color 100ms linear 0ms,
+    color 100ms linear 0ms;
 }
 .a-show-card__follow--open .a-show-card__panel-item {
   opacity: 1;
