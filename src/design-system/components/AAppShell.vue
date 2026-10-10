@@ -11,8 +11,8 @@ export interface NavItem {
   icon: IconName
   to: RouteLocationRaw
   badge?: number
-  /** On phones: a bottom tab (default) or an icon button in the header. */
-  mobile?: 'tab' | 'header'
+  /** On phones: a bottom tab (default), an icon button in the header, or not shown. */
+  mobile?: 'tab' | 'header' | 'hidden'
 }
 
 /**
@@ -85,7 +85,7 @@ const emit = defineEmits<{ toggleTheme: [] }>()
       </main>
       <nav class="a-shell__bottom" aria-label="Primary">
         <RouterLink
-          v-for="n in nav.filter((i) => i.mobile !== 'header')"
+          v-for="n in nav.filter((i) => !i.mobile || i.mobile === 'tab')"
           :key="n.id"
           :to="n.to"
           class="a-shell__bottomitem"

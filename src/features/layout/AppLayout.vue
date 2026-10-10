@@ -36,7 +36,7 @@ const nav = computed<NavItem[]>(() => {
     { id: 'home', label: 'Guide', icon: 'guide', to: { name: 'home' } },
     { id: 'library', label: 'Library', icon: 'library', to: { name: 'library' } },
     { id: 'discover', label: 'Discover', icon: 'discover', to: { name: 'discover' } },
-    { id: 'search', label: 'Search', icon: 'search', to: { name: 'search' }, mobile: 'header' },
+    { id: 'search', label: 'Search', icon: 'search', to: { name: 'search' } },
     {
       id: 'notifications',
       label: 'Alerts',
@@ -44,7 +44,14 @@ const nav = computed<NavItem[]>(() => {
       to: { name: 'notifications' },
       badge: notifications.unreadCount,
     },
-    { id: 'settings', label: 'Settings', icon: 'settings', to: { name: 'settings' } },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: 'settings',
+      to: { name: 'settings' },
+      // The header avatar opens Settings on phones.
+      mobile: 'hidden',
+    },
   ]
   if (auth.isAdmin)
     items.push({
