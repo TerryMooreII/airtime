@@ -1,18 +1,33 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import {
+  ABadge,
   AButton,
   AEmptyState,
   APageHeader,
   APills,
+  APoster,
+  ASearchBox,
   ASegmented,
   AShowCard,
   ASkeleton,
+  AStarRating,
+  ATable,
+  type TableColumn,
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { fetchUpcomingEpisodes } from '@/lib/api/episodes'
-import { episodeCode, formatAirTime, shortDayLabel, STATUS_LABELS } from '@/lib/format'
+import {
+  episodeCode,
+  formatAirTime,
+  shortDayLabel,
+  STATUS_LABELS,
+  timeAgo,
+  yearOf,
+} from '@/lib/format'
+import { fuzzyFilter } from '@/lib/fuzzy'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
@@ -25,6 +40,9 @@ import {
 
 type Filter = UserShowStatus | 'all'
 type Sort = 'next' | 'rating' | 'az' | 'added'
+type View = 'grid' | 'table'
+
+const VIEW_KEY = 'airtime:library-view'
 
 const auth = useAuthStore()
 const library = useLibraryStore()
@@ -32,7 +50,24 @@ const ui = useUiStore()
 
 const filter = ref<Filter>('all')
 const sort = ref<Sort>('next')
+const view = ref<View>(readView())
+const query = ref('')
 const nextByShow = ref(new Map<number, UpcomingEpisode>())
+
+function readView(): View {
+  try {
+    return localStorage.getItem(VIEW_KEY) === 'table' ? 'table' : 'grid'
+  } catch {
+    return 'grid'
+  }
+}
+watch(view, (v) => {
+  try {
+    localStorage.setItem(VIEW_KEY, v)
+  } catch {
+    /* ignore */
+  }
+})
 
 onMounted(async () => {
   await library.load()
@@ -55,18 +90,27 @@ const filters = computed(() => [
   })),
 ])
 
-const entries = computed(() => {
-  const list = library.entries.filter(
+const nextTime = (e: LibraryEntry) => {
+  const n = nextByShow.value.get(e.show_id)
+  return n ? new Date(n.airstamp).getTime() : Number.POSITIVE_INFINITY
+}
+
+const searching = computed(() => query.value.trim().length > 0)
+
+/** Status filter + "ended shows can't air next" rule, before search and sort. */
+const scoped = computed(() =>
+  library.entries.filter(
     (e) =>
       (filter.value === 'all' || e.status === filter.value) &&
-      // An ended show cannot air next; keep it out of that view.
-      (sort.value !== 'next' || e.show.status !== 'Ended'),
-  )
-  const nextTime = (e: LibraryEntry) => {
-    const n = nextByShow.value.get(e.show_id)
-    return n ? new Date(n.airstamp).getTime() : Number.POSITIVE_INFINITY
-  }
-  return [...list].sort((a, b) => {
+      // Searching should always find the show, even when the view hides ended ones.
+      (searching.value || sort.value !== 'next' || e.show.status !== 'Ended'),
+  ),
+)
+
+const entries = computed(() => {
+  // While searching, relevance order wins over the chosen sort.
+  if (searching.value) return fuzzyFilter(scoped.value, query.value, (e) => e.show.name)
+  return [...scoped.value].sort((a, b) => {
     switch (sort.value) {
       case 'rating':
         return (b.rating ?? 0) - (a.rating ?? 0) || a.show.name.localeCompare(b.show.name)
@@ -82,25 +126,54 @@ const entries = computed(() => {
 
 const rated = computed(() => library.entries.filter((e) => e.rating).length)
 const hiddenEnded = computed(() =>
-  sort.value === 'next'
+  sort.value === 'next' && !searching.value
     ? library.entries.filter(
         (e) => (filter.value === 'all' || e.status === filter.value) && e.show.status === 'Ended',
       ).length
     : 0,
 )
+const subtitle = computed(() => {
+  const parts = [
+    `${library.counts.all} show${library.counts.all === 1 ? '' : 's'}`,
+    `${rated.value} rated`,
+  ]
+  if (searching.value)
+    parts.push(`${entries.value.length} match${entries.value.length === 1 ? '' : 'es'}`)
+  if (hiddenEnded.value)
+    parts.push(
+      `${hiddenEnded.value} ended show${hiddenEnded.value === 1 ? '' : 's'} hidden in this view`,
+    )
+  return parts.join(' · ')
+})
 
+function next(e: LibraryEntry): UpcomingEpisode | undefined {
+  return nextByShow.value.get(e.show_id)
+}
 function badge(e: LibraryEntry): string | undefined {
-  const n = nextByShow.value.get(e.show_id)
-  if (!n) return undefined
-  return `${shortDayLabel(n.airstamp, auth.timezone)} ${formatAirTime(n.airstamp, auth.timezone)}`
+  const n = next(e)
+  return n
+    ? `${shortDayLabel(n.airstamp, auth.timezone)} ${formatAirTime(n.airstamp, auth.timezone)}`
+    : undefined
 }
 function meta(e: LibraryEntry): string {
-  const n = nextByShow.value.get(e.show_id)
+  const n = next(e)
   return `${STATUS_LABELS[e.status]} · ${n ? episodeCode(n.season, n.number) : (e.show.status ?? '—')}`
+}
+function showMeta(e: LibraryEntry): string {
+  return [yearOf(e.show.premiered), e.show.genres.slice(0, 2).join(', ')]
+    .filter(Boolean)
+    .join(' · ')
 }
 async function rate(e: LibraryEntry, rating: number | null) {
   try {
     await library.update(e.show_id, { rating }, e.show.tvmaze_id)
+  } catch (err) {
+    ui.error(errorMessage(err))
+  }
+}
+async function setStatus(e: LibraryEntry, status: UserShowStatus) {
+  try {
+    await library.update(e.show_id, { status }, e.show.tvmaze_id)
   } catch (err) {
     ui.error(errorMessage(err))
   }
@@ -113,14 +186,23 @@ async function unfollow(e: LibraryEntry) {
     ui.error(errorMessage(err))
   }
 }
+
+const columns: TableColumn[] = [
+  { key: 'show', label: 'Show' },
+  { key: 'status', label: 'My status' },
+  { key: 'rating', label: 'Rating' },
+  { key: 'next', label: 'Next episode' },
+  { key: 'show_status', label: 'Show' },
+  { key: 'added_at', label: 'Added' },
+  { key: 'actions', label: '', align: 'right' },
+]
+const tableRows = computed(() => entries.value.map((e) => ({ id: e.show_id, entry: e })))
+const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.label }))
 </script>
 
 <template>
   <div class="library">
-    <APageHeader
-      title="Library"
-      :subtitle="`${library.counts.all} show${library.counts.all === 1 ? '' : 's'} · ${rated} rated${hiddenEnded ? ` · ${hiddenEnded} ended show${hiddenEnded === 1 ? '' : 's'} hidden in this view` : ''}`"
-    >
+    <APageHeader title="Library" :subtitle="subtitle">
       <AButton variant="outline" size="sm" icon="plus" :to="{ name: 'import' }">Import CSV</AButton>
       <ASegmented
         v-model="sort"
@@ -132,35 +214,136 @@ async function unfollow(e: LibraryEntry) {
         ]"
         aria-label="Sort"
       />
+      <ASegmented
+        v-model="view"
+        :options="[
+          { value: 'grid', label: 'Grid' },
+          { value: 'table', label: 'Table' },
+        ]"
+        aria-label="View"
+      />
     </APageHeader>
 
-    <APills
-      v-model="filter"
-      :options="filters"
-      aria-label="Status filter"
-      class="library__filters"
-    />
+    <div class="library__tools">
+      <APills
+        v-model="filter"
+        :options="filters"
+        aria-label="Status filter"
+        class="library__filters"
+      />
+      <ASearchBox v-model="query" placeholder="Filter your shows" class="library__search" />
+    </div>
 
     <div v-if="library.loading && !library.loaded" class="grid">
       <ASkeleton v-for="i in 8" :key="i" ratio="2 / 3" />
     </div>
 
-    <div v-else-if="entries.length" class="grid">
-      <AShowCard
-        v-for="e in entries"
-        :key="e.show_id"
-        :show-id="e.show_id"
-        :name="e.show.name"
-        :image="e.show.image_medium"
-        :badge="badge(e)"
-        :meta="meta(e)"
-        :rating="e.rating"
-        show-rating
-        following
-        @update:rating="rate(e, $event)"
-        @follow="unfollow(e)"
-      />
-    </div>
+    <template v-else-if="entries.length">
+      <div v-if="view === 'grid'" class="grid">
+        <AShowCard
+          v-for="e in entries"
+          :key="e.show_id"
+          :show-id="e.show_id"
+          :name="e.show.name"
+          :image="e.show.image_medium"
+          :badge="badge(e)"
+          :meta="meta(e)"
+          :rating="e.rating"
+          show-rating
+          following
+          @update:rating="rate(e, $event)"
+          @follow="unfollow(e)"
+        />
+      </div>
+
+      <ATable v-else :columns="columns" :rows="tableRows" class="table">
+        <template #cell-show="{ row }">
+          <RouterLink
+            :to="{ name: 'show', params: { id: (row.entry as LibraryEntry).show_id } }"
+            class="show-cell"
+          >
+            <APoster
+              :src="(row.entry as LibraryEntry).show.image_medium"
+              radius="sm"
+              class="show-cell__img"
+            />
+            <span class="show-cell__text">
+              <span class="show-cell__name truncate">{{
+                (row.entry as LibraryEntry).show.name
+              }}</span>
+              <span class="show-cell__meta truncate">{{
+                showMeta(row.entry as LibraryEntry)
+              }}</span>
+            </span>
+          </RouterLink>
+        </template>
+        <template #cell-status="{ row }">
+          <select
+            class="status-select"
+            :value="(row.entry as LibraryEntry).status"
+            :aria-label="`Status for ${(row.entry as LibraryEntry).show.name}`"
+            @change="
+              setStatus(
+                row.entry as LibraryEntry,
+                ($event.target as HTMLSelectElement).value as UserShowStatus,
+              )
+            "
+          >
+            <option v-for="o in statusOptions" :key="o.value" :value="o.value">
+              {{ o.label }}
+            </option>
+          </select>
+        </template>
+        <template #cell-rating="{ row }">
+          <AStarRating
+            :model-value="(row.entry as LibraryEntry).rating"
+            size="sm"
+            @update:model-value="rate(row.entry as LibraryEntry, $event)"
+          />
+        </template>
+        <template #cell-next="{ row }">
+          <span v-if="next(row.entry as LibraryEntry)" class="next-cell">
+            <span class="next-cell__when">{{ badge(row.entry as LibraryEntry) }}</span>
+            <span class="t-muted t-mono next-cell__code">{{
+              episodeCode(
+                next(row.entry as LibraryEntry)!.season,
+                next(row.entry as LibraryEntry)!.number,
+              )
+            }}</span>
+          </span>
+          <span v-else class="t-muted">—</span>
+        </template>
+        <template #cell-show_status="{ row }">
+          <ABadge
+            :variant="(row.entry as LibraryEntry).show.status === 'Running' ? 'success' : 'muted'"
+            >{{ (row.entry as LibraryEntry).show.status ?? '—' }}</ABadge
+          >
+        </template>
+        <template #cell-added_at="{ row }"
+          ><span class="t-muted">{{
+            timeAgo((row.entry as LibraryEntry).added_at)
+          }}</span></template
+        >
+        <template #cell-actions="{ row }">
+          <AButton
+            variant="ghost"
+            size="sm"
+            icon="close"
+            @click="unfollow(row.entry as LibraryEntry)"
+            >Unfollow</AButton
+          >
+        </template>
+      </ATable>
+    </template>
+
+    <AEmptyState
+      v-else-if="searching"
+      title="No shows match"
+      :description="`Nothing in your library matches “${query.trim()}”.`"
+      compact
+    >
+      <AButton variant="outline" size="sm" @click="query = ''">Clear search</AButton>
+    </AEmptyState>
 
     <AEmptyState
       v-else
@@ -185,18 +368,87 @@ async function unfollow(e: LibraryEntry) {
   flex-direction: column;
   gap: 24px;
 }
-.library__filters {
+.library__tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-top: -8px;
+}
+.library__filters {
+  min-width: 0;
+}
+.library__search {
+  width: min(320px, 100%);
 }
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
   gap: var(--grid-gap);
 }
+.show-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--fg);
+  min-width: 220px;
+}
+.show-cell__img {
+  width: 36px;
+  flex: none;
+}
+.show-cell__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.show-cell__name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.show-cell__meta {
+  font: 500 11.5px var(--font-mono);
+  color: var(--muted);
+}
+.status-select {
+  appearance: none;
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 28px 6px 12px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239d9da4' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+.status-select:hover {
+  background-color: var(--hover);
+}
+.next-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.next-cell__when {
+  font: 600 12.5px var(--font-mono);
+  color: var(--primary-text);
+  white-space: nowrap;
+}
+.next-cell__code {
+  font-size: 11.5px;
+}
 @media (max-width: 759px) {
   .grid {
     grid-template-columns: repeat(auto-fill, minmax(var(--card-min-mobile), 1fr));
     gap: var(--grid-gap-mobile);
+  }
+  .library__search {
+    width: 100%;
   }
 }
 </style>
