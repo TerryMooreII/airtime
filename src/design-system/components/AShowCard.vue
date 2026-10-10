@@ -253,7 +253,8 @@ const rating = defineModel<number | null>('rating', { default: null })
 .a-show-card__chip:hover {
   transform: scale(1.06);
 }
-.a-show-card__chip--open {
+.a-show-card__chip--open,
+.a-show-card__chip--open:hover {
   background: transparent;
   transform: rotate(135deg);
 }
