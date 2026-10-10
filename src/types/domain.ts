@@ -212,3 +212,40 @@ export interface AdminUser {
   role: AppRole
   tracked_shows: number
 }
+
+// ---------------------------------------------------------------------------
+// Cast and people: fetched live from TVmaze (not stored locally).
+// ---------------------------------------------------------------------------
+export interface CastMember {
+  personId: number
+  name: string
+  image: string | null
+  character: string | null
+  characterImage: string | null
+  self: boolean
+  voice: boolean
+}
+
+export interface Person {
+  id: number
+  name: string
+  image: string | null
+  imageOriginal: string | null
+  birthday: string | null
+  deathday: string | null
+  gender: string | null
+  country: string | null
+  url: string | null
+}
+
+export interface Credit {
+  showTvmazeId: number
+  showName: string
+  showImage: string | null
+  showUrl: string | null
+  premiered: string | null
+  status: string | null
+  character: string | null
+  self: boolean
+  voice: boolean
+}

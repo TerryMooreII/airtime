@@ -63,3 +63,19 @@ export function externalLink(provider: string, id: string): string | null {
       return null
   }
 }
+
+/** Map TVmaze show ids to local catalog ids (only ids present locally are returned). */
+export async function resolveLocalShows(tvmazeIds: number[]): Promise<Map<number, number>> {
+  const out = new Map<number, number>()
+  const unique = [...new Set(tvmazeIds)]
+  for (let i = 0; i < unique.length; i += 200) {
+    const { data, error } = await supabase
+      .from('shows')
+      .select('id, tvmaze_id')
+      .in('tvmaze_id', unique.slice(i, i + 200))
+    if (error) throw error
+    for (const row of (data ?? []) as { id: number; tvmaze_id: number }[])
+      out.set(row.tvmaze_id, row.id)
+  }
+  return out
+}

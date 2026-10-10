@@ -39,6 +39,13 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'Show' },
     },
     {
+      path: '/people/:id(\\d+)',
+      name: 'person',
+      component: () => import('@/features/people/PersonView.vue'),
+      props: true,
+      meta: { requiresAuth: true, title: 'Person' },
+    },
+    {
       path: '/notifications',
       name: 'notifications',
       component: () => import('@/features/notifications/NotificationsView.vue'),

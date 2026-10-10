@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 
 import {
   AAlert,
+  APersonCard,
+  ATabs,
   ABrandIcon,
   ABadge,
   AButton,
@@ -19,6 +21,7 @@ import {
 import { errorMessage } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
 import { fetchEpisodeRatings, fetchEpisodesForShow } from '@/lib/api/episodes'
+import { fetchShowCast } from '@/lib/tvmaze'
 import {
   externalLink,
   fetchShow,
@@ -41,6 +44,7 @@ import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
 import {
   USER_SHOW_STATUSES,
+  type CastMember,
   type Episode,
   type Show,
   type ShowExternalId,
@@ -67,6 +71,33 @@ const episodesLoading = ref(false)
 const error = ref<string | null>(null)
 const season = ref<number | null>(null)
 const openEpisode = ref<Episode | null>(null)
+
+type Tab = 'episodes' | 'cast'
+const tab = ref<Tab>('episodes')
+const cast = ref<CastMember[] | null>(null)
+const castLoading = ref(false)
+const castError = ref<string | null>(null)
+
+/** Cast comes live from TVmaze; fetched the first time the tab opens. */
+async function loadCast() {
+  if (!show.value || castLoading.value) return
+  castLoading.value = true
+  castError.value = null
+  try {
+    cast.value = await fetchShowCast(show.value.tvmaze_id)
+  } catch (err) {
+    castError.value = errorMessage(err)
+  } finally {
+    castLoading.value = false
+  }
+}
+watch(tab, (t) => {
+  if (t === 'cast' && cast.value === null) void loadCast()
+})
+function castRole(c: CastMember): string {
+  if (c.self) return 'Themself'
+  return c.character ?? ''
+}
 
 const showId = computed(() => Number(props.id))
 const entry = computed(() => library.entryFor(showId.value))
@@ -131,6 +162,8 @@ async function refreshEpisodes() {
 onMounted(load)
 watch(showId, () => {
   season.value = null
+  tab.value = 'episodes'
+  cast.value = null
   void load()
 })
 
@@ -349,7 +382,16 @@ function isFuture(e: Episode): boolean {
         </div>
       </section>
 
-      <section class="episodes">
+      <ATabs
+        v-model="tab"
+        :options="[
+          { value: 'episodes', label: 'Episodes', count: episodes.length || undefined },
+          { value: 'cast', label: 'Cast', count: cast?.length },
+        ]"
+        aria-label="Show sections"
+      />
+
+      <section v-if="tab === 'episodes'" class="episodes">
         <div class="episodes__head">
           <span class="t-h2">Episodes</span>
           <span v-if="episodesLoading" class="episodes__sync t-mono">Syncing from TVmaze…</span>
@@ -396,6 +438,35 @@ function isFuture(e: Episode): boolean {
           </button>
         </div>
         <p v-else class="t-sub">No episodes listed yet.</p>
+      </section>
+
+      <section v-else class="cast">
+        <AAlert v-if="castError" variant="error" @retry="loadCast">{{ castError }}</AAlert>
+        <div v-else-if="castLoading || cast === null" class="cast__grid">
+          <div v-for="i in 8" :key="i" class="cast__skeleton">
+            <ASkeleton width="76px" height="76px" radius="50%" />
+            <ASkeleton width="70%" height="12px" />
+            <ASkeleton width="50%" height="10px" />
+          </div>
+        </div>
+        <AEmptyState
+          v-else-if="!cast.length"
+          title="No cast listed"
+          description="TVmaze doesn't have cast information for this show yet."
+          compact
+        />
+        <div v-else class="cast__grid">
+          <APersonCard
+            v-for="c in cast"
+            :key="c.personId"
+            :name="c.name"
+            :image="c.image"
+            :role="castRole(c)"
+            :tag="c.voice ? 'voice' : undefined"
+            :to="{ name: 'person', params: { id: c.personId } }"
+          />
+        </div>
+        <p class="t-muted cast__credit">Cast data from TVmaze.</p>
       </section>
     </template>
 
@@ -651,6 +722,26 @@ function isFuture(e: Episode): boolean {
   font-size: 13.5px;
   color: var(--muted);
   line-height: 1.45;
+}
+.cast {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cast__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px 6px;
+}
+.cast__skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+}
+.cast__credit {
+  font-size: 12.5px;
 }
 @media (max-width: 759px) {
   .hero__inner {

@@ -63,6 +63,12 @@ Names are fuzzy-matched against the local catalog (`match_show_candidates`, trig
 through every row, confirm or change the match, skip, or search for a different title. Confirmed rows
 are upserted into `user_shows` with the chosen status; unmatched names are listed at the end.
 
+## Cast and people
+
+Cast lists and person pages are not stored locally. The browser fetches them from TVmaze's
+public API (`src/lib/tvmaze.ts`), caches responses for the session, and limits itself to two
+requests in flight. Credits link to local show pages when the show exists in the catalog.
+
 ## Adding another ratings provider (IMDb, Rotten Tomatoes, ...)
 
 The schema is provider-agnostic:
@@ -90,6 +96,6 @@ design/               the original Claude Design mock (reference only)
 
 ## Not yet built
 
-- Discover / recommendations page from the mock (needs cast and crew data, which is not imported).
+- Discover / recommendations page from the mock.
 - Per-episode watched tracking (v1 tracks status and rating per show).
 - Email digests.
