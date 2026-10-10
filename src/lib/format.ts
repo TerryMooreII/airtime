@@ -63,6 +63,20 @@ export function relativeDayLabel(iso: string, timeZone: string): string {
   )
 }
 
+/** Compact day label for badges: "Today", "Tomorrow", "Tue" within a week, else "Oct 13". */
+export function shortDayLabel(iso: string, timeZone: string): string {
+  const key = dayKey(iso, timeZone)
+  for (let d = 0; d < 7; d++) {
+    const probe = dayKey(new Date(Date.now() + d * 86_400_000).toISOString(), timeZone)
+    if (probe === key) {
+      if (d === 0) return 'Today'
+      if (d === 1) return 'Tomorrow'
+      return formatter(timeZone, { weekday: 'short' }).format(new Date(iso))
+    }
+  }
+  return formatter(timeZone, { month: 'short', day: 'numeric' }).format(new Date(iso))
+}
+
 export function formatPlainDate(date: string | null): string {
   if (!date) return '—'
   const [y, m, d] = date.split('-').map(Number)

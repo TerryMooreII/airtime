@@ -12,7 +12,7 @@ import {
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { fetchUpcomingEpisodes } from '@/lib/api/episodes'
-import { episodeCode, formatAirTime, relativeDayLabel, STATUS_LABELS } from '@/lib/format'
+import { episodeCode, formatAirTime, shortDayLabel, STATUS_LABELS } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
@@ -80,7 +80,7 @@ const rated = computed(() => library.entries.filter((e) => e.rating).length)
 function badge(e: LibraryEntry): string | undefined {
   const n = nextByShow.value.get(e.show_id)
   if (!n) return undefined
-  return `${relativeDayLabel(n.airstamp, auth.timezone)} ${formatAirTime(n.airstamp, auth.timezone)}`
+  return `${shortDayLabel(n.airstamp, auth.timezone)} ${formatAirTime(n.airstamp, auth.timezone)}`
 }
 function meta(e: LibraryEntry): string {
   const n = nextByShow.value.get(e.show_id)

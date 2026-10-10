@@ -33,6 +33,7 @@ const rating = defineModel<number | null>('rating', { default: null })
   <RouterLink
     :to="{ name: 'show', params: { id: showId } }"
     class="a-show-card"
+    :class="{ 'a-show-card--no-follow': !showFollow }"
     :style="width ? { width, flex: 'none' } : undefined"
   >
     <APoster :src="image" :alt="name" radius="lg">
@@ -76,12 +77,20 @@ const rating = defineModel<number | null>('rating', { default: null })
   position: absolute;
   left: 8px;
   top: 8px;
+  /* Never run into the follow chip (34px + 8px margin) on the right. */
+  max-width: calc(100% - 58px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font: 600 11px var(--font-mono);
   background: var(--primary);
   color: var(--on-primary);
   padding: 4px 7px;
   border-radius: 6px;
   z-index: 1;
+}
+.a-show-card--no-follow .a-show-card__badge {
+  max-width: calc(100% - 16px);
 }
 .a-show-card__name {
   font-size: 14.5px;
