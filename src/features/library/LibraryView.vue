@@ -198,14 +198,6 @@ async function setStatus(e: LibraryEntry, status: UserShowStatus) {
     ui.error(errorMessage(err))
   }
 }
-async function unfollow(e: LibraryEntry) {
-  try {
-    await library.untrack(e.show_id)
-    ui.toast(`Removed ${e.show.name}`)
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
-}
 
 const columns: TableColumn[] = [
   { key: 'show', label: 'Show' },
@@ -216,7 +208,6 @@ const columns: TableColumn[] = [
   { key: 'next', label: 'Next episode' },
   { key: 'show_status', label: 'Show' },
   { key: 'added_at', label: 'Added' },
-  { key: 'actions', label: '', align: 'right' },
 ]
 const tableRows = computed(() => entries.value.map((e) => ({ id: e.show_id, entry: e })))
 const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.label }))
@@ -279,9 +270,8 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
           :meta="meta(e)"
           :rating="e.rating"
           show-rating
-          following
+          :show-follow="false"
           @update:rating="rate(e, $event)"
-          @follow="unfollow(e)"
         />
       </div>
 
@@ -379,15 +369,6 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
             timeAgo((row.entry as LibraryEntry).added_at)
           }}</span></template
         >
-        <template #cell-actions="{ row }">
-          <AButton
-            variant="ghost"
-            size="sm"
-            icon="close"
-            @click="unfollow(row.entry as LibraryEntry)"
-            >Unfollow</AButton
-          >
-        </template>
       </ATable>
     </template>
 
