@@ -105,6 +105,12 @@ async function signOut() {
       <ASettingsRow title="Role" description="Admins can manage shows, users and the sync queue.">
         <span class="role">{{ auth.isAdmin ? 'Admin' : 'Member' }}</span>
       </ASettingsRow>
+      <ASettingsRow
+        title="Import shows"
+        description="Bring in a CSV of show names and ratings; you confirm every match before it's saved."
+      >
+        <AButton variant="outline" icon="plus" :to="{ name: 'import' }">Import CSV</AButton>
+      </ASettingsRow>
       <ASettingsRow title="Sign out" description="You'll need your password to sign back in.">
         <AButton variant="outline" icon="logout" @click="signOut">Sign out</AButton>
       </ASettingsRow>

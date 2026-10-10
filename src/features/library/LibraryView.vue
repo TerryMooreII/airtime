@@ -201,7 +201,6 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
 <template>
   <div class="library">
     <APageHeader title="Library" :subtitle="subtitle">
-      <AButton variant="outline" size="sm" icon="plus" :to="{ name: 'import' }">Import CSV</AButton>
       <ASegmented
         v-model="sort"
         :options="[
