@@ -208,6 +208,10 @@ function episodeMeta(e: Episode): string {
     .filter(Boolean)
     .join(' · ')
 }
+function openFromDrawer(e: Episode) {
+  openEpisode.value = e
+  season.value = e.season
+}
 function isFuture(e: Episode): boolean {
   return !!e.airstamp && new Date(e.airstamp).getTime() > now
 }
@@ -380,12 +384,7 @@ function isFuture(e: Episode): boolean {
       :timezone="tz"
       :rating="openEpisode ? episodeRatings.get(openEpisode.id) : undefined"
       @close="openEpisode = null"
-      @navigate="
-        (e) => {
-          openEpisode = e
-          season = e.season
-        }
-      "
+      @navigate="openFromDrawer"
     />
   </div>
 </template>

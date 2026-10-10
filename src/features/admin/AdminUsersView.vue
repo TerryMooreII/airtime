@@ -60,6 +60,10 @@ async function doDelete() {
   await act(u, () => deleteUser(u.id), 'User deleted')
   confirmDelete.value = null
 }
+function changePage(delta: number) {
+  page.value = Math.max(1, page.value + delta)
+  void load()
+}
 function isBanned(u: AdminUser): boolean {
   return !!u.banned_until && new Date(u.banned_until).getTime() > Date.now()
 }
@@ -128,24 +132,10 @@ const columns: TableColumn[] = [
         >Page {{ page }}<template v-if="total !== null"> · {{ total }} users</template></span
       >
       <div class="pager__btns">
-        <AButton
-          variant="outline"
-          size="sm"
-          :disabled="page === 1"
-          @click="
-            page--
-            load()
-          "
+        <AButton variant="outline" size="sm" :disabled="page === 1" @click="changePage(-1)"
           >Previous</AButton
         >
-        <AButton
-          variant="outline"
-          size="sm"
-          :disabled="users.length < 50"
-          @click="
-            page++
-            load()
-          "
+        <AButton variant="outline" size="sm" :disabled="users.length < 50" @click="changePage(1)"
           >Next</AButton
         >
       </div>

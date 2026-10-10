@@ -56,6 +56,13 @@ All writes go through set-based SQL functions (`upsert_shows`, `upsert_episodes`
 Functions stay well under their CPU budget. The queue (`sync_queue`) is durable, de-duplicated,
 retried with backoff, and visible in Admin -> Sync.
 
+## Importing an existing list
+
+Library -> **Import CSV** accepts a file (or pasted rows) of `show name, rating` with an optional header.
+Names are fuzzy-matched against the local catalog (`match_show_candidates`, trigram KNN); you step
+through every row, confirm or change the match, skip, or search for a different title. Confirmed rows
+are upserted into `user_shows` with the chosen status; unmatched names are listed at the end.
+
 ## Adding another ratings provider (IMDb, Rotten Tomatoes, ...)
 
 The schema is provider-agnostic:

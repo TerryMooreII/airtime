@@ -12,6 +12,7 @@ All components are prefixed `A` and exported from `@/design-system`:
 | `AAppShell` | Sidebar + header + bottom nav frame. Slots: `search`, `actions`, `rail`, default. |
 | `AButton` | `variant` primary / outline / ghost / soft / danger, `size` sm / md / lg, `icon`, `loading`, `to`. |
 | `AInput`, `ASelect`, `AToggle`, `ASearchBox` | Form controls with `v-model`. |
+| `AFileDrop` | Drag-and-drop / click file picker, emits `file`. |
 | `ASegmented`, `APills` | Single-choice option groups (`v-model`). |
 | `AStarRating` | 1–5 stars, `v-model` number \| null, `size`, `readonly`. |
 | `AShowCard` | Poster card with follow chip, optional rating and badge. |

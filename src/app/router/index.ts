@@ -26,6 +26,12 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'My shows' },
     },
     {
+      path: '/library/import',
+      name: 'import',
+      component: () => import('@/features/library/ImportView.vue'),
+      meta: { requiresAuth: true, title: 'Import shows' },
+    },
+    {
       path: '/shows/:id(\\d+)',
       name: 'show',
       component: () => import('@/features/shows/ShowDetailView.vue'),

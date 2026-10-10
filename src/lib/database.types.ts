@@ -731,6 +731,23 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_notifications_read: { Args: { p_ids: number[] }; Returns: undefined }
+      match_show_candidates: {
+        Args: { p_limit?: number; p_names: string[] }
+        Returns: {
+          id: number
+          image_medium: string
+          is_exact: boolean
+          name: string
+          network_name: string
+          premiered: string
+          query_name: string
+          rating: number
+          score: number
+          status: string
+          tvmaze_id: number
+          type: string
+        }[]
+      }
       mark_show_episodes_synced: {
         Args: { p_tvmaze_id: number }
         Returns: undefined

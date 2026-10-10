@@ -109,6 +109,7 @@ async function unfollow(e: LibraryEntry) {
       title="Library"
       :subtitle="`${library.counts.all} show${library.counts.all === 1 ? '' : 's'} · ${rated} rated`"
     >
+      <AButton variant="outline" size="sm" icon="plus" :to="{ name: 'import' }">Import CSV</AButton>
       <ASegmented
         v-model="sort"
         :options="[
@@ -159,6 +160,9 @@ async function unfollow(e: LibraryEntry) {
       "
     >
       <AButton v-if="filter === 'all'" :to="{ name: 'search' }" icon="search">Find shows</AButton>
+      <AButton v-if="filter === 'all'" variant="outline" :to="{ name: 'import' }" icon="plus"
+        >Import a CSV</AButton
+      >
     </AEmptyState>
   </div>
 </template>
