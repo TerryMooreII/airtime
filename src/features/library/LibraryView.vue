@@ -56,7 +56,12 @@ const filters = computed(() => [
 ])
 
 const entries = computed(() => {
-  const list = library.entries.filter((e) => filter.value === 'all' || e.status === filter.value)
+  const list = library.entries.filter(
+    (e) =>
+      (filter.value === 'all' || e.status === filter.value) &&
+      // An ended show cannot air next; keep it out of that view.
+      (sort.value !== 'next' || e.show.status !== 'Ended'),
+  )
   const nextTime = (e: LibraryEntry) => {
     const n = nextByShow.value.get(e.show_id)
     return n ? new Date(n.airstamp).getTime() : Number.POSITIVE_INFINITY
@@ -76,6 +81,13 @@ const entries = computed(() => {
 })
 
 const rated = computed(() => library.entries.filter((e) => e.rating).length)
+const hiddenEnded = computed(() =>
+  sort.value === 'next'
+    ? library.entries.filter(
+        (e) => (filter.value === 'all' || e.status === filter.value) && e.show.status === 'Ended',
+      ).length
+    : 0,
+)
 
 function badge(e: LibraryEntry): string | undefined {
   const n = nextByShow.value.get(e.show_id)
@@ -107,7 +119,7 @@ async function unfollow(e: LibraryEntry) {
   <div class="library">
     <APageHeader
       title="Library"
-      :subtitle="`${library.counts.all} show${library.counts.all === 1 ? '' : 's'} · ${rated} rated`"
+      :subtitle="`${library.counts.all} show${library.counts.all === 1 ? '' : 's'} · ${rated} rated${hiddenEnded ? ` · ${hiddenEnded} ended show${hiddenEnded === 1 ? '' : 's'} hidden in this view` : ''}`"
     >
       <AButton variant="outline" size="sm" icon="plus" :to="{ name: 'import' }">Import CSV</AButton>
       <ASegmented
