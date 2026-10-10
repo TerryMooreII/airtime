@@ -10,15 +10,38 @@ export class HttpError extends Error {
   }
 }
 
-/** True when the request carries the project's service-role key (cron / internal calls). */
+/** True when the request carries the project's service-role key. */
 export function isServiceRoleRequest(req: Request): boolean {
   const auth = req.headers.get('authorization') ?? ''
   const token = auth.replace(/^Bearer\s+/i, '')
   return token.length > 0 && token === env('SUPABASE_SERVICE_ROLE_KEY')
 }
 
-export function requireServiceRole(req: Request): void {
-  if (!isServiceRoleRequest(req)) throw new HttpError(401, 'service role required')
+let cachedSyncSecret: { value: string; at: number } | null = null
+
+/** The shared secret pg_cron sends (app_settings.sync_secret), cached for 5 minutes. */
+async function syncSecret(): Promise<string | null> {
+  if (cachedSyncSecret && Date.now() - cachedSyncSecret.at < 5 * 60_000)
+    return cachedSyncSecret.value
+  const { data } = await serviceClient()
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'sync_secret')
+    .maybeSingle()
+  const value = typeof data?.value === 'string' ? data.value : null
+  if (value) cachedSyncSecret = { value, at: Date.now() }
+  return value
+}
+
+/**
+ * Internal callers only: either the service-role key as bearer, or the
+ * x-sync-secret header pg_cron attaches (see public.invoke_edge_function).
+ */
+export async function requireInternal(req: Request): Promise<void> {
+  if (isServiceRoleRequest(req)) return
+  const header = req.headers.get('x-sync-secret')
+  const expected = header ? await syncSecret() : null
+  if (!header || !expected || header !== expected) throw new HttpError(401, 'internal callers only')
 }
 
 export interface CallerContext {

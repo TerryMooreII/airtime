@@ -107,7 +107,7 @@ export interface TvmazeEpisode {
 }
 
 // ---------------------------------------------------------------------------
-// Row shapes (match the jsonb_to_recordset definitions in 0007_functions.sql)
+// Row shapes (match the jsonb_to_recordset definitions in 0007_functions_catalog.sql)
 // ---------------------------------------------------------------------------
 export interface ChannelRow {
   kind: 'network' | 'web_channel'

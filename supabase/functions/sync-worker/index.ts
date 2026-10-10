@@ -7,7 +7,7 @@
  */
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { handleOptions, json } from '../_shared/cors.ts'
-import { HttpError, requireServiceRole } from '../_shared/auth.ts'
+import { HttpError, requireInternal } from '../_shared/auth.ts'
 import { serviceClient, unwrap } from '../_shared/supabase.ts'
 import {
   importShowWithEpisodes,
@@ -262,12 +262,12 @@ async function drainQueue(db: SupabaseClient): Promise<void> {
   console.log(`[${WORKER_ID}] processed ${processed} job(s)`)
 }
 
-Deno.serve((req) => {
+Deno.serve(async (req) => {
   const options = handleOptions(req)
   if (options) return options
 
   try {
-    requireServiceRole(req)
+    await requireInternal(req)
   } catch (err) {
     const status = err instanceof HttpError ? err.status : 500
     return json({ error: err instanceof Error ? err.message : 'error' }, status)

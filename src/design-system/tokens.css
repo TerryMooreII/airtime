@@ -1,0 +1,138 @@
+/*
+ * Airtime design tokens — derived from the Airdate mock (Airdate.dc.html).
+ * Dark is the default theme; light is opted into via data-theme="light".
+ * Accent defaults to "coral"; alternative accents are listed at the bottom.
+ */
+:root {
+  /* Surfaces & lines */
+  --bg: #0a0a0b;
+  --surface: #141416;
+  --surface2: #1d1d20;
+  --line: rgba(255, 255, 255, 0.08);
+  --line2: rgba(255, 255, 255, 0.2);
+  --hover: rgba(255, 255, 255, 0.05);
+  --scrim: rgba(0, 0, 0, 0.62);
+
+  /* Text */
+  --fg: #f3f3f1;
+  --muted: #9d9da4;
+
+  /* Accent (coral) */
+  --primary: #ff5a36;
+  --on-primary: #0a0a0b;
+  --primary-text: #ff8466;
+  --primary-soft: rgba(255, 90, 54, 0.16);
+
+  /* Semantic */
+  --star: #f5b83d;
+  --danger: #ff5d5d;
+  --danger-soft: rgba(255, 93, 93, 0.14);
+  --success: #3ccf8e;
+  --success-soft: rgba(60, 207, 142, 0.14);
+  --warning: #f5b83d;
+  --warning-soft: rgba(245, 184, 61, 0.14);
+
+  /* Typography */
+  --font-sans: Geist, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14.5px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 22px;
+  --text-h1: 44px;
+  --text-h1-mobile: 30px;
+  --text-hero: 40px;
+  --text-hero-mobile: 28px;
+  --tracking-tight: -0.035em;
+  --tracking-label: 0.08em;
+
+  /* Shape */
+  --radius-xs: 5px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 22px;
+  --radius-pill: 999px;
+
+  /* Space */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Layout */
+  --sidebar-w: 236px;
+  --content-max: 1180px;
+  --page-pad: 32px 40px 64px;
+  --page-pad-mobile: 20px 16px 32px;
+  --head-pad: 14px 32px;
+  --head-pad-mobile: 12px 16px;
+  --card-min: 168px;
+  --card-min-mobile: 140px;
+  --grid-gap: 28px 20px;
+  --grid-gap-mobile: 18px 14px;
+  --rail-w: 156px;
+  --rail-w-mobile: 132px;
+
+  /* Elevation & motion */
+  --shadow-seg: 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-poster: 0 24px 60px rgba(0, 0, 0, 0.4);
+  --shadow-drawer: 0 0 60px rgba(0, 0, 0, 0.35);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+
+  --z-sticky: 2;
+  --z-header: 5;
+  --z-drawer: 50;
+  --z-toast: 60;
+  --z-overlay: 70;
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --surface2: #efefeb;
+  --line: rgba(0, 0, 0, 0.08);
+  --line2: rgba(0, 0, 0, 0.18);
+  --hover: rgba(0, 0, 0, 0.04);
+  --scrim: rgba(0, 0, 0, 0.38);
+  --fg: #111113;
+  --muted: #626268;
+  --primary: #d63a15;
+  --on-primary: #ffffff;
+  --primary-text: #bf3210;
+  --primary-soft: rgba(214, 58, 21, 0.1);
+  --star: #e39a0b;
+  --danger: #d1332e;
+  --danger-soft: rgba(209, 51, 46, 0.1);
+  --success: #178a52;
+  --success-soft: rgba(23, 138, 82, 0.1);
+  --warning: #9a5b00;
+  --warning-soft: rgba(154, 91, 0, 0.1);
+  --shadow-seg: 0 1px 2px rgba(0, 0, 0, 0.12);
+  color-scheme: light;
+}
+
+/* Optional accents from the mock. Apply with data-accent="violet" on <html>. */
+:root[data-accent='violet'] { --primary: #6e5fff; --on-primary: #fff; --primary-text: #ada4ff; --primary-soft: rgba(110, 95, 255, 0.18); }
+:root[data-accent='violet'][data-theme='light'] { --primary: #5847f0; --primary-text: #4533de; --primary-soft: rgba(88, 71, 240, 0.11); }
+:root[data-accent='teal'] { --primary: #1fcbaa; --on-primary: #0a0a0b; --primary-text: #55ddc4; --primary-soft: rgba(31, 203, 170, 0.15); }
+:root[data-accent='teal'][data-theme='light'] { --primary: #0a8672; --on-primary: #fff; --primary-text: #087563; --primary-soft: rgba(10, 134, 114, 0.1); }
+:root[data-accent='blue'] { --primary: #2f6bff; --on-primary: #fff; --primary-text: #86a9ff; --primary-soft: rgba(47, 107, 255, 0.18); }
+:root[data-accent='blue'][data-theme='light'] { --primary: #1f57e8; --primary-text: #1a4bcc; --primary-soft: rgba(31, 87, 232, 0.1); }
+:root[data-accent='emerald'] { --primary: #22c55e; --on-primary: #0a0a0b; --primary-text: #5edc8c; --primary-soft: rgba(34, 197, 94, 0.15); }
+:root[data-accent='emerald'][data-theme='light'] { --primary: #11783a; --on-primary: #fff; --primary-text: #0f6b34; --primary-soft: rgba(17, 120, 58, 0.1); }
+:root[data-accent='amber'] { --primary: #ffb21e; --on-primary: #0a0a0b; --primary-text: #ffc95c; --primary-soft: rgba(255, 178, 30, 0.15); }
+:root[data-accent='amber'][data-theme='light'] { --primary: #9a5b00; --on-primary: #fff; --primary-text: #8a5100; --primary-soft: rgba(154, 91, 0, 0.1); }

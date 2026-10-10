@@ -6,7 +6,7 @@
  */
 import webpush from 'npm:web-push@3.6.7'
 import { handleOptions, json } from '../_shared/cors.ts'
-import { HttpError, requireServiceRole } from '../_shared/auth.ts'
+import { HttpError, requireInternal } from '../_shared/auth.ts'
 import { env, serviceClient, unwrap } from '../_shared/supabase.ts'
 
 const BATCH = 200
@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
   if (options) return options
 
   try {
-    requireServiceRole(req)
+    await requireInternal(req)
     webpush.setVapidDetails(env('VAPID_SUBJECT'), env('VAPID_PUBLIC_KEY'), env('VAPID_PRIVATE_KEY'))
     const db = serviceClient()
 

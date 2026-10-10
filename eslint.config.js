@@ -9,7 +9,7 @@ export default defineConfigWithVueTs(
   },
   {
     name: 'app/files-to-ignore',
-    ignores: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**', 'supabase/functions/**', 'public/**'],
+    ignores: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**', 'supabase/functions/**', 'public/**', 'design/**'],
   },
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,
@@ -17,6 +17,8 @@ export default defineConfigWithVueTs(
   {
     rules: {
       'vue/multi-word-component-names': 'off',
+      // Optional TypeScript props are already typed as possibly undefined.
+      'vue/require-default-prop': 'off',
       'vue/block-order': ['error', { order: ['script', 'template', 'style'] }],
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],

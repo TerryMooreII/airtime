@@ -1,11 +1,6 @@
 -- ---------------------------------------------------------------------------
--- Scheduling. Edge Functions are invoked through pg_net using secrets in Vault:
---   project_url       -> https://<ref>.supabase.co
---   service_role_key  -> used as the bearer token; the function compares it to
---                        its own SUPABASE_SERVICE_ROLE_KEY env var.
--- Create them once (SQL editor):
---   select vault.create_secret('https://<ref>.supabase.co', 'project_url');
---   select vault.create_secret('<service role key>', 'service_role_key');
+-- Scheduling. Edge Functions are invoked through pg_net. The credentials used
+-- by invoke_edge_function are defined in 0012_internal_auth.sql.
 -- ---------------------------------------------------------------------------
 create or replace function public.invoke_edge_function(p_name text, p_body jsonb default '{}'::jsonb)
 returns bigint
@@ -86,24 +81,8 @@ end;
 $$;
 revoke all on function public.enqueue_nightly_sync() from public, anon, authenticated;
 
-create or replace function public.purge_old_records()
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  delete from public.sync_runs where finished_at < now() - interval '30 days';
-  delete from public.sync_queue where status in ('succeeded', 'cancelled') and updated_at < now() - interval '7 days';
-  delete from public.sync_queue where status = 'failed' and updated_at < now() - interval '30 days';
-  delete from public.notifications where read_at is not null and read_at < now() - interval '90 days';
-  delete from public.push_subscriptions where failed_at is not null and failed_at < now() - interval '30 days';
-end;
-$$;
-revoke all on function public.purge_old_records() from public, anon, authenticated;
 
 select cron.schedule('airtime-sync-worker-tick',   '* * * * *',  $$select public.tick_sync_worker()$$);
 select cron.schedule('airtime-push-dispatch-tick', '* * * * *',  $$select public.tick_push_dispatch()$$);
 select cron.schedule('airtime-nightly-sync',       '0 6 * * *',  $$select public.enqueue_nightly_sync()$$);
 select cron.schedule('airtime-airing-today',       '0 * * * *',  $$select public.create_airing_today_notifications()$$);
-select cron.schedule('airtime-purge',              '30 4 * * 0', $$select public.purge_old_records()$$);

@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A0A0B;--surface:#141416;--surface2:#1D1D20;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.2);--fg:#F3F3F1;--muted:#9D9DA4;--primary:#6E5FFF;--primary-text:#ADA4FF;--primary-soft:rgba(110,95,255,.18);--on-primary:#fff;--star:#F5B83D;--hover:rgba(255,255,255,.05);--scrim:rgba(0,0,0,.62);color-scheme:dark}
+:root[data-theme=light]{--bg:#FAFAF7;--surface:#FFFFFF;--surface2:#EFEFEB;--line:rgba(0,0,0,.08);--line2:rgba(0,0,0,.18);--fg:#111113;--muted:#626268;--primary:#5847F0;--primary-text:#4533DE;--primary-soft:rgba(88,71,240,.11);--on-primary:#fff;--star:#E39A0B;--hover:rgba(0,0,0,.04);--scrim:rgba(0,0,0,.38);color-scheme:light}
+body{margin:0;background:var(--bg);-webkit-font-smoothing:antialiased}
+a{color:var(--primary-text)}a:hover{color:var(--fg)}
+@keyframes adpulse{0%,100%{opacity:.45}50%{opacity:.9}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:{{ outerBg }};padding:{{ outerPad }};box-sizing:border-box;font-family:Geist,system-ui,sans-serif;color:var(--fg)">
+<div data-root="1" style="position:relative;display:flex;width:{{ appW }};height:{{ appH }};border-radius:{{ appR }};border:{{ appBorder }};overflow:hidden;background:var(--bg);flex:none;max-width:100%">
+
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<aside style="width:236px;flex:none;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:22px 14px 16px;gap:28px;box-sizing:border-box;overflow:auto">
+  <div style="display:flex;align-items:center;gap:10px;padding:2px 10px">
+    <div style="width:22px;height:16px;border:2.5px solid var(--primary);border-radius:5px;display:flex;align-items:center;justify-content:center"><div style="width:6px;height:6px;border-radius:50%;background:var(--primary)"></div></div>
+    <span style="font-size:19px;font-weight:700;letter-spacing:-0.03em">Airdate</span>
+  </div>
+  <nav style="display:flex;flex-direction:column;gap:2px">
+    <sc-for list="{{ nav }}" as="n" hint-placeholder-count="4">
+      <button onClick="{{ n.on }}" style="display:flex;align-items:center;gap:12px;border:0;cursor:pointer;font-family:inherit;font-size:14.5px;font-weight:{{ n.fw }};padding:10px 12px;border-radius:10px;background:{{ n.bg }};color:{{ n.fg }};text-align:left" style-hover="color:var(--fg)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>{{ n.label }}</button>
+    </sc-for>
+  </nav>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 12px 4px">Airing soon</div>
+    <sc-for list="{{ soon }}" as="s" hint-placeholder-count="5">
+      <div onClick="{{ s.open }}" style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;cursor:pointer" style-hover="background:var(--hover)">
+        <img src="{{ s.img }}" alt="" style="width:26px;height:38px;object-fit:cover;border-radius:4px;background:var(--surface2);flex:none">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</span><span style="font:500 11.5px 'Geist Mono',monospace;color:var(--primary-text)">{{ s.rel }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="flex:1"></div>
+  <button onClick="{{ toggleTheme }}" style="display:flex;align-items:center;gap:10px;border:1px solid var(--line);cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:500;padding:9px 12px;border-radius:10px;background:transparent;color:var(--fg)" style-hover="background:var(--hover)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="{{ themeIcon }}"></path></svg>{{ themeLabel }}</button>
+</aside>
+</sc-if>
+
+<div style="flex:1;min-width:0;display:flex;flex-direction:column">
+  <header style="flex:none;display:flex;align-items:center;gap:12px;padding:{{ headPad }};border-bottom:1px solid var(--line)">
+    <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div style="width:20px;height:15px;border:2.5px solid var(--primary);border-radius:5px;display:flex;align-items:center;justify-content:center"><div style="width:5px;height:5px;border-radius:50%;background:var(--primary)"></div></div>
+        <span style="font-size:18px;font-weight:700;letter-spacing:-0.03em">Airdate</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+      <label style="flex:1;max-width:440px;display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:10px;padding:0 12px;height:38px;color:var(--muted)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM20 20l-4.8-4.8"></path></svg><input value="{{ q }}" onChange="{{ onQ }}" placeholder="Search any show on TVmaze" style="flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--fg);font-family:inherit;font-size:14px"></label>
+    </sc-if>
+    <div style="flex:1"></div>
+    <span style="font:600 11px 'Geist Mono',monospace;letter-spacing:.06em;color:var(--muted);border:1px solid var(--line);padding:4px 7px;border-radius:6px">{{ region }}</span>
+    <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ toggleTheme }}" aria-label="Toggle theme" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--fg);cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="{{ themeIcon }}"></path></svg></button>
+    </sc-if>
+  </header>
+
+  <div data-main="1" style="flex:1;overflow:auto;min-height:0">
+  <div style="max-width:1180px;margin:0 auto;padding:{{ pagePad }};box-sizing:border-box">
+
+    <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;padding:14px 16px;border-radius:12px;border:1px solid var(--line2);margin-bottom:20px"><span style="font-size:14px">{{ error }}</span><button onClick="{{ retry }}" style="border:0;border-radius:8px;padding:8px 14px;background:var(--primary);color:var(--on-primary);font-family:inherit;font-weight:600;cursor:pointer">Retry</button></div>
+    </sc-if>
+
+    <!-- GUIDE -->
+    <sc-if value="{{ isGuide }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:{{ h1 }};font-weight:700;letter-spacing:-0.035em;line-height:1.02">Your week on TV</h1>
+          <p style="margin:0;color:var(--muted);font-size:15px;text-wrap:pretty">{{ guideSub }}</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;padding:3px;background:var(--surface2);border-radius:10px;gap:2px">
+            <sc-for list="{{ scopeSeg }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.on }}" style="border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+          </div>
+          <div style="display:flex;padding:3px;background:var(--surface2);border-radius:10px;gap:2px">
+            <sc-for list="{{ viewSeg }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.on }}" style="border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+          </div>
+        </div>
+      </div>
+
+      <sc-if value="{{ loading }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="height:{{ heroH }};border-radius:20px;background:var(--surface2);animation:adpulse 1.4s ease-in-out infinite"></div>
+          <div style="height:64px;border-radius:12px;background:var(--surface2);animation:adpulse 1.4s ease-in-out infinite"></div>
+          <div style="height:64px;border-radius:12px;background:var(--surface2);animation:adpulse 1.4s ease-in-out infinite"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasHero }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:{{ heroCols }};gap:16px">
+        <div onClick="{{ hero.open }}" style="position:relative;min-height:{{ heroH }};border-radius:20px;overflow:hidden;cursor:pointer;background:#111;display:flex">
+          <img src="{{ hero.bg }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.9) 8%,rgba(0,0,0,.35) 60%,rgba(0,0,0,.05))"></div>
+          <div style="position:relative;flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:{{ heroPad }};gap:8px;color:#fff">
+            <div style="display:flex"><span style="font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;background:var(--primary);color:var(--on-primary);padding:5px 9px;border-radius:6px">Up next · {{ hero.rel }}</span></div>
+            <div style="font-size:{{ heroTitle }};font-weight:700;letter-spacing:-0.035em;line-height:1;text-wrap:balance">{{ hero.name }}</div>
+            <div style="font-size:15px;color:rgba(255,255,255,.88)"><span style="font-family:'Geist Mono',monospace;font-size:13px">{{ hero.code }}</span> — {{ hero.title }}</div>
+            <div style="font:500 13px 'Geist Mono',monospace;color:rgba(255,255,255,.75)">{{ hero.when }} · {{ hero.net }}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;border-radius:20px;background:var(--surface);border:1px solid var(--line);padding:18px 14px 10px">
+          <div style="font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 6px 8px">Then</div>
+          <sc-for list="{{ then }}" as="it" hint-placeholder-count="4">
+            <div onClick="{{ it.open }}" style="display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:center;padding:8px 6px;border-radius:10px;cursor:pointer" style-hover="background:var(--hover)">
+              <img src="{{ it.img }}" alt="" style="width:36px;aspect-ratio:2/3;object-fit:cover;border-radius:5px;background:var(--surface2)">
+              <div style="min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.name }}</span><span style="font:500 12px 'Geist Mono',monospace;color:var(--muted)">{{ it.when }}</span><span style="font:500 12px 'Geist Mono',monospace;color:var(--primary-text)">{{ it.rel }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ showStrip }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">
+          <sc-for list="{{ strip }}" as="d" hint-placeholder-count="7">
+            <button onClick="{{ d.on }}" style="border:0;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;min-height:60px;border-radius:12px;background:{{ d.bg }};color:{{ d.fg }}"><span style="font:600 10.5px 'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.04em">{{ d.dow }}</span><span style="font-size:18px;font-weight:700">{{ d.num }}</span><span style="width:5px;height:5px;border-radius:50%;background:{{ d.dot }}"></span></button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showWeek }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:start">
+          <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7">
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <div style="padding:10px 12px;border-radius:12px;background:{{ c.headBg }};color:{{ c.headFg }};display:flex;align-items:baseline;justify-content:space-between;gap:4px"><span style="font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase">{{ c.dow }}</span><span style="font-size:20px;font-weight:700;letter-spacing:-0.02em">{{ c.num }}</span></div>
+              <sc-for list="{{ c.items }}" as="it" hint-placeholder-count="3">
+                <div onClick="{{ it.open }}" style="display:flex;flex-direction:column;border-radius:10px;overflow:hidden;background:var(--surface);border:1px solid var(--line);cursor:pointer;opacity:{{ it.op }}" style-hover="border-color:var(--line2)">
+                  <img src="{{ it.thumb }}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--surface2);display:block">
+                  <div style="padding:8px 10px 10px;display:flex;flex-direction:column;gap:3px"><span style="font:600 11.5px 'Geist Mono',monospace;color:var(--primary-text)">{{ it.time }}</span><span style="font-size:13.5px;font-weight:600;line-height:1.25">{{ it.name }}</span><span style="font:400 11.5px 'Geist Mono',monospace;color:var(--muted)">{{ it.code }}</span></div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ c.empty }}" hint-placeholder-val="{{ false }}"><div style="border:1px dashed var(--line2);border-radius:10px;padding:18px 8px;text-align:center;font-size:12px;color:var(--muted)">Nothing new</div></sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showEpg }}" hint-placeholder-val="{{ false }}">
+        <div data-epg="1" style="overflow:auto;max-height:{{ epgMaxH }};border:1px solid var(--line);border-radius:16px;background:var(--surface)">
+          <div style="width:{{ epgW }};position:relative">
+            <div style="display:flex;position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line)">
+              <div style="position:sticky;left:0;z-index:4;width:{{ labelW }};flex:none;box-sizing:border-box;background:var(--surface);border-right:1px solid var(--line);padding:11px 12px;font:600 11px 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--primary-text)">{{ epgDay }}</div>
+              <div style="position:relative;height:38px;flex:1">
+                <sc-for list="{{ hours }}" as="hr" hint-placeholder-count="8"><div style="position:absolute;top:0;bottom:0;left:{{ hr.left }};border-left:1px solid var(--line);padding:11px 8px;font:500 11.5px 'Geist Mono',monospace;color:var(--muted);white-space:nowrap">{{ hr.label }}</div></sc-for>
+              </div>
+            </div>
+            <sc-for list="{{ epgRows }}" as="r" hint-placeholder-count="6">
+              <div style="display:flex;border-bottom:1px solid var(--line)">
+                <div style="position:sticky;left:0;z-index:2;width:{{ labelW }};flex:none;box-sizing:border-box;background:var(--surface);border-right:1px solid var(--line);padding:10px 12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;line-height:1.2">{{ r.name }}<sc-if value="{{ r.mine }}" hint-placeholder-val="{{ false }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--primary);flex:none"></span></sc-if></div>
+                <div style="position:relative;flex:1;height:{{ r.h }};background-image:repeating-linear-gradient(to right,var(--line) 0 1px,transparent 1px {{ hw }})">
+                  <sc-for list="{{ r.blocks }}" as="b" hint-placeholder-count="2">
+                    <div onClick="{{ b.open }}" style="position:absolute;left:{{ b.left }};top:{{ b.top }};width:{{ b.width }};height:48px;border-radius:8px;background:{{ b.bg }};color:{{ b.fg }};padding:6px 9px;box-sizing:border-box;overflow:hidden;cursor:pointer;opacity:{{ b.op }};display:flex;flex-direction:column;gap:2px" style-hover="filter:brightness(1.08)">
+                      <span style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.name }}</span>
+                      <span style="font:500 10.5px 'Geist Mono',monospace;color:{{ b.sfg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.sub }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ nowOn }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:0;bottom:0;left:{{ nowLeft }};width:2px;background:var(--primary);z-index:1;pointer-events:none"></div></sc-if>
+          </div>
+        </div>
+        <sc-if value="{{ epgEmpty }}" hint-placeholder-val="{{ false }}"><div style="border:1px dashed var(--line2);border-radius:16px;padding:32px 20px;text-align:center;color:var(--muted);font-size:14px">None of your shows air on this day. Switch to “Everything” to see the full grid.</div></sc-if>
+      </sc-if>
+
+      <sc-if value="{{ showCd }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:{{ cdCols }};gap:14px">
+          <sc-for list="{{ cd }}" as="c" hint-placeholder-count="4">
+            <div onClick="{{ c.open }}" style="display:flex;flex-direction:column;gap:16px;padding:16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);cursor:pointer" style-hover="border-color:var(--line2)">
+              <div style="display:flex;gap:14px;align-items:center;min-width:0">
+                <img src="{{ c.img }}" alt="" style="width:48px;aspect-ratio:2/3;object-fit:cover;border-radius:6px;background:var(--surface2);flex:none">
+                <div style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><span style="font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-family:'Geist Mono',monospace;font-size:12.5px">{{ c.code }}</span> · {{ c.title }}</span></div>
+              </div>
+              <sc-if value="{{ c.notLive }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;align-items:baseline;gap:6px;font-family:'Geist Mono',monospace">
+                  <span style="font-size:40px;font-weight:600;letter-spacing:-0.04em;line-height:1">{{ c.d }}</span><span style="font-size:12px;color:var(--muted);margin-right:8px">d</span>
+                  <span style="font-size:40px;font-weight:600;letter-spacing:-0.04em;line-height:1">{{ c.h }}</span><span style="font-size:12px;color:var(--muted);margin-right:8px">h</span>
+                  <span style="font-size:40px;font-weight:600;letter-spacing:-0.04em;line-height:1;color:var(--primary-text)">{{ c.m }}</span><span style="font-size:12px;color:var(--muted)">m</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ c.live }}" hint-placeholder-val="{{ false }}"><div style="font:600 32px 'Geist Mono',monospace;letter-spacing:-0.03em;color:var(--primary-text);line-height:1">On now</div></sc-if>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="height:4px;border-radius:2px;background:var(--surface2);overflow:hidden"><div style="height:100%;width:{{ c.pct }};background:var(--primary);border-radius:2px"></div></div>
+                <span style="font:500 12px 'Geist Mono',monospace;color:var(--muted)">{{ c.when }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasIdle }}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-size:13.5px;color:var(--muted);text-wrap:pretty">{{ cdIdle }}</p></sc-if>
+      </sc-if>
+
+      <sc-if value="{{ showAgenda }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+            <div style="display:flex;flex-direction:column">
+              <div style="position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:baseline;gap:10px;padding:12px 0 10px;border-bottom:1px solid var(--line);margin-bottom:6px">
+                <span style="font-size:20px;font-weight:650;letter-spacing:-0.02em">{{ g.label }}</span><span style="font:500 13px 'Geist Mono',monospace;color:var(--muted)">{{ g.sub }}</span><span style="margin-left:auto;font:500 12px 'Geist Mono',monospace;color:var(--muted)">{{ g.count }}</span>
+              </div>
+              <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+                <div onClick="{{ it.open }}" style="display:grid;grid-template-columns:{{ rowCols }};align-items:center;gap:14px;padding:10px 8px;margin:0 -8px;border-radius:12px;cursor:pointer;opacity:{{ it.op }}" style-hover="background:var(--hover)">
+                  <div style="font:500 13.5px 'Geist Mono',monospace">{{ it.time }}</div>
+                  <img src="{{ it.img }}" alt="" style="width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;background:var(--surface2);display:block">
+                  <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                    <div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.name }}</span><sc-if value="{{ it.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 10px 'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.06em;padding:3px 6px;border-radius:5px;background:{{ it.badgeBg }};color:{{ it.badgeFg }}">{{ it.badge }}</span></sc-if></div>
+                    <div style="font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-family:'Geist Mono',monospace;font-size:12.5px">{{ it.code }}</span> · {{ it.title }}</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:var(--muted);white-space:nowrap">{{ it.net }}</span></sc-if>
+                    <sc-if value="{{ it.showFollow }}" hint-placeholder-val="{{ false }}"><button onClick="{{ it.onFollow }}" aria-label="{{ it.followLabel }}" style="width:34px;height:34px;border-radius:50%;border:1px solid {{ it.fBd }};background:{{ it.fBg }};color:{{ it.fFg }};font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">{{ it.fIcon }}</button></sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ guideEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px dashed var(--line2);border-radius:16px;padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center"><span style="font-size:18px;font-weight:600">Nothing new on this day</span><span style="color:var(--muted);font-size:14px;max-width:340px">Follow more shows from Discover, or switch to “Everything” to browse the full schedule.</span></div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- LIBRARY -->
+    <sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font-size:{{ h1 }};font-weight:700;letter-spacing:-0.035em;line-height:1.02">Library</h1><p style="margin:0;color:var(--muted);font-size:15px">{{ libSub }}</p></div>
+        <div style="display:flex;padding:3px;background:var(--surface2);border-radius:10px;gap:2px">
+          <sc-for list="{{ sortSeg }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.on }}" style="border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;overflow-x:auto;margin-top:-8px">
+        <sc-for list="{{ libSeg }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.on }}" style="flex:none;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:{{ o.bg }};color:{{ o.fg }};font-family:inherit;font-size:13px;font-weight:500;cursor:pointer">{{ o.label }}</button></sc-for>
+      </div>
+      <sc-if value="{{ libEmpty }}" hint-placeholder-val="{{ false }}"><div style="border:1px dashed var(--line2);border-radius:16px;padding:32px 20px;text-align:center;color:var(--muted);font-size:14px">No shows here yet.</div></sc-if>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax({{ cardMin }},1fr));gap:{{ gridGap }}">
+        <sc-for list="{{ lib }}" as="s" hint-placeholder-count="8">
+          <div onClick="{{ s.open }}" style="display:flex;flex-direction:column;gap:8px;cursor:pointer;min-width:0">
+            <div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:2/3;background:var(--surface2)">
+              <img src="{{ s.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+              <sc-if value="{{ s.nextOn }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:8px;top:8px;font:600 11px 'Geist Mono',monospace;background:var(--primary);color:var(--on-primary);padding:4px 7px;border-radius:6px">{{ s.nextShort }}</span></sc-if>
+            </div>
+            <div style="font-size:15px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</div>
+            <div style="display:flex;gap:1px;margin:-4px 0 -2px -2px">
+              <sc-for list="{{ s.stars }}" as="st" hint-placeholder-count="5"><button onClick="{{ st.on }}" style="border:0;background:transparent;padding:2px;font-size:19px;line-height:1;cursor:pointer;color:{{ st.c }}">★</button></sc-for>
+            </div>
+            <div style="font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.status }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- DISCOVER -->
+    <sc-if value="{{ isDiscover }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:32px">
+      <div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font-size:{{ h1 }};font-weight:700;letter-spacing:-0.035em;line-height:1.02">Discover</h1><p style="margin:0;color:var(--muted);font-size:15px">Picked from your star ratings and what’s on this week.</p></div>
+      <sc-if value="{{ hasPick }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;border-radius:20px;overflow:hidden;background:var(--surface);border:1px solid var(--line)">
+          <img src="{{ pick.big }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(48px) saturate(1.5);opacity:.4;transform:scale(1.3)">
+          <div style="position:relative;display:flex;flex-wrap:wrap;gap:28px;padding:{{ heroPad }};align-items:center">
+            <img src="{{ pick.img }}" alt="" onClick="{{ pick.open }}" style="width:{{ pickW }};aspect-ratio:2/3;object-fit:cover;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.35);cursor:pointer">
+            <div style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:12px">
+              <span style="font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--primary-text)">Top pick for you</span>
+              <div style="font-size:{{ heroTitle }};font-weight:700;letter-spacing:-0.035em;line-height:1">{{ pick.name }}</div>
+              <div style="font:500 13px 'Geist Mono',monospace;color:var(--muted)">{{ pick.meta }} · {{ pick.net }}</div>
+              <p style="margin:0;font-size:15px;line-height:1.55;max-width:60ch;text-wrap:pretty">{{ pick.sum }}</p>
+              <div style="font-size:13.5px;color:var(--muted)">{{ pick.reason }}</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+                <button onClick="{{ pick.onFollow }}" style="height:42px;padding:0 18px;border-radius:10px;border:1px solid {{ pick.fBd }};background:{{ pick.fBg }};color:{{ pick.fFg }};font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">{{ pick.fIcon }} {{ pick.followLabel }}</button>
+                <button onClick="{{ pick.open }}" style="height:42px;padding:0 18px;border-radius:10px;border:1px solid var(--line2);background:transparent;color:var(--fg);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Details</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:20px;font-weight:650;letter-spacing:-0.02em">{{ r.title }}</span><span style="font-size:13.5px;color:var(--muted)">{{ r.reason }}</span></div>
+          <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;margin:0 -4px;padding-left:4px">
+            <sc-for list="{{ r.items }}" as="s" hint-placeholder-count="6">
+              <div onClick="{{ s.open }}" style="flex:none;width:{{ railW }};display:flex;flex-direction:column;gap:7px;cursor:pointer">
+                <div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:2/3;background:var(--surface2)">
+                  <img src="{{ s.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+                  <button onClick="{{ s.onFollow }}" aria-label="{{ s.followLabel }}" style="position:absolute;right:8px;top:8px;width:34px;height:34px;border-radius:50%;border:0;background:{{ s.chipBg }};color:{{ s.chipFg }};font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;backdrop-filter:blur(6px)">{{ s.fIcon }}</button>
+                </div>
+                <span style="font-size:14px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</span>
+                <span style="font:500 12px 'Geist Mono',monospace;color:var(--muted);margin-top:-3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.meta }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <!-- SEARCH -->
+    <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <h1 style="margin:0;font-size:{{ h1 }};font-weight:700;letter-spacing:-0.035em;line-height:1.02">{{ searchTitle }}</h1>
+      <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+        <label style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:12px;padding:0 14px;height:48px;color:var(--muted)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM20 20l-4.8-4.8"></path></svg><input value="{{ q }}" onChange="{{ onQ }}" placeholder="Search any show" style="flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--fg);font-family:inherit;font-size:16px"></label>
+      </sc-if>
+      <p style="margin:-8px 0 0;color:var(--muted);font-size:15px">{{ searchSub }}</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax({{ cardMin }},1fr));gap:{{ gridGap }}">
+        <sc-for list="{{ results }}" as="s" hint-placeholder-count="0">
+          <div onClick="{{ s.open }}" style="display:flex;flex-direction:column;gap:7px;cursor:pointer;min-width:0">
+            <div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:2/3;background:var(--surface2)">
+              <img src="{{ s.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+              <button onClick="{{ s.onFollow }}" aria-label="{{ s.followLabel }}" style="position:absolute;right:8px;top:8px;width:34px;height:34px;border-radius:50%;border:0;background:{{ s.chipBg }};color:{{ s.chipFg }};font-size:17px;font-weight:600;cursor:pointer;font-family:inherit">{{ s.fIcon }}</button>
+            </div>
+            <span style="font-size:14.5px;font-weight:600;line-height:1.25">{{ s.name }}</span>
+            <span style="font:500 12px 'Geist Mono',monospace;color:var(--muted);margin-top:-3px">{{ s.meta }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- SHOW DETAIL -->
+    <sc-if value="{{ isShow }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex"><button onClick="{{ back }}" style="display:flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--muted);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;padding:6px 0" style-hover="color:var(--fg)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>Back</button></div>
+      <sc-if value="{{ dLoading }}" hint-placeholder-val="{{ false }}"><div style="height:320px;border-radius:20px;background:var(--surface2);animation:adpulse 1.4s ease-in-out infinite"></div></sc-if>
+      <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:32px">
+        <div style="position:relative;border-radius:22px;overflow:hidden;background:var(--surface);border:1px solid var(--line)">
+          <img src="{{ D.big }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(56px) saturate(1.6);opacity:.42;transform:scale(1.3)">
+          <div style="position:relative;display:flex;flex-wrap:wrap;gap:28px;align-items:flex-end;padding:{{ heroPad }}">
+            <img src="{{ D.img }}" alt="" style="width:{{ posterW }};aspect-ratio:2/3;object-fit:cover;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.4);flex:none">
+            <div style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ D.genres }}" as="g" hint-placeholder-count="2"><span style="font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;border:1px solid var(--line2)">{{ g.g }}</span></sc-for></div>
+              <h1 style="margin:0;font-size:{{ h1big }};font-weight:700;letter-spacing:-0.04em;line-height:.98;text-wrap:balance">{{ D.name }}</h1>
+              <div style="font:500 13px 'Geist Mono',monospace;color:var(--muted)">{{ D.meta }}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;margin-top:6px">
+                <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 10.5px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">TVmaze</span><span style="font-size:26px;font-weight:700;letter-spacing:-0.02em">★ {{ D.avg }}</span></div>
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font:600 10.5px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Your rating · {{ D.myRating }}</span><div style="display:flex;margin-left:-3px"><sc-for list="{{ D.stars }}" as="st" hint-placeholder-count="5"><button onClick="{{ st.on }}" style="border:0;background:transparent;padding:0 3px;font-size:30px;line-height:1.1;cursor:pointer;color:{{ st.c }}">★</button></sc-for></div></div>
+                <button onClick="{{ D.onFollow }}" style="height:44px;padding:0 20px;border-radius:12px;border:1px solid {{ D.fBd }};background:{{ D.fBg }};color:{{ D.fFg }};font-family:inherit;font-size:14.5px;font-weight:600;cursor:pointer">{{ D.fIcon }} {{ D.followLabel }}</button>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+                <sc-for list="{{ statusSeg }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.on }}" style="height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:{{ o.bg }};color:{{ o.fg }};font-family:inherit;font-size:13px;font-weight:500;cursor:pointer">{{ o.label }}</button></sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:{{ aboutCols }};gap:24px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:10px"><span style="font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">About</span><p style="margin:0;font-size:16px;line-height:1.6;text-wrap:pretty;max-width:68ch">{{ D.summary }}</p></div>
+          <sc-if value="{{ D.hasNext }}" hint-placeholder-val="{{ false }}">
+            <div style="border-radius:16px;background:var(--primary-soft);padding:18px;display:flex;flex-direction:column;gap:6px">
+              <span style="font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--primary-text)">Next episode · {{ D.next.rel }}</span>
+              <span style="font-size:17px;font-weight:600">{{ D.next.title }}</span>
+              <span style="font:500 13px 'Geist Mono',monospace;color:var(--muted)">{{ D.next.code }} · {{ D.next.when }}</span>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
+            <span style="font-size:22px;font-weight:650;letter-spacing:-0.02em">Episodes</span>
+            <button onClick="{{ prog.on }}" style="height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--line2);background:transparent;color:var(--fg);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">{{ prog.btn }}</button>
+          </div>
+          <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">
+            <sc-for list="{{ seasons }}" as="s" hint-placeholder-count="3"><button onClick="{{ s.on }}" style="flex:none;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:{{ s.bg }};color:{{ s.fg }};font:600 12.5px 'Geist Mono',monospace;cursor:pointer">{{ s.label }}</button></sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="flex:1;height:6px;border-radius:3px;background:var(--surface2);overflow:hidden"><div style="height:100%;width:{{ prog.pct }};background:var(--primary);border-radius:3px"></div></div><span style="font:500 12.5px 'Geist Mono',monospace;color:var(--muted);white-space:nowrap">{{ prog.label }}</span></div>
+          <span style="font-size:13px;color:var(--muted);margin-top:-6px">{{ prog.total }}</span>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ epRows }}" as="e" hint-placeholder-count="6">
+              <div onClick="{{ e.open }}" style="display:grid;grid-template-columns:{{ epCols }};gap:16px;align-items:center;padding:10px 8px;margin:0 -8px;border-radius:12px;cursor:pointer;opacity:{{ e.op }}" style-hover="background:var(--hover)">
+                <img src="{{ e.img }}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:var(--surface2);display:block">
+                <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                  <div style="display:flex;align-items:baseline;gap:8px;min-width:0"><span style="font:600 12.5px 'Geist Mono',monospace;color:var(--primary-text);flex:none">{{ e.code }}</span><span style="font-size:15.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.title }}</span></div>
+                  <span style="font:500 12.5px 'Geist Mono',monospace;color:var(--muted)">{{ e.meta }}</span>
+                  <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}"><span style="font-size:13.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45">{{ e.sum }}</span></sc-if>
+                </div>
+                <button onClick="{{ e.toggle }}" aria-label="Toggle watched" style="width:36px;height:36px;border-radius:50%;border:1.5px solid {{ e.cBd }};background:{{ e.cBg }};color:{{ e.cFg }};cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font-size:22px;font-weight:650;letter-spacing:-0.02em">Cast</span>
+          <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:8px">
+            <sc-for list="{{ cast }}" as="c" hint-placeholder-count="6">
+              <div style="flex:none;width:96px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+                <img src="{{ c.img }}" alt="" style="width:76px;height:76px;border-radius:50%;object-fit:cover;background:var(--surface2)">
+                <span style="font-size:13px;font-weight:600;line-height:1.25">{{ c.name }}</span>
+                <span style="font-size:12px;color:var(--muted);line-height:1.25;margin-top:-3px">{{ c.role }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <sc-if value="{{ hasLike }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:22px;font-weight:650;letter-spacing:-0.02em">More with this cast</span><span style="font-size:13.5px;color:var(--muted)">Other shows featuring the lead actors</span></div>
+          <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:8px">
+            <sc-for list="{{ likeCards }}" as="s" hint-placeholder-count="6">
+              <div onClick="{{ s.open }}" style="flex:none;width:{{ railW }};display:flex;flex-direction:column;gap:7px;cursor:pointer">
+                <div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:2/3;background:var(--surface2)">
+                  <img src="{{ s.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+                  <button onClick="{{ s.onFollow }}" aria-label="{{ s.followLabel }}" style="position:absolute;right:8px;top:8px;width:34px;height:34px;border-radius:50%;border:0;background:{{ s.chipBg }};color:{{ s.chipFg }};font-size:17px;font-weight:600;cursor:pointer;font-family:inherit">{{ s.fIcon }}</button>
+                </div>
+                <span style="font-size:14px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</span>
+                <span style="font:500 12px 'Geist Mono',monospace;color:var(--muted);margin-top:-3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.meta }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- SETTINGS -->
+    <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:28px;max-width:760px">
+      <h1 style="margin:0;font-size:{{ h1 }};font-weight:700;letter-spacing:-0.035em;line-height:1.02">Settings</h1>
+
+      <div style="display:flex;flex-direction:column;border-radius:16px;background:var(--surface);border:1px solid var(--line)">
+        <div style="padding:14px 18px 6px;font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Appearance &amp; region</div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">Theme</span><span style="font-size:13px;color:var(--muted)">System follows your device setting</span></div>
+          <div style="display:flex;padding:3px;background:var(--surface2);border-radius:10px;gap:2px"><sc-for list="{{ themeSeg }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.on }}" style="border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">TV region</span><span style="font-size:13px;color:var(--muted)">Which broadcast schedule the guide uses</span></div>
+          <div style="display:flex;padding:3px;background:var(--surface2);border-radius:10px;gap:2px;flex-wrap:wrap"><sc-for list="{{ regionSeg }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.on }}" style="border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-radius:16px;background:var(--surface);border:1px solid var(--line)">
+        <div style="padding:14px 18px 6px;font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Notifications</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">New episodes</span><span style="font-size:13px;color:var(--muted)">When a show you follow airs</span></div><button onClick="{{ tNew.on }}" aria-label="Toggle" style="flex:none;width:44px;height:26px;border-radius:13px;border:0;background:{{ tNew.bg }};position:relative;cursor:pointer;padding:0"><span style="position:absolute;top:2px;left:{{ tNew.x }};width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">Premieres &amp; returns</span><span style="font-size:13px;color:var(--muted)">New seasons of shows you follow</span></div><button onClick="{{ tPrem.on }}" aria-label="Toggle" style="flex:none;width:44px;height:26px;border-radius:13px;border:0;background:{{ tPrem.bg }};position:relative;cursor:pointer;padding:0"><span style="position:absolute;top:2px;left:{{ tPrem.x }};width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">Recommendations</span><span style="font-size:13px;color:var(--muted)">A weekly pick based on your ratings</span></div><button onClick="{{ tFinale.on }}" aria-label="Toggle" style="flex:none;width:44px;height:26px;border-radius:13px;border:0;background:{{ tFinale.bg }};position:relative;cursor:pointer;padding:0"><span style="position:absolute;top:2px;left:{{ tFinale.x }};width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></button></div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:14px 18px"><span style="font-size:15px;font-weight:600">Remind me</span>
+          <div style="display:flex;padding:3px;background:var(--surface2);border-radius:10px;gap:2px;flex-wrap:wrap;align-self:flex-start"><sc-for list="{{ leadSeg }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.on }}" style="border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-radius:16px;background:var(--surface);border:1px solid var(--line)">
+        <div style="padding:14px 18px 6px;font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Guide</div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)"><span style="font-size:15px;font-weight:600">Default view</span>
+          <div style="display:flex;padding:3px;background:var(--surface2);border-radius:10px;gap:2px;flex-wrap:wrap;align-self:flex-start"><sc-for list="{{ defViewSeg }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.on }}" style="border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">Hide aired episodes</span><span style="font-size:13px;color:var(--muted)">Only show what’s still to come</span></div><button onClick="{{ tHide.on }}" aria-label="Toggle" style="flex:none;width:44px;height:26px;border-radius:13px;border:0;background:{{ tHide.bg }};position:relative;cursor:pointer;padding:0"><span style="position:absolute;top:2px;left:{{ tHide.x }};width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">Include streaming releases</span><span style="font-size:13px;color:var(--muted)">Netflix, Prime Video, Apple TV+ and more</span></div><button onClick="{{ tStream.on }}" aria-label="Toggle" style="flex:none;width:44px;height:26px;border-radius:13px;border:0;background:{{ tStream.bg }};position:relative;cursor:pointer;padding:0"><span style="position:absolute;top:2px;left:{{ tStream.x }};width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></button></div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
+        <span style="font-size:13px;color:var(--muted)">Show and episode data from <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVmaze</a> (CC BY-SA).</span>
+        <button onClick="{{ replayOb }}" style="height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--line2);background:transparent;color:var(--fg);font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Run setup again</button>
+      </div>
+    </div>
+    </sc-if>
+
+  </div>
+  </div>
+
+  <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+    <nav style="flex:none;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--bg);padding:6px 6px 14px">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="4">
+        <button onClick="{{ n.on }}" style="border:0;background:transparent;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:52px;justify-content:center;color:{{ n.mfg }};font-size:11px;font-weight:{{ n.fw }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>{{ n.label }}</button>
+      </sc-for>
+    </nav>
+  </sc-if>
+</div>
+
+<sc-if value="{{ hasEp }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:50;display:flex;justify-content:flex-end;align-items:flex-end">
+    <div onClick="{{ ep.close }}" style="position:absolute;inset:0;background:var(--scrim)"></div>
+    <div style="position:relative;width:{{ dw }};height:{{ dh }};border-radius:{{ dr }};background:var(--surface);overflow:auto;box-shadow:0 0 60px rgba(0,0,0,.35);display:flex;flex-direction:column">
+      <div style="position:relative;flex:none">
+        <img src="{{ ep.img }}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--surface2)">
+        <button onClick="{{ ep.close }}" aria-label="Close" style="position:absolute;right:12px;top:12px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+      </div>
+      <div style="padding:24px;display:flex;flex-direction:column;gap:14px">
+        <span style="font:600 11.5px 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--primary-text)">{{ ep.show }} · {{ ep.code }}</span>
+        <h2 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.03em;line-height:1.08">{{ ep.title }}</h2>
+        <span style="font:500 13px 'Geist Mono',monospace;color:var(--muted)">{{ ep.meta }}</span>
+        <span style="font-size:14px;color:var(--muted)">{{ ep.avg }}</span>
+        <button onClick="{{ ep.toggle }}" style="height:46px;border-radius:12px;border:1px solid {{ ep.wBd }};background:{{ ep.wBg }};color:{{ ep.wFg }};font-family:inherit;font-size:15px;font-weight:600;cursor:pointer">{{ ep.wLabel }}</button>
+        <p style="margin:4px 0 0;font-size:15.5px;line-height:1.6;text-wrap:pretty">{{ ep.summary }}</p>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onClick="{{ ep.prev }}" style="flex:1;height:42px;border-radius:10px;border:1px solid var(--line2);background:transparent;color:var(--fg);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;opacity:{{ ep.prevOp }}">← Previous</button>
+          <button onClick="{{ ep.next }}" style="flex:1;height:42px;border-radius:10px;border:1px solid var(--line2);background:transparent;color:var(--fg);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;opacity:{{ ep.nextOp }}">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ onboard }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column">
+    <div style="flex:none;display:flex;align-items:center;gap:14px;padding:{{ headPad }};border-bottom:1px solid var(--line)">
+      <div style="display:flex;align-items:center;gap:9px"><div style="width:20px;height:15px;border:2.5px solid var(--primary);border-radius:5px;display:flex;align-items:center;justify-content:center"><div style="width:5px;height:5px;border-radius:50%;background:var(--primary)"></div></div><span style="font-size:18px;font-weight:700;letter-spacing:-0.03em">Airdate</span></div>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:6px"><sc-for list="{{ obDots }}" as="o" hint-placeholder-count="3"><span style="width:22px;height:4px;border-radius:2px;background:{{ o.bg }}"></span></sc-for></div>
+      <button onClick="{{ obSkip }}" style="border:0;background:transparent;color:var(--muted);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;padding:8px 4px">Skip</button>
+    </div>
+    <div style="flex:1;overflow:auto;min-height:0">
+      <div style="max-width:960px;margin:0 auto;padding:{{ pagePad }};box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font:600 11px 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--primary-text)">{{ obStepLabel }}</span>
+          <h1 style="margin:0;font-size:{{ h1 }};font-weight:700;letter-spacing:-0.035em;line-height:1.02;text-wrap:balance">{{ obTitle }}</h1>
+          <p style="margin:0;color:var(--muted);font-size:15px;text-wrap:pretty">{{ obSub }}</p>
+        </div>
+        <sc-if value="{{ obStep0 }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax({{ obMin }},1fr));gap:14px">
+            <sc-for list="{{ obCards }}" as="s" hint-placeholder-count="12">
+              <button onClick="{{ s.on }}" style="border:0;padding:0;background:transparent;color:var(--fg);font-family:inherit;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0">
+                <div style="position:relative;width:100%;border-radius:12px;overflow:hidden;aspect-ratio:2/3;background:var(--surface2);box-shadow:0 0 0 3px {{ s.bd }}">
+                  <img src="{{ s.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+                  <span style="position:absolute;right:7px;top:7px;width:28px;height:28px;border-radius:50%;background:{{ s.ck }};color:{{ s.ckFg }};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">{{ s.ckIcon }}</span>
+                </div>
+                <span style="font-size:13px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">{{ s.name }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ obStep1 }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;border-radius:16px;background:var(--surface);border:1px solid var(--line)">
+            <sc-for list="{{ obRate }}" as="s" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap">
+                <img src="{{ s.img }}" alt="" style="width:40px;aspect-ratio:2/3;object-fit:cover;border-radius:6px;background:var(--surface2)">
+                <div style="flex:1 1 160px;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">{{ s.name }}</span><span style="font-size:12.5px;color:var(--muted)">{{ s.meta }}</span></div>
+                <div style="display:flex"><sc-for list="{{ s.stars }}" as="st" hint-placeholder-count="5"><button onClick="{{ st.on }}" style="border:0;background:transparent;padding:4px;font-size:26px;line-height:1;cursor:pointer;color:{{ st.c }}">★</button></sc-for></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ obStep2 }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;border-radius:16px;background:var(--surface);border:1px solid var(--line)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">New episodes</span><span style="font-size:13px;color:var(--muted)">When a show you follow airs</span></div><button onClick="{{ tNew.on }}" aria-label="Toggle" style="flex:none;width:44px;height:26px;border-radius:13px;border:0;background:{{ tNew.bg }};position:relative;cursor:pointer;padding:0"><span style="position:absolute;top:2px;left:{{ tNew.x }};width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></button></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">Premieres &amp; returns</span><span style="font-size:13px;color:var(--muted)">New seasons of shows you follow</span></div><button onClick="{{ tPrem.on }}" aria-label="Toggle" style="flex:none;width:44px;height:26px;border-radius:13px;border:0;background:{{ tPrem.bg }};position:relative;cursor:pointer;padding:0"><span style="position:absolute;top:2px;left:{{ tPrem.x }};width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></button></div>
+            <div style="display:flex;flex-direction:column;gap:10px;padding:16px 18px"><span style="font-size:15px;font-weight:600">Remind me</span>
+              <div style="display:flex;padding:3px;background:var(--surface2);border-radius:10px;gap:2px;flex-wrap:wrap;align-self:flex-start"><sc-for list="{{ leadSeg }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.on }}" style="border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+    <div style="flex:none;display:flex;align-items:center;gap:12px;padding:14px 20px 18px;border-top:1px solid var(--line);background:var(--bg)">
+      <button onClick="{{ obBack }}" style="height:46px;padding:0 16px;border-radius:12px;border:1px solid var(--line2);background:transparent;color:var(--fg);font-family:inherit;font-size:14.5px;font-weight:600;cursor:pointer;opacity:{{ obBackOp }}">Back</button>
+      <span style="flex:1;text-align:center;font:500 12.5px 'Geist Mono',monospace;color:var(--muted)">{{ obCount }}</span>
+      <button onClick="{{ obNext }}" style="height:46px;padding:0 22px;border-radius:12px;border:0;background:var(--primary);color:var(--on-primary);font-family:inherit;font-size:14.5px;font-weight:600;cursor:pointer;opacity:{{ obNextOp }}">{{ obNextLabel }}</button>
+    </div>
+  </div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;coral&quot;,&quot;teal&quot;,&quot;blue&quot;,&quot;lime&quot;,&quot;violet&quot;,&quot;crimson&quot;,&quot;magenta&quot;,&quot;amber&quot;,&quot;emerald&quot;,&quot;cyan&quot;,&quot;indigo&quot;,&quot;rose&quot;,&quot;gold&quot;,&quot;sky&quot;,&quot;mono&quot;],&quot;default&quot;:&quot;coral&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Display&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;,&quot;system&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'|'system'&quot;,&quot;section&quot;:&quot;Display&quot;},&quot;frame&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;phone&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;'auto'|'phone'&quot;,&quot;section&quot;:&quot;Display&quot;},&quot;guideView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;agenda&quot;,&quot;week&quot;,&quot;grid&quot;,&quot;countdown&quot;],&quot;default&quot;:&quot;agenda&quot;,&quot;tsType&quot;:&quot;'agenda'|'week'|'grid'|'countdown'&quot;,&quot;section&quot;:&quot;Guide&quot;},&quot;region&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;US&quot;,&quot;GB&quot;,&quot;CA&quot;,&quot;AU&quot;],&quot;default&quot;:&quot;US&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Guide&quot;}}">
+const API='https://api.tvmaze.com';
+const LS='airdate:v1';
+const NOIMG='data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+const ent=s=>s.replace(/&amp;/g,'&').replace(/&#39;|&rsquo;/g,'’').replace(/&quot;/g,'"').replace(/&nbsp;/g,' ');
+const strip=h=>ent((h||'').replace(/<[^>]+>/g,'')).trim();
+const pad=n=>String(n).padStart(2,'0');
+const epCode=e=>e.number==null?'Special':`S${pad(e.season)} E${pad(e.number)}`;
+const fmtTime=t=>new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+const fmtDate=t=>new Date(t).toLocaleDateString([],{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+const dayKey=d=>d.toLocaleDateString('en-CA');
+const mini=s=>({id:s.id,name:s.name,img:s.image?.medium||null,big:s.image?.original||null,genres:s.genres||[],status:s.status||'',avg:s.rating?.average||null,net:(s.network||s.webChannel)?.name||'',weight:s.weight||0,year:(s.premiered||'').slice(0,4),sum:strip(s.summary).slice(0,300)});
+const ICON={guide:'M3 6h18v15H3zM3 11h18M8 3v5M16 3v5',library:'M6 3h12v18l-6-4-6 4z',discover:'M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4z',search:'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM20 20l-4.8-4.8',settings:'M4 7h10M18 7h2M4 17h4M12 17h8M16 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM10 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'};
+const SUN='M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z';
+const MOON='M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z';
+const NAV=[['guide','Guide'],['library','Library'],['discover','Discover'],['search','Search'],['settings','Settings']];
+const STATUS=[['watching','Watching'],['completed','Completed'],['plan','Plan to watch']];
+const ACCENTS={
+  coral:{dark:['#FF5A36','#0A0A0B','#FF8466','rgba(255,90,54,.16)'],light:['#D63A15','#FFFFFF','#BF3210','rgba(214,58,21,.10)']},
+  teal:{dark:['#1FCBAA','#0A0A0B','#55DDC4','rgba(31,203,170,.15)'],light:['#0A8672','#FFFFFF','#087563','rgba(10,134,114,.10)']},
+  blue:{dark:['#2F6BFF','#FFFFFF','#86A9FF','rgba(47,107,255,.18)'],light:['#1F57E8','#FFFFFF','#1A4BCC','rgba(31,87,232,.10)']},
+  lime:{dark:['#C4EE32','#0A0A0B','#D3F56A','rgba(196,238,50,.14)'],light:['#4A7300','#FFFFFF','#426600','rgba(74,115,0,.10)']},
+  violet:{dark:['#6E5FFF','#FFFFFF','#ADA4FF','rgba(110,95,255,.18)'],light:['#5847F0','#FFFFFF','#4533DE','rgba(88,71,240,.11)']},
+  crimson:{dark:['#E5304F','#FFFFFF','#FF7A8F','rgba(229,48,79,.18)'],light:['#C8193A','#FFFFFF','#B01532','rgba(200,25,58,.10)']},
+  magenta:{dark:['#E03CC0','#FFFFFF','#F28BDD','rgba(224,60,192,.18)'],light:['#B8189A','#FFFFFF','#A01386','rgba(184,24,154,.10)']},
+  amber:{dark:['#FFB21E','#0A0A0B','#FFC95C','rgba(255,178,30,.15)'],light:['#9A5B00','#FFFFFF','#8A5100','rgba(154,91,0,.10)']},
+  emerald:{dark:['#22C55E','#0A0A0B','#5EDC8C','rgba(34,197,94,.15)'],light:['#11783A','#FFFFFF','#0F6B34','rgba(17,120,58,.10)']},
+  cyan:{dark:['#22D3EE','#0A0A0B','#67E3F5','rgba(34,211,238,.14)'],light:['#0B7285','#FFFFFF','#096475','rgba(11,114,133,.10)']},
+  indigo:{dark:['#4F46E5','#FFFFFF','#9D98FF','rgba(79,70,229,.2)'],light:['#3F37C9','#FFFFFF','#352EB0','rgba(63,55,201,.10)']},
+  rose:{dark:['#FF6F91','#0A0A0B','#FF97B0','rgba(255,111,145,.15)'],light:['#C2295A','#FFFFFF','#AD2350','rgba(194,41,90,.10)']},
+  gold:{dark:['#E8C547','#0A0A0B','#F0D77A','rgba(232,197,71,.14)'],light:['#7F6500','#FFFFFF','#705900','rgba(127,101,0,.10)']},
+  sky:{dark:['#38A8FF','#0A0A0B','#7CC4FF','rgba(56,168,255,.15)'],light:['#0B63B5','#FFFFFF','#0A579F','rgba(11,99,181,.10)']},
+  mono:{dark:['#F3F3F1','#0A0A0B','#F3F3F1','rgba(255,255,255,.1)'],light:['#111113','#FFFFFF','#111113','rgba(0,0,0,.07)']}
+};
+const DEF_SET={notifyNew:true,notifyPrem:true,notifyFinale:false,lead:'15',hideAired:false,streaming:true};
+
+class Component extends DCLogic {
+  state={tab:'guide',prevTab:'guide',view:null,scope:'mine',eps:[],pool:{},followed:{},ratings:{},status:{},watched:{},settings:DEF_SET,seeded:false,loading:true,error:null,w:1200,day:0,showId:null,detail:null,dLoading:false,like:null,season:null,epId:null,q:'',results:[],searching:false,theme:null,region:null,sort:'next',libFilter:'all',now:Date.now(),onboard:false,obStep:0,obSel:null,reco:null};
+  rootRef=React.createRef(); mainRef=React.createRef(); epgRef=React.createRef();
+  componentDidMount(){
+    let s=null; try{s=JSON.parse(localStorage.getItem(LS)||'null')}catch(e){}
+    if(s&&s.followed) this.setState({followed:s.followed,ratings:s.ratings||{},status:s.status||{},watched:s.watched||{},settings:{...DEF_SET,...(s.settings||{})},seeded:true,onboard:!s.onboarded});
+    else this.setState({onboard:true});
+    this.ro=new ResizeObserver(en=>{const w=en[0].contentRect.width;if(Math.abs(w-this.state.w)>1)this.setState({w})});
+    const attach=()=>{const r=document.querySelector('[data-root]');if(r){this.ro.observe(r)}else setTimeout(attach,50)};attach();
+    this.timer=setInterval(()=>this.setState({now:Date.now()}),30000);
+    this.mq=window.matchMedia('(prefers-color-scheme: dark)');this.mqf=()=>this.forceUpdate();this.mq.addEventListener&&this.mq.addEventListener('change',this.mqf);
+    this.applyTheme(); setTimeout(()=>this.load(),0);
+  }
+  componentWillUnmount(){this.ro&&this.ro.disconnect();clearInterval(this.timer);this.mq&&this.mq.removeEventListener&&this.mq.removeEventListener('change',this.mqf)}
+  afterRender(){
+    const pp=this._pp||this.props,ps=this._ps||this.state;
+    this._pp=this.props;this._ps=this.state;
+    this.componentDidUpdate(pp,ps);
+  }
+  componentDidUpdate(pp,ps){
+    if(pp===this.props&&ps===this.state&&this._ranOnce){return}
+    this._ranOnce=true;
+    const S=this.state;
+    if(pp.theme!==this.props.theme&&S.theme)this.setState({theme:null});
+    this.applyTheme();
+    if(pp.region!==this.props.region||ps.region!==S.region)this.load();
+    if(S.tab==='discover'&&ps.tab!=='discover')this.loadReco();
+    if(S.seeded&&(ps.followed!==S.followed||ps.ratings!==S.ratings||ps.status!==S.status||ps.watched!==S.watched||ps.settings!==S.settings||ps.onboard!==S.onboard)){try{localStorage.setItem(LS,JSON.stringify({followed:S.followed,ratings:S.ratings,status:S.status,watched:S.watched,settings:S.settings,onboarded:!S.onboard}))}catch(e){}}
+    const el=document.querySelector('[data-epg]'),key=`${S.day}|${S.tab}|${this.view()}|${S.loading}|${S.scope}`;
+    if(el&&(this.epgKey!==key||this.epgEl!==el)){this.epgKey=key;this.epgEl=el;
+      const hw=this.state.w<760?150:200,t0=new Date();t0.setHours(0,0,0,0);const ds=t0.getTime()+S.day*864e5;
+      const dayEps=S.eps.filter(e=>e.t>=ds&&e.t<ds+864e5&&(S.scope==='all'||S.followed[e.showId]));
+      let h=S.day===0?Math.max(0,new Date().getHours()-1):18;
+      const later=dayEps.filter(e=>(e.t-ds)/36e5>=h),first=(later[0]||dayEps[dayEps.length-1]);
+      if(first){const fh=Math.floor((first.t-ds)/36e5);if(!later.length||fh>h)h=Math.max(0,fh-(later.length?0:0))}
+      el.scrollLeft=h*hw}
+  }
+  view(){return this.state.view||this.props.guideView||'agenda'}
+  region(){return this.state.region||this.props.region||'US'}
+  themeMode(){return this.state.theme||this.props.theme||'dark'}
+  theme(){const m=this.themeMode();return m==='system'?(this.mq&&!this.mq.matches?'light':'dark'):m}
+  applyTheme(){const r=document.documentElement,t=this.theme();r.dataset.theme=t;
+    const A=ACCENTS[this.props.accent]||ACCENTS.coral,a=A[t];
+    r.style.setProperty('--primary',a[0]);r.style.setProperty('--on-primary',a[1]);r.style.setProperty('--primary-text',a[2]);r.style.setProperty('--primary-soft',a[3]);}
+  top(){const m=document.querySelector('[data-main]');if(m)m.scrollTop=0}
+  go=tab=>{this.setState({tab,epId:null});this.top()}
+  follow(s){this.setState(st=>{const f={...st.followed},x={...st.status};if(f[s.id]){delete f[s.id];delete x[s.id]}else{f[s.id]=s;x[s.id]=x[s.id]||'watching'}return {followed:f,status:x}})}
+  rate(id,n){this.setState(st=>({ratings:{...st.ratings,[id]:st.ratings[id]===n?0:n}}))}
+  setStatus(s,v){this.setState(st=>{const f={...st.followed};if(!f[s.id])f[s.id]=s;const w={...st.watched};if(v==='completed'&&st.detail&&st.detail.id===s.id)(st.detail._embedded?.episodes||[]).forEach(e=>{if(e.airstamp&&new Date(e.airstamp).getTime()<Date.now())w[e.id]=1});return {followed:f,status:{...st.status,[s.id]:v},watched:w}})}
+  setSet(k,v){this.setState(st=>({settings:{...st.settings,[k]:v}}))}
+  toggleW(id){this.setState(st=>{const w={...st.watched};if(w[id])delete w[id];else w[id]=1;return {watched:w}})}
+  markSeason(ids,val){this.setState(st=>{const w={...st.watched};ids.forEach(i=>{if(val)w[i]=1;else delete w[i]});return {watched:w}})}
+  obToggle(s){this.setState(st=>{const m={...(st.obSel||st.followed)};if(m[s.id])delete m[s.id];else m[s.id]=s;return {obSel:m}})}
+  obNext=()=>{const S=this.state;
+    if(S.obStep===0){const sel=S.obSel||S.followed,x={};Object.keys(sel).forEach(id=>x[id]=S.status[id]||'watching');this.setState({followed:{...sel},status:x,obStep:1});}
+    else if(S.obStep===1)this.setState({obStep:2});
+    else{this.setState({onboard:false,obStep:0,obSel:null,tab:'guide'});this.top()}
+  };
+  async load(){
+    const cc=this.region();
+    this.setState({loading:true,error:null});
+    try{
+      const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()+i);return dayKey(d)});
+      const j=u=>fetch(API+u).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()});
+      const res=await Promise.all(days.flatMap(d=>[j(`/schedule?country=${cc}&date=${d}`),j(`/schedule/web?date=${d}`).catch(()=>[])]));
+      const pool={},seen=new Set(),eps=[];
+      res.flat().forEach(e=>{
+        const s=e.show||e._embedded?.show;
+        if(!s||!e.airstamp||seen.has(e.id))return;
+        if(!e.show&&s.language!=='English')return;
+        seen.add(e.id);pool[s.id]=mini(s);
+        eps.push({id:e.id,showId:s.id,web:!e.show,title:e.name||'TBA',code:epCode(e),season:e.season,number:e.number,t:new Date(e.airstamp).getTime(),runtime:e.runtime||s.runtime||s.averageRuntime,still:e.image?.medium||null,stillBig:e.image?.original||null});
+      });
+      eps.sort((a,b)=>a.t-b.t);
+      let followed=this.state.followed,ratings=this.state.ratings,status=this.state.status;
+      if(!this.state.seeded){
+        const top=Object.values(pool).filter(s=>s.img).sort((a,b)=>b.weight-a.weight).slice(0,8);
+        followed={};status={};top.forEach(s=>{followed[s.id]=s;status[s.id]='watching'});
+        ratings={};[5,4,4,5,3,4].forEach((r,i)=>{if(top[i])ratings[top[i].id]=r});
+      }else{
+        followed={...followed};Object.keys(followed).forEach(id=>{if(pool[id])followed[id]={...followed[id],...pool[id]}});
+      }
+      this.setState({pool,eps,followed,ratings,status,seeded:true,loading:false},()=>{if(this.state.tab==='discover')this.loadReco()});
+    }catch(err){this.setState({loading:false,error:'Couldn’t reach TVmaze. Check your connection and try again.'})}
+  }
+  async loadReco(){
+    const S=this.state;
+    const src=Object.values(S.followed).sort((a,b)=>(S.ratings[b.id]||0)-(S.ratings[a.id]||0)||b.weight-a.weight)[0];
+    if(!src||this.recoFor===src.id)return;this.recoFor=src.id;
+    const j=u=>fetch(API+u).then(r=>r.ok?r.json():[]).catch(()=>[]);
+    const [cast,crew]=await Promise.all([j(`/shows/${src.id}/cast`),j(`/shows/${src.id}/crew`)]);
+    const people=cast.slice(0,3).map(c=>c.person);
+    const creators=crew.filter(c=>c.type==='Creator').slice(0,2).map(c=>c.person);
+    const [cc,cr]=await Promise.all([Promise.all(people.map(p=>j(`/people/${p.id}/castcredits?embed=show`))),Promise.all(creators.map(p=>j(`/people/${p.id}/crewcredits?embed=show`)))]);
+    const collect=(lists,ps)=>{const m={};lists.forEach((l,i)=>l.forEach(x=>{const s=x._embedded?.show;if(!s||s.id===src.id||!s.image||m[s.id])return;m[s.id]={...mini(s),via:ps[i].name}}));return Object.values(m).sort((a,b)=>b.weight-a.weight).slice(0,14)};
+    if(this.recoFor===src.id)this.setState({reco:{src,cast:collect(cc,people),crew:collect(cr,creators),creators:creators.map(p=>p.name)}});
+  }
+  async openShow(id){
+    this.setState(st=>({tab:'show',showId:id,detail:null,like:null,dLoading:true,epId:null,prevTab:st.tab==='show'?st.prevTab:st.tab}));
+    this.top();
+    try{
+      const d=await fetch(`${API}/shows/${id}?embed[]=episodes&embed[]=cast&embed[]=nextepisode`).then(r=>r.json());
+      if(this.state.showId!==id)return;
+      const eps=d._embedded?.episodes||[];
+      const aired=eps.filter(e=>e.airstamp&&new Date(e.airstamp).getTime()<Date.now());
+      this.setState({detail:d,season:(aired[aired.length-1]||eps[0])?.season??1,dLoading:false});
+      const people=(d._embedded?.cast||[]).slice(0,3).map(c=>c.person);
+      const ls=await Promise.all(people.map(p=>fetch(`${API}/people/${p.id}/castcredits?embed=show`).then(r=>r.ok?r.json():[]).catch(()=>[])));
+      if(this.state.showId!==id)return;
+      const m={};ls.forEach((l,i)=>l.forEach(x=>{const s=x._embedded?.show;if(!s||s.id===id||!s.image||m[s.id])return;m[s.id]={...mini(s),via:people[i].name}}));
+      this.setState({like:Object.values(m).sort((a,b)=>b.weight-a.weight).slice(0,14)});
+    }catch(e){this.setState({dLoading:false,error:'Couldn’t load this show.'})}
+  }
+  onQ=e=>{
+    const q=e.target.value;this.setState({q,tab:'search',epId:null});clearTimeout(this.qt);
+    if(!q.trim()){this.setState({results:[],searching:false});return}
+    this.setState({searching:true});
+    this.qt=setTimeout(async()=>{
+      const r=await fetch(`${API}/search/shows?q=${encodeURIComponent(q)}`).then(r=>r.json()).catch(()=>[]);
+      if(this.state.q===q)this.setState({results:r.map(x=>mini(x.show)),searching:false});
+    },300);
+  };
+  renderVals(){
+    cancelAnimationFrame(this._raf);this._raf=requestAnimationFrame(()=>requestAnimationFrame(()=>this.afterRender()));
+    const S=this.state,now=S.now,mobile=S.w<760,desktop=!mobile,F=S.followed,pool=S.pool,phone=this.props.frame==='phone',set=S.settings;
+    const theme=this.theme(),view=this.view(),region=this.region();
+    const showOf=id=>F[id]||pool[id]||{name:'',img:null,genres:[]};
+    const stars=(v,fn)=>[1,2,3,4,5].map(n=>({c:n<=v?'var(--star)':'var(--line2)',on:e=>{if(e)e.stopPropagation();fn(n)}}));
+    const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime();
+    const dIdx=t=>Math.floor((t-T0)/864e5);
+    const dInfo=i=>{const d=new Date(T0);d.setDate(d.getDate()+i);return {label:i===0?'Today':i===1?'Tomorrow':d.toLocaleDateString([],{weekday:'long'}),sub:d.toLocaleDateString([],{month:'short',day:'numeric'}),dow:d.toLocaleDateString([],{weekday:'short'}),num:d.getDate()}};
+    const endOf=e=>e.t+(e.runtime||30)*6e4;
+    const rel=e=>{if(endOf(e)<now)return 'Aired';const m=Math.round((e.t-now)/6e4);if(m<=0)return 'On now';if(m<60)return `in ${m}m`;const h=Math.floor(m/60);if(h<24)return `in ${h}h ${pad(m%60)}m`;return `in ${Math.floor(h/24)}d ${h%24}h`};
+    const whenTxt=e=>{const i=dIdx(e.t);return `${i>=0&&i<7?dInfo(i).label:new Date(e.t).toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})} · ${fmtTime(e.t)}`};
+    const seg=(opts,cur,fn)=>opts.map(([v,l])=>({label:l,on:()=>fn(v),bg:v===cur?'var(--surface)':'transparent',fg:v===cur?'var(--fg)':'var(--muted)',sh:v===cur?'0 1px 2px rgba(0,0,0,.18)':'none'}));
+    const tg=k=>{const on=!!set[k];return {on:()=>this.setSet(k,!on),bg:on?'var(--primary)':'var(--line2)',x:on?'20px':'2px'}};
+    const followBtn=s=>{const on=!!F[s.id];return {followLabel:on?'Following':'Follow',fBg:on?'transparent':'var(--primary)',fFg:on?'var(--fg)':'var(--on-primary)',fBd:on?'var(--line2)':'var(--primary)',chipBg:on?'var(--primary)':'rgba(0,0,0,.6)',chipFg:on?'var(--on-primary)':'#fff',fIcon:on?'✓':'+',onFollow:ev=>{if(ev)ev.stopPropagation();this.follow(s)}}};
+    const row=e=>{const s=showOf(e.showId),past=endOf(e)<now,live=!past&&e.t<=now;const badge=live?'On now':e.number===1?(e.season===1?'Series premiere':'Season premiere'):'';
+      return {key:e.id,time:fmtTime(e.t),name:s.name,img:s.img||NOIMG,thumb:e.still||s.img||NOIMG,code:e.code,title:e.title,net:s.net,op:past?0.45:1,badge,hasBadge:!!badge,badgeBg:live?'var(--primary)':'var(--primary-soft)',badgeFg:live?'var(--on-primary)':'var(--primary-text)',showFollow:S.scope==='all',open:()=>this.openShow(e.showId),rel:rel(e),...followBtn(s)}};
+    const base=S.eps.filter(e=>set.streaming||!e.web);
+    const vis=e=>!set.hideAired||endOf(e)>=now;
+    const mine=base.filter(e=>F[e.showId]);
+    let scoped=mine;
+    if(S.scope==='all'){const by={};base.forEach(e=>{const i=dIdx(e.t);(by[i]=by[i]||[]).push(e)});scoped=Object.values(by).flatMap(a=>a.sort((x,y)=>(showOf(y.showId).weight||0)-(showOf(x.showId).weight||0)).slice(0,40)).sort((a,b)=>a.t-b.t)}
+    const days=[0,1,2,3,4,5,6];
+    const byDay=days.map(i=>scoped.filter(e=>dIdx(e.t)===i&&vis(e)));
+    const upcoming=mine.filter(e=>endOf(e)>=now);
+    const h=upcoming[0];
+    const hero=h?{...row(h),bg:h.stillBig||h.still||showOf(h.showId).big||NOIMG,when:whenTxt(h)}:{};
+    const then=upcoming.slice(1,5).map(e=>({...row(e),when:whenTxt(e)}));
+    const groups=(mobile&&view==='week'?[S.day]:days).map(i=>({key:i,...dInfo(i),items:byDay[i].map(row),count:`${byDay[i].length} ep${byDay[i].length===1?'':'s'}`})).filter(g=>g.items.length);
+    const cols=days.map(i=>{const d=dInfo(i);return {key:i,dow:d.dow,num:d.num,headBg:i===0?'var(--primary)':'var(--surface2)',headFg:i===0?'var(--on-primary)':'var(--fg)',items:byDay[i].slice(0,14).map(row),empty:!byDay[i].length}});
+    const dayStrip=days.map(i=>{const d=dInfo(i),on=i===S.day;return {key:i,dow:d.dow,num:d.num,on:()=>this.setState({day:i}),bg:on?'var(--primary)':'transparent',fg:on?'var(--on-primary)':'var(--fg)',dot:byDay[i].length?(on?'var(--on-primary)':'var(--primary)'):'transparent'}});
+    const nF=Object.keys(F).length;
+    const ready=!S.loading;
+    const showWeek=ready&&view==='week'&&desktop,showEpg=ready&&view==='grid',showCd=ready&&view==='countdown';
+    const showAgenda=ready&&(view==='agenda'||(view==='week'&&mobile));
+
+    // EPG
+    const HW=mobile?150:200,LW=mobile?92:132;
+    const dayStart=T0+S.day*864e5;
+    const chans={};base.filter(e=>dIdx(e.t)===S.day).forEach(e=>{const s=showOf(e.showId),n=s.net||'Other';const c=chans[n]=chans[n]||{name:n,eps:[],w:0,mine:false};c.eps.push(e);c.w+=s.weight||0;if(F[e.showId])c.mine=true});
+    let chList=Object.values(chans);if(S.scope==='mine')chList=chList.filter(c=>c.mine);
+    chList=chList.sort((a,b)=>(b.mine-a.mine)||b.w-a.w).slice(0,18);
+    const epgRows=chList.map(c=>{const lanes=[];const blocks=c.eps.sort((a,b)=>a.t-b.t).map(e=>{const s=showOf(e.showId),st=e.t,en=st+Math.max(e.runtime||30,20)*6e4;let l=lanes.findIndex(x=>x<=st);if(l<0){l=lanes.length;lanes.push(en)}else lanes[l]=en;const mE=!!F[e.showId];
+      return {key:e.id,left:`${(st-dayStart)/36e5*HW+2}px`,top:`${l*54+5}px`,width:`${Math.max(e.runtime||30,20)/60*HW-4}px`,name:s.name,sub:`${fmtTime(st)} · ${e.code}`,bg:mE?'var(--primary)':'var(--surface2)',fg:mE?'var(--on-primary)':'var(--fg)',sfg:mE?'var(--on-primary)':'var(--muted)',op:endOf(e)<now?0.5:1,open:()=>this.openShow(e.showId)}});
+      return {key:c.name,name:c.name,mine:c.mine,h:`${lanes.length*54+8}px`,blocks}});
+    const hours=[...Array(24)].map((_,i)=>({key:i,left:`${i*HW}px`,label:new Date(dayStart+i*36e5).toLocaleTimeString([],{hour:'numeric'})}));
+    const nowOn=S.day===0;
+
+    // countdown
+    const nextBy={};upcoming.forEach(e=>{if(!nextBy[e.showId])nextBy[e.showId]=e});
+    const cd=Object.values(F).filter(s=>nextBy[s.id]).sort((a,b)=>nextBy[a.id].t-nextBy[b.id].t).map(s=>{const n=nextBy[s.id],ms=Math.max(0,n.t-now);return {key:s.id,name:s.name,img:s.img||NOIMG,code:n.code,title:n.title,when:`${whenTxt(n)} · ${s.net}`,d:pad(Math.floor(ms/864e5)),h:pad(Math.floor(ms%864e5/36e5)),m:pad(Math.floor(ms%36e5/6e4)),live:n.t<=now,notLive:n.t>now,pct:`${Math.max(4,100-ms/(7*864e5)*100)}%`,open:()=>this.openShow(s.id)}});
+    const idle=Object.values(F).filter(s=>!nextBy[s.id]).map(s=>s.name);
+
+    // library
+    const stLabel=Object.fromEntries(STATUS);
+    const lib=Object.values(F).filter(s=>S.libFilter==='all'||(S.status[s.id]||'watching')===S.libFilter).map(s=>{const n=nextBy[s.id],r=S.ratings[s.id]||0;return {key:s.id,name:s.name,img:s.img||NOIMG,rating:r,stars:stars(r,v=>this.rate(s.id,v)),nextOn:!!n,nextShort:n?(dIdx(n.t)===0?`Today ${fmtTime(n.t)}`:`${dInfo(dIdx(n.t)).dow} ${fmtTime(n.t)}`):'',nt:n?n.t:Infinity,status:`${stLabel[S.status[s.id]||'watching']} · ${n?n.code:(s.status||'—')}`,open:()=>this.openShow(s.id)}});
+    lib.sort(S.sort==='rating'?(a,b)=>b.rating-a.rating||a.name.localeCompare(b.name):S.sort==='az'?(a,b)=>a.name.localeCompare(b.name):(a,b)=>a.nt-b.nt||a.name.localeCompare(b.name));
+    const rated=Object.values(F).filter(s=>S.ratings[s.id]).length;
+
+    // discover
+    const score={},netScore={};Object.values(F).forEach(s=>{const w=S.ratings[s.id]||2.5;(s.genres||[]).forEach(g=>score[g]=(score[g]||0)+w);if(s.net)netScore[s.net]=(netScore[s.net]||0)+w});
+    const topG=Object.entries(score).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>x[0]);
+    const topNet=Object.entries(netScore).sort((a,b)=>b[1]-a[1])[0]?.[0];
+    const cand=Object.values(pool).filter(s=>!F[s.id]&&s.img);
+    const card=s=>({key:s.id,name:s.name,img:s.img||NOIMG,meta:s.via?`with ${s.via}`:[s.avg?`★ ${s.avg}`:null,(s.genres||[])[0]||s.net||s.year].filter(Boolean).join(' · '),open:()=>this.openShow(s.id),...followBtn(s)});
+    const because=g=>{const src=Object.values(F).filter(s=>(s.genres||[]).includes(g)).sort((a,b)=>(S.ratings[b.id]||0)-(S.ratings[a.id]||0))[0];return src?(S.ratings[src.id]?`Because you rated ${src.name} ${'★'.repeat(S.ratings[src.id])}`:`Because you follow ${src.name}`):''};
+    const rank=(a,b)=>(b.avg||0)-(a.avg||0)||b.weight-a.weight;
+    const rows=[];const R=S.reco;
+    rows.push({key:'trend',title:'Trending on TVmaze',reason:'Most-followed shows airing this week',items:[...cand].sort((a,b)=>b.weight-a.weight).slice(0,14).map(card)});
+    if(R&&R.cast.length)rows.push({key:'cast',title:`Shares cast with ${R.src.name}`,reason:S.ratings[R.src.id]?`Your top-rated show · ${'★'.repeat(S.ratings[R.src.id])}`:'From a show you follow',items:R.cast.map(card)});
+    if(R&&R.crew.length)rows.push({key:'crew',title:`From the creator${R.creators.length>1?'s':''} of ${R.src.name}`,reason:R.creators.join(' & '),items:R.crew.map(card)});
+    topG.forEach(g=>{const it=cand.filter(s=>s.genres.includes(g)).sort(rank).slice(0,14);if(it.length>=3)rows.push({key:g,title:`${g} for you`,reason:because(g),items:it.map(card)})});
+    if(topNet){const it=cand.filter(s=>s.net===topNet).sort(rank).slice(0,14);if(it.length>=2)rows.push({key:'net',title:`More on ${topNet}`,reason:'The network you watch most',items:it.map(card)})}
+    const prem=[...new Set(base.filter(e=>e.number===1&&e.season===1).map(e=>e.showId))].map(id=>pool[id]).filter(s=>s&&s.img).sort((a,b)=>b.weight-a.weight).slice(0,14);
+    if(prem.length)rows.push({key:'prem',title:'New series this week',reason:'Series premieres in the next 7 days',items:prem.map(card)});
+    const pickS=cand.filter(s=>s.sum).map(s=>({s,v:(s.genres.reduce((a,g)=>a+(score[g]||0),0)+(s.net===topNet?4:0)+1)*(s.avg||6)})).sort((a,b)=>b.v-a.v)[0]?.s;
+    const pick=pickS?{...card(pickS),big:pickS.big||pickS.img,sum:pickS.sum,reason:because(pickS.genres.find(g=>score[g])||'')||'Popular this week',net:pickS.net}:{};
+
+    // detail
+    const d=S.detail;let D={},seasons=[],epRows=[],cast=[],prog={},ep={},statusSeg=[];
+    if(d){
+      const all=d._embedded?.episodes||[];
+      seasons=[...new Set(all.map(e=>e.season))].map(n=>({key:n,label:`Season ${n}`,on:()=>this.setState({season:n}),bg:n===S.season?'var(--fg)':'transparent',fg:n===S.season?'var(--bg)':'var(--fg)'}));
+      const se=all.filter(e=>e.season===S.season);const wc=se.filter(e=>S.watched[e.id]).length;const allW=se.length&&wc===se.length;
+      epRows=se.map(e=>{const w=!!S.watched[e.id],t=e.airstamp?new Date(e.airstamp).getTime():null;return {key:e.id,code:e.number==null?'SP':`E${pad(e.number)}`,title:e.name,meta:[t?new Date(t).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}):'TBA',e.runtime?`${e.runtime} min`:null,e.rating?.average?`★ ${e.rating.average}`:null].filter(Boolean).join(' · '),sum:strip(e.summary),img:e.image?.medium||d.image?.medium||NOIMG,open:()=>this.setState({epId:e.id}),toggle:ev=>{ev.stopPropagation();this.toggleW(e.id)},cBg:w?'var(--primary)':'transparent',cBd:w?'var(--primary)':'var(--line2)',cFg:w?'var(--on-primary)':'var(--muted)',op:t&&t>now?0.5:1}});
+      const tw=all.filter(e=>S.watched[e.id]).length;
+      prog={label:`${wc} of ${se.length} watched`,total:`${tw} of ${all.length} episodes watched overall`,pct:`${se.length?Math.round(wc/se.length*100):0}%`,btn:allW?'Mark season unwatched':'Mark season watched',on:()=>this.markSeason(se.map(e=>e.id),!allW)};
+      cast=(d._embedded?.cast||[]).slice(0,14).map((c,i)=>({key:i,name:c.person?.name,role:c.character?.name||'',img:c.person?.image?.medium||NOIMG}));
+      const m=mini(d),nx=d._embedded?.nextepisode,nt=nx&&nx.airstamp?new Date(nx.airstamp).getTime():null;
+      const cur=F[d.id]?(S.status[d.id]||'watching'):null;
+      statusSeg=STATUS.map(([v,l])=>({key:v,label:l,on:()=>this.setStatus(m,v),bg:v===cur?'var(--fg)':'transparent',fg:v===cur?'var(--bg)':'var(--fg)'}));
+      D={...m,img:m.img||NOIMG,big:m.big||m.img||NOIMG,summary:strip(d.summary)||'No synopsis available.',genres:m.genres.map(g=>({g})),meta:[m.year?`${m.year}–${d.ended?d.ended.slice(0,4):''}`:null,m.net,d.status,(d.runtime||d.averageRuntime)?`${d.runtime||d.averageRuntime} min`:null].filter(Boolean).join('  ·  '),avg:m.avg?String(m.avg):'—',stars:stars(S.ratings[d.id]||0,v=>this.rate(d.id,v)),myRating:S.ratings[d.id]?`${S.ratings[d.id]}/5`:'tap to rate',...followBtn(m),hasNext:!!nt,next:nt?{code:epCode(nx),title:nx.name,when:whenTxt({t:nt}),rel:rel({t:nt,runtime:nx.runtime})}:{}};
+      const ei=all.findIndex(e=>e.id===S.epId);
+      if(ei>=0){const e=all[ei],w=!!S.watched[e.id],t=e.airstamp?new Date(e.airstamp).getTime():null;
+        ep={img:e.image?.original||e.image?.medium||d.image?.original||NOIMG,show:d.name,code:epCode(e),title:e.name,meta:[t?fmtDate(t):'TBA',t?fmtTime(t):null,e.runtime?`${e.runtime} min`:null].filter(Boolean).join(' · '),avg:e.rating?.average?`★ ${e.rating.average} average on TVmaze`:'Not yet rated on TVmaze',summary:strip(e.summary)||'No synopsis yet.',wLabel:w?'✓ Watched':'Mark as watched',wBg:w?'var(--primary)':'transparent',wFg:w?'var(--on-primary)':'var(--fg)',wBd:w?'var(--primary)':'var(--line2)',toggle:()=>this.toggleW(e.id),close:()=>this.setState({epId:null}),prev:()=>{if(ei>0)this.setState({epId:all[ei-1].id,season:all[ei-1].season})},next:()=>{if(ei<all.length-1)this.setState({epId:all[ei+1].id,season:all[ei+1].season})},prevOp:ei>0?1:.35,nextOp:ei<all.length-1?1:.35};
+      }
+    }
+    const likeCards=(S.like||[]).map(card);
+
+    // onboarding
+    const sel=S.obSel||F,nSel=Object.keys(sel).length;
+    const obPool=[...Object.values(F),...Object.values(pool).filter(s=>s.img&&!F[s.id]).sort((a,b)=>b.weight-a.weight)].slice(0,30);
+    const obCards=obPool.map(s=>{const on=!!sel[s.id];return {key:s.id,name:s.name,img:s.img||NOIMG,bd:on?'var(--primary)':'transparent',ck:on?'var(--primary)':'rgba(0,0,0,.45)',ckFg:on?'var(--on-primary)':'#fff',ckIcon:on?'✓':'+',on:()=>this.obToggle(s)}});
+    const obRate=Object.values(F).map(s=>({key:s.id,name:s.name,img:s.img||NOIMG,meta:[s.net,(s.genres||[])[0]].filter(Boolean).join(' · '),stars:stars(S.ratings[s.id]||0,v=>this.rate(s.id,v))}));
+    const OB=[['Pick the shows you watch','Airdate builds your TV guide from these. You can add more any time from Search.'],['Rate what you’ve seen','Your stars shape recommendations. Skip any you haven’t started.'],['Never miss an episode','Choose how Airdate reminds you when something new airs.']];
+
+    const active=S.tab==='show'?S.prevTab:S.tab;
+    const nav=NAV.map(([id,label])=>{const on=id===active;return {key:id,label,d:ICON[id],on:()=>this.go(id),bg:on?'var(--primary-soft)':'transparent',fg:on?'var(--primary-text)':'var(--muted)',mfg:on?'var(--primary-text)':'var(--muted)',fw:on?600:500}});
+    return {
+      rootRef:this.rootRef,mainRef:this.mainRef,epgRef:this.epgRef,mobile,desktop,region,
+      outerBg:phone?'var(--surface2)':'var(--bg)',outerPad:phone?'32px':'0',appW:phone?'390px':'100%',appH:phone?'844px':'100vh',appR:phone?'46px':'0',appBorder:phone?'10px solid #1b1b1e':'0',
+      headPad:mobile?'12px 16px':'14px 32px',pagePad:mobile?'20px 16px 32px':'32px 40px 64px',h1:mobile?'30px':'44px',h1big:mobile?'34px':'56px',heroTitle:mobile?'28px':'40px',heroH:mobile?'260px':'340px',heroPad:mobile?'20px':'32px',heroCols:mobile?'minmax(0,1fr)':'minmax(0,1.7fr) minmax(0,1fr)',rowCols:mobile?'56px 38px minmax(0,1fr) auto':'76px 44px minmax(0,1fr) auto',epCols:mobile?'104px minmax(0,1fr) 36px':'160px minmax(0,1fr) 36px',cardMin:mobile?'140px':'168px',obMin:mobile?'100px':'140px',gridGap:mobile?'18px 14px':'28px 20px',railW:mobile?'132px':'156px',pickW:mobile?'130px':'180px',posterW:mobile?'130px':'210px',aboutCols:mobile?'minmax(0,1fr)':'minmax(0,1fr) 320px',cdCols:mobile?'minmax(0,1fr)':'repeat(auto-fill,minmax(340px,1fr))',
+      dw:mobile?'100%':'460px',dh:mobile?'90%':'100%',dr:mobile?'22px 22px 0 0':'0',
+      themeIcon:theme==='dark'?SUN:MOON,themeLabel:theme==='dark'?'Light mode':'Dark mode',toggleTheme:()=>this.setState({theme:theme==='dark'?'light':'dark'}),
+      nav,soon:upcoming.slice(0,6).map(row),q:S.q,onQ:this.onQ,
+      hasError:!!S.error,error:S.error,retry:()=>this.load(),loading:S.loading,
+      isGuide:S.tab==='guide',isLibrary:S.tab==='library',isDiscover:S.tab==='discover',isSearch:S.tab==='search',isShow:S.tab==='show',isSettings:S.tab==='settings',
+      guideSub:S.loading?'Loading this week’s schedule from TVmaze…':S.scope==='mine'?`${upcoming.length} new episodes from ${nF} shows you follow · next 7 days`:`${scoped.length} episodes airing in ${region} and on streaming · next 7 days`,
+      scopeSeg:seg([['mine','My shows'],['all','Everything']],S.scope,v=>this.setState({scope:v})),
+      viewSeg:seg([['agenda','Agenda'],['week',mobile?'Day':'Week'],['grid','Grid'],['countdown','Countdown']],view,v=>this.setState({view:v})),
+      hasHero:ready&&view==='agenda'&&S.scope==='mine'&&!!h,hero,then,
+      showStrip:ready&&((mobile&&view==='week')||view==='grid'),strip:dayStrip,showWeek,cols,showAgenda,groups,guideEmpty:showAgenda&&!groups.length&&!S.error,
+      showEpg,epgRows,hours,epgW:`${LW+24*HW}px`,labelW:`${LW}px`,hw:`${HW}px`,epgDay:`${dInfo(S.day).label}`,nowOn,nowLeft:`${LW+(now-T0)/36e5*HW}px`,epgEmpty:showEpg&&!epgRows.length,epgMaxH:mobile?'560px':'620px',
+      showCd,cd,cdIdle:idle.length?`Not airing this week: ${idle.join(', ')}`:'',hasIdle:showCd&&idle.length>0,
+      libSub:`${nF} shows · ${rated} rated`,sortSeg:seg([['next','Airing next'],['rating','Rating'],['az','A–Z']],S.sort,v=>this.setState({sort:v})),libSeg:seg([['all','All'],...STATUS],S.libFilter,v=>this.setState({libFilter:v})),lib,libEmpty:!lib.length,
+      hasPick:!!pickS,pick,rows,
+      searchTitle:S.q.trim()?`Results for “${S.q.trim()}”`:'Search',searchSub:S.searching?'Searching TVmaze…':S.q.trim()?`${S.results.length} shows found`:'Find any show on TVmaze and add it to your library.',results:S.results.map(card),
+      back:()=>this.go(S.prevTab||'guide'),dLoading:S.dLoading,hasDetail:!!d,D,statusSeg,seasons,epRows,prog,cast,hasLike:likeCards.length>0,likeCards,hasEp:ep.title!==undefined,ep,
+      themeSeg:seg([['dark','Dark'],['light','Light'],['system','System']],this.themeMode(),v=>this.setState({theme:v})),
+      regionSeg:seg([['US','US'],['GB','UK'],['CA','Canada'],['AU','Australia']],region,v=>this.setState({region:v})),
+      leadSeg:seg([['0','At airtime'],['15','15 min before'],['60','1 hr before'],['digest','Morning digest']],set.lead,v=>this.setSet('lead',v)),
+      defViewSeg:seg([['agenda','Agenda'],['week','Week'],['grid','Grid'],['countdown','Countdown']],view,v=>this.setState({view:v})),
+      tNew:tg('notifyNew'),tPrem:tg('notifyPrem'),tFinale:tg('notifyFinale'),tHide:tg('hideAired'),tStream:tg('streaming'),
+      replayOb:()=>this.setState({onboard:true,obStep:0,obSel:null}),
+      onboard:S.onboard,obStep0:S.obStep===0,obStep1:S.obStep===1,obStep2:S.obStep===2,obTitle:OB[S.obStep][0],obSub:OB[S.obStep][1],
+      obDots:[0,1,2].map(i=>({key:i,bg:i<=S.obStep?'var(--primary)':'var(--line2)'})),obStepLabel:`Step ${S.obStep+1} of 3`,
+      obCards,obRate,obCount:S.obStep===0?`${nSel} selected`:S.obStep===1?`${rated} of ${nF} rated`:'You can change these in Settings',
+      obNext:this.obNext,obNextLabel:S.obStep===2?'Start watching':'Continue',obNextOp:S.obStep===0&&!nSel?0.4:1,
+      obBack:()=>this.setState({obStep:Math.max(0,S.obStep-1)}),obBackOp:S.obStep>0?1:0,obSkip:()=>this.setState({onboard:false,obStep:0,obSel:null})
+    };
+  }
+}
+</script>
+</body>
+</html>
+
