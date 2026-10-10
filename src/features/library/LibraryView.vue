@@ -405,14 +405,22 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
 .library__right {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
 }
+/* Fixed width so long network names never widen the toolbar; the select truncates. */
 .library__network {
-  min-width: 180px;
+  width: 190px;
+  flex: none;
+}
+.library__network :deep(select) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .library__search {
-  width: min(280px, 100%);
+  width: 260px;
+  flex: none;
 }
 .grid {
   display: grid;
@@ -488,8 +496,15 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
     grid-template-columns: repeat(auto-fill, minmax(var(--card-min-mobile), 1fr));
     gap: var(--grid-gap-mobile);
   }
-  .library__search {
+  .library__right {
     width: 100%;
+  }
+  .library__network {
+    width: 44%;
+  }
+  .library__search {
+    flex: 1;
+    width: auto;
   }
 }
 </style>
