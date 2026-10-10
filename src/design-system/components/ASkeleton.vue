@@ -7,7 +7,11 @@ withDefaults(defineProps<{ height?: string; width?: string; radius?: string; rat
 </script>
 
 <template>
-  <div class="a-skeleton" :style="{ height: ratio ? undefined : height, width, borderRadius: radius, aspectRatio: ratio }" aria-hidden="true" />
+  <div
+    class="a-skeleton"
+    :style="{ height: ratio ? undefined : height, width, borderRadius: radius, aspectRatio: ratio }"
+    aria-hidden="true"
+  />
 </template>
 
 <style scoped>

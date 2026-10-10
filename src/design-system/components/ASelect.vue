@@ -6,9 +6,12 @@ export interface SelectOption {
   label: string
 }
 
-withDefaults(defineProps<{ label?: string; options: SelectOption[]; disabled?: boolean; hint?: string }>(), {
-  disabled: false,
-})
+withDefaults(
+  defineProps<{ label?: string; options: SelectOption[]; disabled?: boolean; hint?: string }>(),
+  {
+    disabled: false,
+  },
+)
 const model = defineModel<string | number>({ required: true })
 const id = useId()
 </script>
@@ -20,7 +23,19 @@ const id = useId()
       <select :id="id" v-model="model" class="a-select__el" :disabled="disabled">
         <option v-for="o in options" :key="o.value" :value="o.value">{{ o.label }}</option>
       </select>
-      <svg class="a-select__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+      <svg
+        class="a-select__chev"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M6 9l6 6 6-6" />
+      </svg>
     </div>
     <p v-if="hint" class="a-select__hint">{{ hint }}</p>
   </div>

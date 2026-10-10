@@ -2,7 +2,15 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { AAlert, AButton, AEmptyState, APageHeader, APoster, ASegmented, ASkeleton } from '@/design-system'
+import {
+  AAlert,
+  AButton,
+  AEmptyState,
+  APageHeader,
+  APoster,
+  ASegmented,
+  ASkeleton,
+} from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { fetchUpcomingEpisodes } from '@/lib/api/episodes'
 import { dayKey, episodeCode, formatAirTime, formatRuntime, relativeDayLabel } from '@/lib/format'
@@ -68,7 +76,11 @@ const groups = computed<DayGroup[]>(() => {
       g = {
         key,
         label: relativeDayLabel(e.airstamp, tz.value),
-        sub: new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', timeZone: tz.value }).format(new Date(e.airstamp)),
+        sub: new Intl.DateTimeFormat(undefined, {
+          month: 'short',
+          day: 'numeric',
+          timeZone: tz.value,
+        }).format(new Date(e.airstamp)),
         items: [],
       }
       map.set(key, g)
@@ -88,7 +100,16 @@ const subtitle = computed(() => {
 <template>
   <div class="guide">
     <APageHeader title="Your week on TV" :subtitle="subtitle">
-      <ASegmented v-model="range" :options="[{ value: 7, label: '7 days' }, { value: 14, label: '14 days' }, { value: 30, label: '30 days' }]" aria-label="Range" @update:model-value="load" />
+      <ASegmented
+        v-model="range"
+        :options="[
+          { value: 7, label: '7 days' },
+          { value: 14, label: '14 days' },
+          { value: 30, label: '30 days' },
+        ]"
+        aria-label="Range"
+        @update:model-value="load"
+      />
     </APageHeader>
 
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
@@ -107,17 +128,30 @@ const subtitle = computed(() => {
           <div class="hero__content">
             <span class="hero__badge">Up next · {{ rel(hero) }}</span>
             <span class="hero__name">{{ hero.show_name }}</span>
-            <span class="hero__ep"><span class="t-mono hero__code">{{ episodeCode(hero.season, hero.number) }}</span> — {{ hero.episode_name ?? 'TBA' }}</span>
-            <span class="hero__when">{{ relativeDayLabel(hero.airstamp, tz) }} · {{ formatAirTime(hero.airstamp, tz) }}<template v-if="hero.runtime"> · {{ formatRuntime(hero.runtime) }}</template></span>
+            <span class="hero__ep"
+              ><span class="t-mono hero__code">{{ episodeCode(hero.season, hero.number) }}</span> —
+              {{ hero.episode_name ?? 'TBA' }}</span
+            >
+            <span class="hero__when"
+              >{{ relativeDayLabel(hero.airstamp, tz) }} · {{ formatAirTime(hero.airstamp, tz)
+              }}<template v-if="hero.runtime"> · {{ formatRuntime(hero.runtime) }}</template></span
+            >
           </div>
         </RouterLink>
         <div class="then">
           <div class="t-label then__title">Then</div>
-          <RouterLink v-for="e in then" :key="e.episode_id" :to="{ name: 'show', params: { id: e.show_id } }" class="then__item">
+          <RouterLink
+            v-for="e in then"
+            :key="e.episode_id"
+            :to="{ name: 'show', params: { id: e.show_id } }"
+            class="then__item"
+          >
             <APoster :src="e.show_image" radius="sm" class="then__img" />
             <span class="then__text">
               <span class="then__name truncate">{{ e.show_name }}</span>
-              <span class="then__when">{{ relativeDayLabel(e.airstamp, tz) }} · {{ formatAirTime(e.airstamp, tz) }}</span>
+              <span class="then__when"
+                >{{ relativeDayLabel(e.airstamp, tz) }} · {{ formatAirTime(e.airstamp, tz) }}</span
+              >
               <span class="then__rel">{{ rel(e) }}</span>
             </span>
           </RouterLink>
@@ -130,7 +164,9 @@ const subtitle = computed(() => {
           <div class="agenda__head">
             <span class="agenda__label">{{ g.label }}</span>
             <span class="agenda__sub">{{ g.sub }}</span>
-            <span class="agenda__count">{{ g.items.length }} ep{{ g.items.length === 1 ? '' : 's' }}</span>
+            <span class="agenda__count"
+              >{{ g.items.length }} ep{{ g.items.length === 1 ? '' : 's' }}</span
+            >
           </div>
           <RouterLink
             v-for="e in g.items"
@@ -144,10 +180,19 @@ const subtitle = computed(() => {
             <span class="row__text">
               <span class="row__title">
                 <span class="row__name truncate">{{ e.show_name }}</span>
-                <span v-if="endOf(e) >= now && new Date(e.airstamp).getTime() <= now" class="row__badge row__badge--live">On now</span>
-                <span v-else-if="e.number === 1" class="row__badge">{{ e.season === 1 ? 'Series premiere' : 'Season premiere' }}</span>
+                <span
+                  v-if="endOf(e) >= now && new Date(e.airstamp).getTime() <= now"
+                  class="row__badge row__badge--live"
+                  >On now</span
+                >
+                <span v-else-if="e.number === 1" class="row__badge">{{
+                  e.season === 1 ? 'Series premiere' : 'Season premiere'
+                }}</span>
               </span>
-              <span class="row__ep truncate"><span class="t-mono row__code">{{ episodeCode(e.season, e.number) }}</span> · {{ e.episode_name ?? 'TBA' }}</span>
+              <span class="row__ep truncate"
+                ><span class="t-mono row__code">{{ episodeCode(e.season, e.number) }}</span> ·
+                {{ e.episode_name ?? 'TBA' }}</span
+              >
             </span>
             <span class="row__rel t-mono">{{ rel(e) }}</span>
           </RouterLink>
@@ -157,7 +202,11 @@ const subtitle = computed(() => {
       <AEmptyState
         v-else
         title="Nothing scheduled yet"
-        :description="library.entries.length ? 'None of the shows you follow have upcoming episodes in this range.' : 'Follow a few shows and your guide fills itself in.'"
+        :description="
+          library.entries.length
+            ? 'None of the shows you follow have upcoming episodes in this range.'
+            : 'Follow a few shows and your guide fills itself in.'
+        "
       >
         <AButton :to="{ name: 'search' }" icon="search">Find shows</AButton>
       </AEmptyState>
@@ -204,7 +253,12 @@ const subtitle = computed(() => {
 .hero__shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 8%, rgba(0, 0, 0, 0.35) 60%, rgba(0, 0, 0, 0.05));
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.9) 8%,
+    rgba(0, 0, 0, 0.35) 60%,
+    rgba(0, 0, 0, 0.05)
+  );
 }
 .hero__content {
   position: relative;

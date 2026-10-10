@@ -3,12 +3,18 @@ import { computed } from 'vue'
 
 import { initials } from '@/lib/format'
 
-const props = withDefaults(defineProps<{ name?: string | null; src?: string | null; size?: number }>(), { size: 32 })
+const props = withDefaults(
+  defineProps<{ name?: string | null; src?: string | null; size?: number }>(),
+  { size: 32 },
+)
 const text = computed(() => initials(props.name))
 </script>
 
 <template>
-  <span class="a-avatar" :style="{ width: `${size}px`, height: `${size}px`, fontSize: `${Math.round(size * 0.38)}px` }">
+  <span
+    class="a-avatar"
+    :style="{ width: `${size}px`, height: `${size}px`, fontSize: `${Math.round(size * 0.38)}px` }"
+  >
     <img v-if="src" :src="src" :alt="name ?? ''" class="a-avatar__img" />
     <span v-else>{{ text }}</span>
   </span>

@@ -36,8 +36,23 @@ async function submit() {
   <AuthFormShell title="Welcome back" subtitle="Sign in to see what's airing this week.">
     <form @submit.prevent="submit">
       <AAlert v-if="error" variant="error">{{ error }}</AAlert>
-      <AInput v-model="email" label="Email" type="email" autocomplete="email" icon="mail" placeholder="you@example.com" required />
-      <AInput v-model="password" label="Password" type="password" autocomplete="current-password" icon="lock" required />
+      <AInput
+        v-model="email"
+        label="Email"
+        type="email"
+        autocomplete="email"
+        icon="mail"
+        placeholder="you@example.com"
+        required
+      />
+      <AInput
+        v-model="password"
+        label="Password"
+        type="password"
+        autocomplete="current-password"
+        icon="lock"
+        required
+      />
       <AButton type="submit" size="lg" block :loading="loading">Sign in</AButton>
     </form>
     <template #footer>

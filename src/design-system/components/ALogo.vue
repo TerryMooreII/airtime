@@ -1,5 +1,8 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ compact?: boolean; name?: string }>(), { compact: false, name: 'Airtime' })
+withDefaults(defineProps<{ compact?: boolean; name?: string }>(), {
+  compact: false,
+  name: 'Airtime',
+})
 </script>
 
 <template>

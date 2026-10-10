@@ -46,8 +46,14 @@ async function act(user: AdminUser, fn: () => Promise<unknown>, message: string)
     busyId.value = null
   }
 }
-const toggleRole = (u: AdminUser) => act(u, () => setUserRole(u.id, u.role === 'admin' ? 'user' : 'admin'), `${u.email} is now ${u.role === 'admin' ? 'a member' : 'an admin'}`)
-const toggleBan = (u: AdminUser) => act(u, () => banUser(u.id, !isBanned(u)), isBanned(u) ? 'User unbanned' : 'User banned')
+const toggleRole = (u: AdminUser) =>
+  act(
+    u,
+    () => setUserRole(u.id, u.role === 'admin' ? 'user' : 'admin'),
+    `${u.email} is now ${u.role === 'admin' ? 'a member' : 'an admin'}`,
+  )
+const toggleBan = (u: AdminUser) =>
+  act(u, () => banUser(u.id, !isBanned(u)), isBanned(u) ? 'User unbanned' : 'User banned')
 async function doDelete() {
   const u = confirmDelete.value
   if (!u) return
@@ -78,8 +84,12 @@ const columns: TableColumn[] = [
           <span class="t-muted">{{ row.email }}</span>
         </span>
       </template>
-      <template #cell-role="{ value }"><ABadge :variant="value === 'admin' ? 'soft' : 'muted'">{{ value }}</ABadge></template>
-      <template #cell-last_sign_in_at="{ value }"><span class="t-muted">{{ value ? timeAgo(String(value)) : 'never' }}</span></template>
+      <template #cell-role="{ value }"
+        ><ABadge :variant="value === 'admin' ? 'soft' : 'muted'">{{ value }}</ABadge></template
+      >
+      <template #cell-last_sign_in_at="{ value }"
+        ><span class="t-muted">{{ value ? timeAgo(String(value)) : 'never' }}</span></template
+      >
       <template #cell-state="{ row }">
         <ABadge v-if="isBanned(row as unknown as AdminUser)" variant="danger">banned</ABadge>
         <ABadge v-else-if="!row.email_confirmed_at" variant="warning">unverified</ABadge>
@@ -87,18 +97,57 @@ const columns: TableColumn[] = [
       </template>
       <template #cell-actions="{ row }">
         <div v-if="row.id !== auth.user?.id" class="actions">
-          <AButton variant="outline" size="sm" :loading="busyId === row.id" @click="toggleRole(row as unknown as AdminUser)">{{ row.role === 'admin' ? 'Make member' : 'Make admin' }}</AButton>
-          <AButton variant="outline" size="sm" :loading="busyId === row.id" @click="toggleBan(row as unknown as AdminUser)">{{ isBanned(row as unknown as AdminUser) ? 'Unban' : 'Ban' }}</AButton>
-          <AButton variant="danger" size="sm" icon="trash" :loading="busyId === row.id" @click="confirmDelete = row as unknown as AdminUser">Delete</AButton>
+          <AButton
+            variant="outline"
+            size="sm"
+            :loading="busyId === row.id"
+            @click="toggleRole(row as unknown as AdminUser)"
+            >{{ row.role === 'admin' ? 'Make member' : 'Make admin' }}</AButton
+          >
+          <AButton
+            variant="outline"
+            size="sm"
+            :loading="busyId === row.id"
+            @click="toggleBan(row as unknown as AdminUser)"
+            >{{ isBanned(row as unknown as AdminUser) ? 'Unban' : 'Ban' }}</AButton
+          >
+          <AButton
+            variant="danger"
+            size="sm"
+            icon="trash"
+            :loading="busyId === row.id"
+            @click="confirmDelete = row as unknown as AdminUser"
+            >Delete</AButton
+          >
         </div>
         <span v-else class="t-muted">you</span>
       </template>
     </ATable>
     <div class="pager">
-      <span class="t-muted">Page {{ page }}<template v-if="total !== null"> · {{ total }} users</template></span>
+      <span class="t-muted"
+        >Page {{ page }}<template v-if="total !== null"> · {{ total }} users</template></span
+      >
       <div class="pager__btns">
-        <AButton variant="outline" size="sm" :disabled="page === 1" @click="page--; load()">Previous</AButton>
-        <AButton variant="outline" size="sm" :disabled="users.length < 50" @click="page++; load()">Next</AButton>
+        <AButton
+          variant="outline"
+          size="sm"
+          :disabled="page === 1"
+          @click="
+            page--
+            load()
+          "
+          >Previous</AButton
+        >
+        <AButton
+          variant="outline"
+          size="sm"
+          :disabled="users.length < 50"
+          @click="
+            page++
+            load()
+          "
+          >Next</AButton
+        >
       </div>
     </div>
 

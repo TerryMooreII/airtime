@@ -8,7 +8,10 @@ useTheme()
 <template>
   <div class="nf">
     <ALogo />
-    <AEmptyState title="Page not found" description="That link doesn't go anywhere. Head back to your guide.">
+    <AEmptyState
+      title="Page not found"
+      description="That link doesn't go anywhere. Head back to your guide."
+    >
       <AButton :to="{ name: 'home' }">Go home</AButton>
     </AEmptyState>
   </div>

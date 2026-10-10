@@ -28,22 +28,33 @@ watch(search.query, (q) => {
   if (q !== current) void router.replace({ name: 'search', query: q ? { q } : {} })
 })
 
-const title = computed(() => (search.query.value.trim() ? `Results for “${search.query.value.trim()}”` : 'Search'))
+const title = computed(() =>
+  search.query.value.trim() ? `Results for “${search.query.value.trim()}”` : 'Search',
+)
 const subtitle = computed(() => {
   if (search.loading.value) return 'Searching…'
-  if (search.query.value.trim().length < 2) return 'Find any show in the catalog and add it to your library.'
+  if (search.query.value.trim().length < 2)
+    return 'Find any show in the catalog and add it to your library.'
   return `${search.results.value.length}${search.hasMore.value ? '+' : ''} show${search.results.value.length === 1 ? '' : 's'} found`
 })
 
 function meta(s: SearchResult): string {
-  return [s.rating ? `★ ${s.rating}` : null, s.genres[0] ?? s.network_name ?? yearOf(s.premiered)].filter(Boolean).join(' · ')
+  return [s.rating ? `★ ${s.rating}` : null, s.genres[0] ?? s.network_name ?? yearOf(s.premiered)]
+    .filter(Boolean)
+    .join(' · ')
 }
 </script>
 
 <template>
   <div class="search">
     <h1 class="t-h1">{{ title }}</h1>
-    <ASearchBox v-model="search.query.value" placeholder="Search any show" size="lg" autofocus class="search__box" />
+    <ASearchBox
+      v-model="search.query.value"
+      placeholder="Search any show"
+      size="lg"
+      autofocus
+      class="search__box"
+    />
     <p class="t-sub search__sub">{{ subtitle }}</p>
 
     <AAlert v-if="search.error.value" variant="error">{{ search.error.value }}</AAlert>
@@ -73,7 +84,9 @@ function meta(s: SearchResult): string {
     />
 
     <div v-if="search.hasMore.value" class="search__more">
-      <AButton variant="outline" :loading="search.loading.value" @click="search.loadMore">Load more</AButton>
+      <AButton variant="outline" :loading="search.loading.value" @click="search.loadMore"
+        >Load more</AButton
+      >
     </div>
   </div>
 </template>

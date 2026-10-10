@@ -17,7 +17,16 @@ const tabs = [
         <h1 class="t-h1">Management</h1>
       </div>
       <nav class="admin__tabs" aria-label="Admin sections">
-        <RouterLink v-for="t in tabs" :key="t.name" :to="{ name: t.name }" class="admin__tab" active-class="admin__tab--on" :exact-active-class="t.name === 'admin' ? 'admin__tab--on' : undefined" exact>{{ t.label }}</RouterLink>
+        <RouterLink
+          v-for="t in tabs"
+          :key="t.name"
+          :to="{ name: t.name }"
+          class="admin__tab"
+          active-class="admin__tab--on"
+          :exact-active-class="t.name === 'admin' ? 'admin__tab--on' : undefined"
+          exact
+          >{{ t.label }}</RouterLink
+        >
       </nav>
     </div>
     <RouterView />

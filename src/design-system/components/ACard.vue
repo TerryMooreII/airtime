@@ -1,13 +1,23 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ padding?: 'none' | 'sm' | 'md' | 'lg'; radius?: 'lg' | 'xl' | '2xl'; interactive?: boolean }>(), {
-  padding: 'md',
-  radius: 'xl',
-  interactive: false,
-})
+withDefaults(
+  defineProps<{
+    padding?: 'none' | 'sm' | 'md' | 'lg'
+    radius?: 'lg' | 'xl' | '2xl'
+    interactive?: boolean
+  }>(),
+  {
+    padding: 'md',
+    radius: 'xl',
+    interactive: false,
+  },
+)
 </script>
 
 <template>
-  <div class="a-card" :class="[`a-card--p-${padding}`, `a-card--r-${radius}`, { 'a-card--interactive': interactive }]">
+  <div
+    class="a-card"
+    :class="[`a-card--p-${padding}`, `a-card--r-${radius}`, { 'a-card--interactive': interactive }]"
+  >
     <slot />
   </div>
 </template>

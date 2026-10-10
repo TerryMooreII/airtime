@@ -40,7 +40,9 @@ async function run(job: 'full_schedule' | 'show_updates') {
   busy.value = job
   try {
     const id = await enqueueSync(job)
-    ui.success(id ? 'Job queued; the worker picks it up within a minute.' : 'That job is already queued.')
+    ui.success(
+      id ? 'Job queued; the worker picks it up within a minute.' : 'That job is already queued.',
+    )
     await load()
   } catch (err) {
     ui.error(errorMessage(err))
@@ -54,35 +56,81 @@ const fmt = (n: number | undefined) => (n ?? 0).toLocaleString()
 <template>
   <div class="dash">
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
-    <div v-if="loading && !stats" class="dash__stats"><ASkeleton v-for="i in 6" :key="i" height="96px" /></div>
+    <div v-if="loading && !stats" class="dash__stats">
+      <ASkeleton v-for="i in 6" :key="i" height="96px" />
+    </div>
     <template v-else-if="stats">
       <div class="dash__stats">
-        <AStat label="Shows" :value="fmt(stats.shows)" :hint="`${fmt(stats.shows_with_episodes)} with episode history`" />
+        <AStat
+          label="Shows"
+          :value="fmt(stats.shows)"
+          :hint="`${fmt(stats.shows_with_episodes)} with episode history`"
+        />
         <AStat label="Episodes" :value="fmt(stats.episodes)" />
-        <AStat label="Users" :value="fmt(stats.users)" :hint="`${fmt(stats.tracked_shows)} shows tracked`" />
+        <AStat
+          label="Users"
+          :value="fmt(stats.users)"
+          :hint="`${fmt(stats.tracked_shows)} shows tracked`"
+        />
         <AStat label="Alerts · 24h" :value="fmt(stats.notifications_24h)" />
-        <AStat label="Queue" :value="fmt((queue?.queued ?? 0) + (queue?.running ?? 0))" :hint="`${fmt(queue?.failed)} failed`" />
-        <AStat label="Catalog import" :value="catalog?.completed_at ? 'Done' : catalog?.last_page != null ? `p.${catalog.last_page}` : '—'" :hint="catalogLabel" />
+        <AStat
+          label="Queue"
+          :value="fmt((queue?.queued ?? 0) + (queue?.running ?? 0))"
+          :hint="`${fmt(queue?.failed)} failed`"
+        />
+        <AStat
+          label="Catalog import"
+          :value="
+            catalog?.completed_at
+              ? 'Done'
+              : catalog?.last_page != null
+                ? `p.${catalog.last_page}`
+                : '—'
+          "
+          :hint="catalogLabel"
+        />
       </div>
 
       <div class="dash__grid">
         <ACard padding="lg">
           <span class="t-label">Nightly sync</span>
-          <p class="dash__p">The full TVMaze schedule and show updates import every night at 06:00 UTC. Trigger either job now:</p>
+          <p class="dash__p">
+            The full TVMaze schedule and show updates import every night at 06:00 UTC. Trigger
+            either job now:
+          </p>
           <div class="dash__actions">
-            <AButton variant="outline" icon="refresh" :loading="busy === 'full_schedule'" @click="run('full_schedule')">Import full schedule</AButton>
-            <AButton variant="outline" icon="refresh" :loading="busy === 'show_updates'" @click="run('show_updates')">Check show updates</AButton>
+            <AButton
+              variant="outline"
+              icon="refresh"
+              :loading="busy === 'full_schedule'"
+              @click="run('full_schedule')"
+              >Import full schedule</AButton
+            >
+            <AButton
+              variant="outline"
+              icon="refresh"
+              :loading="busy === 'show_updates'"
+              @click="run('show_updates')"
+              >Check show updates</AButton
+            >
           </div>
           <div v-if="stats.last_full_schedule" class="dash__last">
-            <ABadge :variant="stats.last_full_schedule.status === 'succeeded' ? 'success' : 'danger'">{{ stats.last_full_schedule.status }}</ABadge>
-            <span class="t-muted">Last schedule import {{ timeAgo(stats.last_full_schedule.finished_at) }}</span>
+            <ABadge
+              :variant="stats.last_full_schedule.status === 'succeeded' ? 'success' : 'danger'"
+              >{{ stats.last_full_schedule.status }}</ABadge
+            >
+            <span class="t-muted"
+              >Last schedule import {{ timeAgo(stats.last_full_schedule.finished_at) }}</span
+            >
           </div>
         </ACard>
         <ACard padding="lg">
           <span class="t-label">Recent runs</span>
           <ul class="runs">
             <li v-for="r in runs" :key="r.id" class="runs__item">
-              <ABadge :variant="r.status === 'succeeded' ? 'success' : 'danger'">{{ r.status }}</ABadge>
+              <ABadge :variant="r.status === 'succeeded' ? 'success' : 'danger'">{{
+                r.status
+              }}</ABadge>
               <span class="runs__type t-mono">{{ r.job_type }}</span>
               <span class="runs__when t-muted">{{ timeAgo(r.finished_at) }}</span>
             </li>

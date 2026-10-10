@@ -52,11 +52,18 @@ const emit = defineEmits<{ toggleTheme: [] }>()
 
     <div class="a-shell__body">
       <header class="a-shell__header">
-        <RouterLink :to="{ name: 'home' }" class="a-shell__brand a-shell__brand--mobile"><ALogo /></RouterLink>
+        <RouterLink :to="{ name: 'home' }" class="a-shell__brand a-shell__brand--mobile"
+          ><ALogo
+        /></RouterLink>
         <div class="a-shell__search"><slot name="search" /></div>
         <div class="a-shell__spacer" />
         <slot name="actions" />
-        <button type="button" class="a-shell__theme a-shell__theme--icon" :aria-label="themeLabel" @click="emit('toggleTheme')">
+        <button
+          type="button"
+          class="a-shell__theme a-shell__theme--icon"
+          :aria-label="themeLabel"
+          @click="emit('toggleTheme')"
+        >
           <AIcon :name="themeIcon" :size="18" />
         </button>
       </header>

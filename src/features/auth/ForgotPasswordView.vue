@@ -30,10 +30,20 @@ async function submit() {
 
 <template>
   <AuthFormShell title="Reset your password" subtitle="We'll email you a link to choose a new one.">
-    <AAlert v-if="sent" variant="success" title="Check your inbox">If an account exists for {{ email }}, a reset link is on its way.</AAlert>
+    <AAlert v-if="sent" variant="success" title="Check your inbox"
+      >If an account exists for {{ email }}, a reset link is on its way.</AAlert
+    >
     <form v-else @submit.prevent="submit">
       <AAlert v-if="error" variant="error">{{ error }}</AAlert>
-      <AInput v-model="email" label="Email" type="email" autocomplete="email" icon="mail" placeholder="you@example.com" required />
+      <AInput
+        v-model="email"
+        label="Email"
+        type="email"
+        autocomplete="email"
+        icon="mail"
+        placeholder="you@example.com"
+        required
+      />
       <AButton type="submit" size="lg" block :loading="loading">Send reset link</AButton>
     </form>
     <template #footer>

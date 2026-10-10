@@ -15,12 +15,19 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ close: []; navigate: [episode: Episode] }>()
 
-const index = computed(() => (props.episode ? props.episodes.findIndex((e) => e.id === props.episode!.id) : -1))
+const index = computed(() =>
+  props.episode ? props.episodes.findIndex((e) => e.id === props.episode!.id) : -1,
+)
 const prev = computed(() => (index.value > 0 ? props.episodes[index.value - 1] : undefined))
 const next = computed(() => (index.value >= 0 ? props.episodes[index.value + 1] : undefined))
 const meta = computed(() => {
   if (!props.episode) return ''
-  return [formatDateTime(props.episode.airstamp, props.timezone), formatRuntime(props.episode.runtime)].filter(Boolean).join(' · ')
+  return [
+    formatDateTime(props.episode.airstamp, props.timezone),
+    formatRuntime(props.episode.runtime),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 })
 </script>
 
@@ -29,14 +36,26 @@ const meta = computed(() => {
     <template v-if="episode">
       <APoster :src="episode.image_medium ?? showImage" ratio="still" radius="sm" class="ep__img" />
       <div class="ep__body">
-        <span class="ep__kicker">{{ showName }} · {{ episodeCode(episode.season, episode.number) }}</span>
+        <span class="ep__kicker"
+          >{{ showName }} · {{ episodeCode(episode.season, episode.number) }}</span
+        >
         <h2 class="ep__title">{{ episode.name ?? 'TBA' }}</h2>
         <span class="ep__meta">{{ meta }}</span>
-        <span class="ep__avg">{{ rating ? `★ ${rating} average on TVmaze` : 'Not yet rated on TVmaze' }}</span>
+        <span class="ep__avg">{{
+          rating ? `★ ${rating} average on TVmaze` : 'Not yet rated on TVmaze'
+        }}</span>
         <p class="ep__summary">{{ stripHtml(episode.summary_html) || 'No synopsis yet.' }}</p>
         <div class="ep__nav">
-          <AButton variant="outline" :disabled="!prev" icon="back" @click="prev && emit('navigate', prev)">Previous</AButton>
-          <AButton variant="outline" :disabled="!next" @click="next && emit('navigate', next)">Next</AButton>
+          <AButton
+            variant="outline"
+            :disabled="!prev"
+            icon="back"
+            @click="prev && emit('navigate', prev)"
+            >Previous</AButton
+          >
+          <AButton variant="outline" :disabled="!next" @click="next && emit('navigate', next)"
+            >Next</AButton
+          >
         </div>
       </div>
     </template>

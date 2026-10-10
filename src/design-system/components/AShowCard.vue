@@ -30,13 +30,29 @@ const rating = defineModel<number | null>('rating', { default: null })
 </script>
 
 <template>
-  <RouterLink :to="{ name: 'show', params: { id: showId } }" class="a-show-card" :style="width ? { width, flex: 'none' } : undefined">
+  <RouterLink
+    :to="{ name: 'show', params: { id: showId } }"
+    class="a-show-card"
+    :style="width ? { width, flex: 'none' } : undefined"
+  >
     <APoster :src="image" :alt="name" radius="lg">
       <span v-if="badge" class="a-show-card__badge">{{ badge }}</span>
-      <AFollowButton v-if="showFollow" :following="following" :loading="followLoading" appearance="chip" @toggle="emit('follow')" />
+      <AFollowButton
+        v-if="showFollow"
+        :following="following"
+        :loading="followLoading"
+        appearance="chip"
+        @toggle="emit('follow')"
+      />
     </APoster>
     <span class="a-show-card__name truncate">{{ name }}</span>
-    <AStarRating v-if="showRating" v-model="rating" size="sm" class="a-show-card__stars" @click.prevent />
+    <AStarRating
+      v-if="showRating"
+      v-model="rating"
+      size="sm"
+      class="a-show-card__stars"
+      @click.prevent
+    />
     <span v-if="meta" class="a-show-card__meta truncate">{{ meta }}</span>
   </RouterLink>
 </template>

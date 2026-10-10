@@ -37,7 +37,9 @@ function init() {
 /** Theme mode persisted per browser (dark is the default, as in the mock). */
 export function useTheme() {
   init()
-  const resolved = computed(() => (mode.value === 'system' ? (systemDark.value ? 'dark' : 'light') : mode.value))
+  const resolved = computed(() =>
+    mode.value === 'system' ? (systemDark.value ? 'dark' : 'light') : mode.value,
+  )
   function toggle() {
     mode.value = resolved.value === 'dark' ? 'light' : 'dark'
   }

@@ -22,7 +22,10 @@ function onKey(e: KeyboardEvent) {
 }
 watch(
   () => props.open,
-  (open) => (open ? document.addEventListener('keydown', onKey) : document.removeEventListener('keydown', onKey)),
+  (open) =>
+    open
+      ? document.addEventListener('keydown', onKey)
+      : document.removeEventListener('keydown', onKey),
   { immediate: true },
 )
 onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
@@ -39,7 +42,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
           <slot />
           <div class="a-modal__actions">
             <AButton variant="outline" @click="emit('close')">{{ cancelLabel }}</AButton>
-            <AButton :variant="danger ? 'danger' : 'primary'" :loading="loading" @click="emit('confirm')">{{ confirmLabel }}</AButton>
+            <AButton
+              :variant="danger ? 'danger' : 'primary'"
+              :loading="loading"
+              @click="emit('confirm')"
+              >{{ confirmLabel }}</AButton
+            >
           </div>
         </div>
       </div>

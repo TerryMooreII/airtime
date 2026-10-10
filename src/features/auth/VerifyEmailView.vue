@@ -12,7 +12,9 @@ const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
-const email = computed(() => (typeof route.query.email === 'string' ? route.query.email : auth.user?.email) ?? '')
+const email = computed(
+  () => (typeof route.query.email === 'string' ? route.query.email : auth.user?.email) ?? '',
+)
 const sending = ref(false)
 const sent = ref(false)
 const error = ref<string | null>(null)
@@ -38,12 +40,19 @@ async function signOut() {
 </script>
 
 <template>
-  <AuthFormShell title="Check your email" :subtitle="`We sent a confirmation link to ${email || 'your inbox'}. Open it to activate your account.`">
+  <AuthFormShell
+    title="Check your email"
+    :subtitle="`We sent a confirmation link to ${email || 'your inbox'}. Open it to activate your account.`"
+  >
     <AAlert v-if="sent" variant="success">A new link is on its way.</AAlert>
     <AAlert v-if="error" variant="error">{{ error }}</AAlert>
     <div class="actions">
-      <AButton variant="outline" :loading="sending" :disabled="!email" @click="resend">Resend email</AButton>
-      <AButton v-if="auth.isAuthenticated" variant="ghost" @click="signOut">Use a different account</AButton>
+      <AButton variant="outline" :loading="sending" :disabled="!email" @click="resend"
+        >Resend email</AButton
+      >
+      <AButton v-if="auth.isAuthenticated" variant="ghost" @click="signOut"
+        >Use a different account</AButton
+      >
     </div>
     <template #footer>
       <span>Already confirmed? <RouterLink :to="{ name: 'login' }">Sign in</RouterLink></span>

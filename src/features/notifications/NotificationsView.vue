@@ -40,8 +40,20 @@ const KIND: Record<AppNotification['type'], string> = {
 
 <template>
   <div class="notifs">
-    <APageHeader title="Alerts" :subtitle="notifications.unreadCount ? `${notifications.unreadCount} unread` : 'You are all caught up.'">
-      <AButton v-if="notifications.unreadCount" variant="outline" size="sm" icon="check" @click="markAll">Mark all read</AButton>
+    <APageHeader
+      title="Alerts"
+      :subtitle="
+        notifications.unreadCount ? `${notifications.unreadCount} unread` : 'You are all caught up.'
+      "
+    >
+      <AButton
+        v-if="notifications.unreadCount"
+        variant="outline"
+        size="sm"
+        icon="check"
+        @click="markAll"
+        >Mark all read</AButton
+      >
     </APageHeader>
 
     <div v-if="notifications.loading && !notifications.items.length" class="notifs__list">
@@ -49,8 +61,17 @@ const KIND: Record<AppNotification['type'], string> = {
     </div>
 
     <div v-else-if="notifications.items.length" class="notifs__list">
-      <div v-for="n in notifications.items" :key="n.id" class="item" :class="{ 'item--unread': !n.read_at }">
-        <RouterLink :to="n.show_id ? { name: 'show', params: { id: n.show_id } } : { name: 'notifications' }" class="item__main" @click="open(n)">
+      <div
+        v-for="n in notifications.items"
+        :key="n.id"
+        class="item"
+        :class="{ 'item--unread': !n.read_at }"
+      >
+        <RouterLink
+          :to="n.show_id ? { name: 'show', params: { id: n.show_id } } : { name: 'notifications' }"
+          class="item__main"
+          @click="open(n)"
+        >
           <APoster :src="n.data.image" radius="sm" class="item__img" />
           <span class="item__text">
             <span class="item__kicker">{{ KIND[n.type] }} · {{ timeAgo(n.created_at) }}</span>
@@ -59,14 +80,27 @@ const KIND: Record<AppNotification['type'], string> = {
           </span>
         </RouterLink>
         <span v-if="!n.read_at" class="item__dot" aria-label="Unread" />
-        <button type="button" class="item__remove" aria-label="Delete notification" @click="remove(n)"><AIcon name="close" :size="14" /></button>
+        <button
+          type="button"
+          class="item__remove"
+          aria-label="Delete notification"
+          @click="remove(n)"
+        >
+          <AIcon name="close" :size="14" />
+        </button>
       </div>
       <div v-if="notifications.hasMore" class="notifs__more">
-        <AButton variant="outline" :loading="notifications.loading" @click="notifications.load()">Load more</AButton>
+        <AButton variant="outline" :loading="notifications.loading" @click="notifications.load()"
+          >Load more</AButton
+        >
       </div>
     </div>
 
-    <AEmptyState v-else title="No alerts yet" description="When a show you follow schedules a new episode, you'll hear about it here." />
+    <AEmptyState
+      v-else
+      title="No alerts yet"
+      description="When a show you follow schedules a new episode, you'll hear about it here."
+    />
   </div>
 </template>
 

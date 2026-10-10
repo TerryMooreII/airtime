@@ -2,7 +2,17 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { AAlert, AButton, AInput, APageHeader, ASegmented, ASelect, ASettingsGroup, ASettingsRow, AToggle } from '@/design-system'
+import {
+  AAlert,
+  AButton,
+  AInput,
+  APageHeader,
+  ASegmented,
+  ASelect,
+  ASettingsGroup,
+  ASettingsRow,
+  AToggle,
+} from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { usePushSubscription } from '@/composables/usePushSubscription'
 import { useTheme, type ThemeMode } from '@/composables/useTheme'
@@ -22,7 +32,10 @@ const displayName = ref(auth.profile?.display_name ?? '')
 const savingName = ref(false)
 
 const timezones = computed(() => {
-  const list = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [browserTimeZone(), 'UTC']
+  const list =
+    typeof Intl.supportedValuesOf === 'function'
+      ? Intl.supportedValuesOf('timeZone')
+      : [browserTimeZone(), 'UTC']
   const set = new Set([...list, auth.timezone, 'UTC'])
   return [...set].sort().map((tz) => ({ value: tz, label: tz.replace(/_/g, ' ') }))
 })
@@ -76,7 +89,13 @@ async function signOut() {
       <ASettingsRow title="Name" :description="auth.user?.email ?? ''">
         <form class="name-form" @submit.prevent="saveName">
           <AInput v-model="displayName" placeholder="Your name" autocomplete="name" />
-          <AButton type="submit" variant="outline" :loading="savingName" :disabled="displayName.trim() === (auth.profile?.display_name ?? '')">Save</AButton>
+          <AButton
+            type="submit"
+            variant="outline"
+            :loading="savingName"
+            :disabled="displayName.trim() === (auth.profile?.display_name ?? '')"
+            >Save</AButton
+          >
         </form>
       </ASettingsRow>
       <ASettingsRow title="Role" description="Admins can manage shows, users and the sync queue.">
@@ -91,26 +110,73 @@ async function signOut() {
       <ASettingsRow title="Theme" description="System follows your device setting.">
         <ASegmented v-model="theme.mode.value" :options="themeOptions" aria-label="Theme" />
       </ASettingsRow>
-      <ASettingsRow title="Time zone" description="Air times and daily digests use this zone." stacked>
-        <ASelect :model-value="auth.timezone" :options="timezones" @update:model-value="save({ timezone: String($event) }, 'Time zone updated')" />
-        <AButton v-if="browserTimeZone() !== auth.timezone" variant="ghost" size="sm" @click="save({ timezone: browserTimeZone() }, 'Time zone updated')">Use {{ browserTimeZone() }}</AButton>
+      <ASettingsRow
+        title="Time zone"
+        description="Air times and daily digests use this zone."
+        stacked
+      >
+        <ASelect
+          :model-value="auth.timezone"
+          :options="timezones"
+          @update:model-value="save({ timezone: String($event) }, 'Time zone updated')"
+        />
+        <AButton
+          v-if="browserTimeZone() !== auth.timezone"
+          variant="ghost"
+          size="sm"
+          @click="save({ timezone: browserTimeZone() }, 'Time zone updated')"
+          >Use {{ browserTimeZone() }}</AButton
+        >
       </ASettingsRow>
     </ASettingsGroup>
 
     <ASettingsGroup title="Notifications">
-      <ASettingsRow title="In-app alerts" description="New episodes and airing-today reminders in your alerts list.">
-        <AToggle :model-value="auth.profile?.notify_in_app ?? true" label="In-app alerts" @update:model-value="save({ notify_in_app: $event })" />
+      <ASettingsRow
+        title="In-app alerts"
+        description="New episodes and airing-today reminders in your alerts list."
+      >
+        <AToggle
+          :model-value="auth.profile?.notify_in_app ?? true"
+          label="In-app alerts"
+          @update:model-value="save({ notify_in_app: $event })"
+        />
       </ASettingsRow>
-      <ASettingsRow title="Browser push" :description="push.supported.value ? (push.configured.value ? 'Get a notification even when Airtime is closed.' : 'Not configured on this deployment.') : 'Not supported by this browser.'">
-        <AToggle :model-value="(auth.profile?.notify_push ?? false) && push.subscribed.value" label="Browser push" :disabled="!push.configured.value || push.busy.value" @update:model-value="togglePush" />
+      <ASettingsRow
+        title="Browser push"
+        :description="
+          push.supported.value
+            ? push.configured.value
+              ? 'Get a notification even when Airtime is closed.'
+              : 'Not configured on this deployment.'
+            : 'Not supported by this browser.'
+        "
+      >
+        <AToggle
+          :model-value="(auth.profile?.notify_push ?? false) && push.subscribed.value"
+          label="Browser push"
+          :disabled="!push.configured.value || push.busy.value"
+          @update:model-value="togglePush"
+        />
       </ASettingsRow>
-      <AAlert v-if="push.error.value" variant="warning" class="push-error">{{ push.error.value }}</AAlert>
-      <ASettingsRow title="Daily reminder time" description="When to tell you about episodes airing that day.">
-        <ASelect :model-value="auth.profile?.airing_digest_hour ?? 9" :options="hours" @update:model-value="save({ airing_digest_hour: Number($event) })" />
+      <AAlert v-if="push.error.value" variant="warning" class="push-error">{{
+        push.error.value
+      }}</AAlert>
+      <ASettingsRow
+        title="Daily reminder time"
+        description="When to tell you about episodes airing that day."
+      >
+        <ASelect
+          :model-value="auth.profile?.airing_digest_hour ?? 9"
+          :options="hours"
+          @update:model-value="save({ airing_digest_hour: Number($event) })"
+        />
       </ASettingsRow>
     </ASettingsGroup>
 
-    <p class="foot">Show and episode data from <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVmaze</a> (CC BY-SA).</p>
+    <p class="foot">
+      Show and episode data from
+      <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVmaze</a> (CC BY-SA).
+    </p>
   </div>
 </template>
 

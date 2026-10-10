@@ -1,8 +1,11 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ title: string; description?: string; dashed?: boolean; compact?: boolean }>(), {
-  dashed: true,
-  compact: false,
-})
+withDefaults(
+  defineProps<{ title: string; description?: string; dashed?: boolean; compact?: boolean }>(),
+  {
+    dashed: true,
+    compact: false,
+  },
+)
 </script>
 
 <template>

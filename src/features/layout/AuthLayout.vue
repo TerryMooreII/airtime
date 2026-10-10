@@ -10,7 +10,10 @@ useTheme()
     <div class="auth__panel">
       <ALogo class="auth__logo" />
       <div class="auth__card"><slot /></div>
-      <p class="auth__foot">Show and episode data from <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVmaze</a> (CC BY-SA).</p>
+      <p class="auth__foot">
+        Show and episode data from
+        <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVmaze</a> (CC BY-SA).
+      </p>
     </div>
     <div class="auth__art" aria-hidden="true">
       <div class="auth__glow" />

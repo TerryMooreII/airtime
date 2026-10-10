@@ -4,7 +4,9 @@ import { onBeforeUnmount, watch } from 'vue'
 import AIcon from './AIcon.vue'
 
 /** Side panel on desktop, bottom sheet on mobile (mirrors the mock's episode drawer). */
-const props = withDefaults(defineProps<{ open: boolean; title?: string; width?: string }>(), { width: '460px' })
+const props = withDefaults(defineProps<{ open: boolean; title?: string; width?: string }>(), {
+  width: '460px',
+})
 const emit = defineEmits<{ close: [] }>()
 
 function onKey(e: KeyboardEvent) {
@@ -35,7 +37,9 @@ onBeforeUnmount(() => {
       <div v-if="open" class="a-drawer" role="dialog" aria-modal="true" :aria-label="title">
         <div class="a-drawer__scrim" @click="emit('close')" />
         <div class="a-drawer__panel" :style="{ '--drawer-w': width }">
-          <button type="button" class="a-drawer__close" aria-label="Close" @click="emit('close')"><AIcon name="close" :size="18" :stroke-width="2.2" /></button>
+          <button type="button" class="a-drawer__close" aria-label="Close" @click="emit('close')">
+            <AIcon name="close" :size="18" :stroke-width="2.2" />
+          </button>
           <slot />
         </div>
       </div>

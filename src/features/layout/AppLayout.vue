@@ -36,10 +36,17 @@ const nav = computed<NavItem[]>(() => {
     { id: 'home', label: 'Guide', icon: 'guide', to: { name: 'home' } },
     { id: 'library', label: 'Library', icon: 'library', to: { name: 'library' } },
     { id: 'search', label: 'Search', icon: 'search', to: { name: 'search' } },
-    { id: 'notifications', label: 'Alerts', icon: 'bell', to: { name: 'notifications' }, badge: notifications.unreadCount },
+    {
+      id: 'notifications',
+      label: 'Alerts',
+      icon: 'bell',
+      to: { name: 'notifications' },
+      badge: notifications.unreadCount,
+    },
     { id: 'settings', label: 'Settings', icon: 'settings', to: { name: 'settings' } },
   ]
-  if (auth.isAdmin) items.push({ id: 'admin', label: 'Admin', icon: 'shield', to: { name: 'admin' } })
+  if (auth.isAdmin)
+    items.push({ id: 'admin', label: 'Admin', icon: 'shield', to: { name: 'admin' } })
   return items
 })
 const activeId = computed(() => {
@@ -53,7 +60,9 @@ const soon = ref<UpcomingEpisode[]>([])
 async function loadSoon() {
   if (!auth.isAuthenticated) return
   try {
-    soon.value = (await fetchUpcomingEpisodes(7, 6)).filter((e) => new Date(e.airstamp).getTime() > Date.now() - 3_600_000).slice(0, 6)
+    soon.value = (await fetchUpcomingEpisodes(7, 6))
+      .filter((e) => new Date(e.airstamp).getTime() > Date.now() - 3_600_000)
+      .slice(0, 6)
   } catch {
     soon.value = []
   }
@@ -70,7 +79,10 @@ onMounted(async () => {
     soonTimer = setInterval(loadSoon, 5 * 60_000)
   }
 })
-watch(() => library.entries.length, () => void loadSoon())
+watch(
+  () => library.entries.length,
+  () => void loadSoon(),
+)
 onBeforeUnmount(() => {
   notifications.unsubscribe()
   clearInterval(soonTimer)
@@ -92,12 +104,20 @@ onBeforeUnmount(() => {
     <template #rail>
       <div v-if="soon.length" class="rail">
         <div class="t-label rail__title">Airing soon</div>
-        <RouterLink v-for="e in soon" :key="e.episode_id" :to="{ name: 'show', params: { id: e.show_id } }" class="rail__item">
+        <RouterLink
+          v-for="e in soon"
+          :key="e.episode_id"
+          :to="{ name: 'show', params: { id: e.show_id } }"
+          class="rail__item"
+        >
           <img v-if="e.show_image" :src="e.show_image" alt="" class="rail__img" />
           <span v-else class="rail__img" />
           <span class="rail__text">
             <span class="rail__name truncate">{{ e.show_name }}</span>
-            <span class="rail__when">{{ relativeDayLabel(e.airstamp, auth.timezone) }} · {{ formatAirTime(e.airstamp, auth.timezone) }}</span>
+            <span class="rail__when"
+              >{{ relativeDayLabel(e.airstamp, auth.timezone) }} ·
+              {{ formatAirTime(e.airstamp, auth.timezone) }}</span
+            >
           </span>
         </RouterLink>
       </div>
@@ -106,10 +126,16 @@ onBeforeUnmount(() => {
     <template #actions>
       <RouterLink :to="{ name: 'notifications' }" class="bell" aria-label="Notifications">
         <AIcon name="bell" :size="18" />
-        <span v-if="notifications.unreadCount" class="bell__count">{{ notifications.unreadCount > 99 ? '99+' : notifications.unreadCount }}</span>
+        <span v-if="notifications.unreadCount" class="bell__count">{{
+          notifications.unreadCount > 99 ? '99+' : notifications.unreadCount
+        }}</span>
       </RouterLink>
       <RouterLink :to="{ name: 'settings' }" class="me" aria-label="Account">
-        <AAvatar :name="auth.profile?.display_name ?? auth.user?.email" :src="auth.profile?.avatar_url" :size="32" />
+        <AAvatar
+          :name="auth.profile?.display_name ?? auth.user?.email"
+          :src="auth.profile?.avatar_url"
+          :size="32"
+        />
       </RouterLink>
     </template>
 

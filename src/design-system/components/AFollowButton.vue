@@ -31,7 +31,11 @@ function onClick(ev: Event) {
     :disabled="loading"
     @click="onClick"
   >
-    <AIcon :name="loading ? 'spinner' : following ? 'check' : 'plus'" :size="16" :stroke-width="2.4" />
+    <AIcon
+      :name="loading ? 'spinner' : following ? 'check' : 'plus'"
+      :size="16"
+      :stroke-width="2.4"
+    />
   </button>
   <button
     v-else
@@ -42,7 +46,11 @@ function onClick(ev: Event) {
     :disabled="loading"
     @click="onClick"
   >
-    <AIcon :name="loading ? 'spinner' : following ? 'check' : 'plus'" :size="16" :stroke-width="2.4" />
+    <AIcon
+      :name="loading ? 'spinner' : following ? 'check' : 'plus'"
+      :size="16"
+      :stroke-width="2.4"
+    />
     {{ following ? 'Following' : 'Follow' }}
   </button>
 </template>

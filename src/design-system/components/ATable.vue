@@ -5,11 +5,20 @@ export interface TableColumn {
   align?: 'left' | 'right' | 'center'
   width?: string
 }
-withDefaults(defineProps<{ columns: TableColumn[]; rows: Record<string, unknown>[]; rowKey?: string; loading?: boolean; emptyText?: string }>(), {
-  rowKey: 'id',
-  loading: false,
-  emptyText: 'Nothing to show.',
-})
+withDefaults(
+  defineProps<{
+    columns: TableColumn[]
+    rows: Record<string, unknown>[]
+    rowKey?: string
+    loading?: boolean
+    emptyText?: string
+  }>(),
+  {
+    rowKey: 'id',
+    loading: false,
+    emptyText: 'Nothing to show.',
+  },
+)
 </script>
 
 <template>
@@ -17,15 +26,27 @@ withDefaults(defineProps<{ columns: TableColumn[]; rows: Record<string, unknown>
     <table class="a-table">
       <thead>
         <tr>
-          <th v-for="c in columns" :key="c.key" :style="{ textAlign: c.align ?? 'left', width: c.width }">{{ c.label }}</th>
+          <th
+            v-for="c in columns"
+            :key="c.key"
+            :style="{ textAlign: c.align ?? 'left', width: c.width }"
+          >
+            {{ c.label }}
+          </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-if="loading" class="a-table__state"><td :colspan="columns.length">Loading…</td></tr>
-        <tr v-else-if="!rows.length" class="a-table__state"><td :colspan="columns.length">{{ emptyText }}</td></tr>
+        <tr v-if="loading" class="a-table__state">
+          <td :colspan="columns.length">Loading…</td>
+        </tr>
+        <tr v-else-if="!rows.length" class="a-table__state">
+          <td :colspan="columns.length">{{ emptyText }}</td>
+        </tr>
         <tr v-for="row in rows" v-else :key="String(row[rowKey])">
           <td v-for="c in columns" :key="c.key" :style="{ textAlign: c.align ?? 'left' }">
-            <slot :name="`cell-${c.key}`" :row="row" :value="row[c.key]">{{ row[c.key] ?? '—' }}</slot>
+            <slot :name="`cell-${c.key}`" :row="row" :value="row[c.key]">{{
+              row[c.key] ?? '—'
+            }}</slot>
           </td>
         </tr>
       </tbody>

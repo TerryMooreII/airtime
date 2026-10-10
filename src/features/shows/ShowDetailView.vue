@@ -2,17 +2,47 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { AAlert, ABadge, AButton, AFollowButton, APills, APoster, ASkeleton, AStarRating } from '@/design-system'
+import {
+  AAlert,
+  ABadge,
+  AButton,
+  AFollowButton,
+  APills,
+  APoster,
+  ASkeleton,
+  AStarRating,
+} from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
 import { fetchEpisodeRatings, fetchEpisodesForShow } from '@/lib/api/episodes'
-import { externalLink, fetchShow, fetchShowExternalIds, fetchShowRatings, RATING_PROVIDER_LABELS } from '@/lib/api/shows'
-import { episodeCode, formatPlainDate, formatRuntime, relativeDayLabel, formatAirTime, stripHtml, yearOf } from '@/lib/format'
+import {
+  externalLink,
+  fetchShow,
+  fetchShowExternalIds,
+  fetchShowRatings,
+  RATING_PROVIDER_LABELS,
+} from '@/lib/api/shows'
+import {
+  episodeCode,
+  formatPlainDate,
+  formatRuntime,
+  relativeDayLabel,
+  formatAirTime,
+  stripHtml,
+  yearOf,
+} from '@/lib/format'
 import { invokeFunction } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
-import { USER_SHOW_STATUSES, type Episode, type Show, type ShowExternalId, type ShowRating, type UserShowStatus } from '@/types/domain'
+import {
+  USER_SHOW_STATUSES,
+  type Episode,
+  type Show,
+  type ShowExternalId,
+  type ShowRating,
+  type UserShowStatus,
+} from '@/types/domain'
 
 import EpisodeDrawer from './EpisodeDrawer.vue'
 
@@ -53,7 +83,11 @@ async function load() {
     ratings.value = r
     externalIds.value = x
     await loadEpisodes()
-    if (!s.episodes_synced_at || Date.now() - new Date(s.episodes_synced_at).getTime() > 6 * 3_600_000) void refreshEpisodes()
+    if (
+      !s.episodes_synced_at ||
+      Date.now() - new Date(s.episodes_synced_at).getTime() > 6 * 3_600_000
+    )
+      void refreshEpisodes()
   } catch (err) {
     error.value = errorMessage(err)
   } finally {
@@ -76,7 +110,9 @@ async function refreshEpisodes() {
   if (!show.value || episodesLoading.value) return
   episodesLoading.value = true
   try {
-    const res = await invokeFunction<{ refreshed: boolean }>('refresh-show', { tvmaze_id: show.value.tvmaze_id })
+    const res = await invokeFunction<{ refreshed: boolean }>('refresh-show', {
+      tvmaze_id: show.value.tvmaze_id,
+    })
     if (res.refreshed) {
       show.value = (await fetchShow(showId.value)) ?? show.value
       await loadEpisodes()
@@ -94,17 +130,30 @@ watch(showId, () => {
   void load()
 })
 
-const seasons = computed(() => [...new Set(episodes.value.map((e) => e.season))].sort((a, b) => a - b))
-const seasonOptions = computed(() => seasons.value.map((n) => ({ value: n, label: n === 0 ? 'Specials' : `Season ${n}` })))
+const seasons = computed(() =>
+  [...new Set(episodes.value.map((e) => e.season))].sort((a, b) => a - b),
+)
+const seasonOptions = computed(() =>
+  seasons.value.map((n) => ({ value: n, label: n === 0 ? 'Specials' : `Season ${n}` })),
+)
 const seasonEpisodes = computed(() => episodes.value.filter((e) => e.season === season.value))
-const nextEpisode = computed(() => episodes.value.find((e) => e.airstamp && new Date(e.airstamp).getTime() > now - 30 * 60_000))
+const nextEpisode = computed(() =>
+  episodes.value.find((e) => e.airstamp && new Date(e.airstamp).getTime() > now - 30 * 60_000),
+)
 
 const genres = computed(() => show.value?.genres ?? [])
 const meta = computed(() => {
   const s = show.value
   if (!s) return ''
   const years = s.premiered ? `${yearOf(s.premiered)}–${s.ended ? yearOf(s.ended) : ''}` : null
-  return [years, s.network?.name ?? s.web_channel?.name, s.status, formatRuntime(s.runtime ?? s.average_runtime)].filter(Boolean).join('  ·  ')
+  return [
+    years,
+    s.network?.name ?? s.web_channel?.name,
+    s.status,
+    formatRuntime(s.runtime ?? s.average_runtime),
+  ]
+    .filter(Boolean)
+    .join('  ·  ')
 })
 const tvmazeRating = computed(() => ratings.value.find((r) => r.provider === 'tvmaze'))
 const otherRatings = computed(() => ratings.value.filter((r) => r.provider !== 'tvmaze'))
@@ -151,7 +200,13 @@ function toggleFollow() {
 }
 function episodeMeta(e: Episode): string {
   const r = episodeRatings.value.get(e.id)
-  return [e.airdate ? formatPlainDate(e.airdate) : 'TBA', formatRuntime(e.runtime), r ? `★ ${r}` : null].filter(Boolean).join(' · ')
+  return [
+    e.airdate ? formatPlainDate(e.airdate) : 'TBA',
+    formatRuntime(e.runtime),
+    r ? `★ ${r}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }
 function isFuture(e: Episode): boolean {
   return !!e.airstamp && new Date(e.airstamp).getTime() > now
@@ -167,11 +222,18 @@ function isFuture(e: Episode): boolean {
 
     <template v-else-if="show">
       <section class="hero">
-        <img v-if="show.image_original ?? show.image_medium" :src="show.image_original ?? show.image_medium ?? ''" alt="" class="hero__bg" />
+        <img
+          v-if="show.image_original ?? show.image_medium"
+          :src="show.image_original ?? show.image_medium ?? ''"
+          alt=""
+          class="hero__bg"
+        />
         <div class="hero__inner">
           <APoster :src="show.image_medium" :alt="show.name" radius="lg" class="hero__poster" />
           <div class="hero__text">
-            <div v-if="genres.length" class="hero__genres"><ABadge v-for="g in genres" :key="g" variant="outline" :mono="false">{{ g }}</ABadge></div>
+            <div v-if="genres.length" class="hero__genres">
+              <ABadge v-for="g in genres" :key="g" variant="outline" :mono="false">{{ g }}</ABadge>
+            </div>
             <h1 class="hero__title">{{ show.name }}</h1>
             <div class="hero__meta">{{ meta }}</div>
             <div class="hero__ratings">
@@ -181,13 +243,26 @@ function isFuture(e: Episode): boolean {
               </div>
               <div v-for="r in otherRatings" :key="r.provider" class="score">
                 <span class="t-label">{{ RATING_PROVIDER_LABELS[r.provider] ?? r.provider }}</span>
-                <span class="score__value">{{ r.value }}<span class="score__scale">/{{ r.scale }}</span></span>
+                <span class="score__value"
+                  >{{ r.value }}<span class="score__scale">/{{ r.scale }}</span></span
+                >
               </div>
               <div class="score">
-                <span class="t-label">Your rating · {{ entry?.rating ? `${entry.rating}/5` : 'tap to rate' }}</span>
-                <AStarRating :model-value="entry?.rating ?? null" size="lg" @update:model-value="setRating" />
+                <span class="t-label"
+                  >Your rating · {{ entry?.rating ? `${entry.rating}/5` : 'tap to rate' }}</span
+                >
+                <AStarRating
+                  :model-value="entry?.rating ?? null"
+                  size="lg"
+                  @update:model-value="setRating"
+                />
               </div>
-              <AFollowButton :following="!!entry" :loading="follow.pending(show.id)" size="lg" @toggle="toggleFollow" />
+              <AFollowButton
+                :following="!!entry"
+                :loading="follow.pending(show.id)"
+                size="lg"
+                @toggle="toggleFollow"
+              />
             </div>
             <APills
               :model-value="entry?.status ?? ''"
@@ -203,23 +278,46 @@ function isFuture(e: Episode): boolean {
       <section class="about">
         <div class="about__text">
           <span class="t-label">About</span>
-          <p class="about__summary">{{ stripHtml(show.summary_html) || 'No synopsis available.' }}</p>
+          <p class="about__summary">
+            {{ stripHtml(show.summary_html) || 'No synopsis available.' }}
+          </p>
           <div v-if="links.length" class="about__links">
-            <a v-for="l in links" :key="l.href" :href="l.href" target="_blank" rel="noopener" class="about__link">{{ l.label }} ↗</a>
+            <a
+              v-for="l in links"
+              :key="l.href"
+              :href="l.href"
+              target="_blank"
+              rel="noopener"
+              class="about__link"
+              >{{ l.label }} ↗</a
+            >
           </div>
         </div>
         <div class="about__side">
           <div v-if="nextEpisode" class="next">
-            <span class="next__kicker">Next episode · {{ relativeDayLabel(nextEpisode.airstamp!, tz) }}</span>
+            <span class="next__kicker"
+              >Next episode · {{ relativeDayLabel(nextEpisode.airstamp!, tz) }}</span
+            >
             <span class="next__title">{{ nextEpisode.name ?? 'TBA' }}</span>
-            <span class="next__meta">{{ episodeCode(nextEpisode.season, nextEpisode.number) }} · {{ formatAirTime(nextEpisode.airstamp, tz) }}</span>
+            <span class="next__meta"
+              >{{ episodeCode(nextEpisode.season, nextEpisode.number) }} ·
+              {{ formatAirTime(nextEpisode.airstamp, tz) }}</span
+            >
           </div>
           <div v-if="entry" class="alerts">
             <div class="alerts__text">
               <span class="alerts__title">Episode alerts</span>
-              <span class="alerts__desc">{{ entry.notify ? 'You will be told when new episodes air.' : 'Muted for this show.' }}</span>
+              <span class="alerts__desc">{{
+                entry.notify ? 'You will be told when new episodes air.' : 'Muted for this show.'
+              }}</span>
             </div>
-            <AButton variant="outline" size="sm" :icon="entry.notify ? 'bell' : 'bell'" @click="setNotify(!entry.notify)">{{ entry.notify ? 'Mute' : 'Unmute' }}</AButton>
+            <AButton
+              variant="outline"
+              size="sm"
+              :icon="entry.notify ? 'bell' : 'bell'"
+              @click="setNotify(!entry.notify)"
+              >{{ entry.notify ? 'Mute' : 'Unmute' }}</AButton
+            >
           </div>
         </div>
       </section>
@@ -228,10 +326,22 @@ function isFuture(e: Episode): boolean {
         <div class="episodes__head">
           <span class="t-h2">Episodes</span>
           <span v-if="episodesLoading" class="episodes__sync t-mono">Syncing from TVmaze…</span>
-          <AButton v-else variant="ghost" size="sm" icon="refresh" @click="refreshEpisodes">Refresh</AButton>
+          <AButton v-else variant="ghost" size="sm" icon="refresh" @click="refreshEpisodes"
+            >Refresh</AButton
+          >
         </div>
-        <APills v-if="seasons.length > 1" :model-value="season ?? -1" :options="seasonOptions" mono aria-label="Season" @update:model-value="season = Number($event)" />
-        <span class="episodes__count">{{ seasonEpisodes.length }} episode{{ seasonEpisodes.length === 1 ? '' : 's' }}<template v-if="episodes.length"> · {{ episodes.length }} overall</template></span>
+        <APills
+          v-if="seasons.length > 1"
+          :model-value="season ?? -1"
+          :options="seasonOptions"
+          mono
+          aria-label="Season"
+          @update:model-value="season = Number($event)"
+        />
+        <span class="episodes__count"
+          >{{ seasonEpisodes.length }} episode{{ seasonEpisodes.length === 1 ? '' : 's'
+          }}<template v-if="episodes.length"> · {{ episodes.length }} overall</template></span
+        >
 
         <div v-if="!episodes.length && episodesLoading" class="episodes__skeleton">
           <ASkeleton v-for="i in 4" :key="i" height="90px" />
@@ -248,7 +358,9 @@ function isFuture(e: Episode): boolean {
             <APoster :src="e.image_medium ?? show.image_medium" ratio="still" radius="md" />
             <span class="episode__text">
               <span class="episode__title">
-                <span class="episode__code t-mono">{{ e.number === null ? 'SP' : `E${String(e.number).padStart(2, '0')}` }}</span>
+                <span class="episode__code t-mono">{{
+                  e.number === null ? 'SP' : `E${String(e.number).padStart(2, '0')}`
+                }}</span>
                 <span class="truncate">{{ e.name ?? 'TBA' }}</span>
               </span>
               <span class="episode__meta">{{ episodeMeta(e) }}</span>
@@ -268,7 +380,12 @@ function isFuture(e: Episode): boolean {
       :timezone="tz"
       :rating="openEpisode ? episodeRatings.get(openEpisode.id) : undefined"
       @close="openEpisode = null"
-      @navigate="(e) => { openEpisode = e; season = e.season }"
+      @navigate="
+        (e) => {
+          openEpisode = e
+          season = e.season
+        }
+      "
     />
   </div>
 </template>

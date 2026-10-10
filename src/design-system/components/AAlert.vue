@@ -1,18 +1,27 @@
 <script setup lang="ts">
 import AIcon from './AIcon.vue'
 
-withDefaults(defineProps<{ variant?: 'error' | 'info' | 'success' | 'warning'; title?: string }>(), { variant: 'info' })
+withDefaults(
+  defineProps<{ variant?: 'error' | 'info' | 'success' | 'warning'; title?: string }>(),
+  { variant: 'info' },
+)
 const emit = defineEmits<{ retry: [] }>()
 </script>
 
 <template>
   <div class="a-alert" :class="`a-alert--${variant}`" role="alert">
-    <AIcon :name="variant === 'error' ? 'warning' : variant === 'success' ? 'check' : 'info'" :size="17" class="a-alert__icon" />
+    <AIcon
+      :name="variant === 'error' ? 'warning' : variant === 'success' ? 'check' : 'info'"
+      :size="17"
+      class="a-alert__icon"
+    />
     <div class="a-alert__body">
       <strong v-if="title" class="a-alert__title">{{ title }}</strong>
       <span class="a-alert__text"><slot /></span>
     </div>
-    <button v-if="$attrs.onRetry" type="button" class="a-alert__retry" @click="emit('retry')">Retry</button>
+    <button v-if="$attrs.onRetry" type="button" class="a-alert__retry" @click="emit('retry')">
+      Retry
+    </button>
   </div>
 </template>
 

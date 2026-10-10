@@ -17,7 +17,15 @@ const props = withDefaults(
     round?: boolean
     to?: RouteLocationRaw
   }>(),
-  { variant: 'primary', size: 'md', type: 'button', loading: false, disabled: false, block: false, round: false },
+  {
+    variant: 'primary',
+    size: 'md',
+    type: 'button',
+    loading: false,
+    disabled: false,
+    block: false,
+    round: false,
+  },
 )
 
 const classes = computed(() => [
@@ -34,7 +42,13 @@ const isDisabled = computed(() => props.disabled || props.loading)
     <AIcon v-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" />
     <slot />
   </RouterLink>
-  <button v-else :type="type" :class="classes" :disabled="isDisabled" :aria-busy="loading || undefined">
+  <button
+    v-else
+    :type="type"
+    :class="classes"
+    :disabled="isDisabled"
+    :aria-busy="loading || undefined"
+  >
     <AIcon v-if="loading" name="spinner" :size="size === 'sm' ? 15 : 17" />
     <AIcon v-else-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" />
     <slot />

@@ -2,7 +2,15 @@
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { AAlert, ABadge, AButton, APoster, ASearchBox, ATable, type TableColumn } from '@/design-system'
+import {
+  AAlert,
+  ABadge,
+  AButton,
+  APoster,
+  ASearchBox,
+  ATable,
+  type TableColumn,
+} from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { useDebouncedRef } from '@/composables/useDebouncedRef'
 import { enqueueSync, searchAdminShows, type AdminShowRow } from '@/lib/api/admin'
@@ -62,21 +70,37 @@ const columns: TableColumn[] = [
     <ATable :columns="columns" :rows="rows" :loading="loading" empty-text="No shows match.">
       <template #cell-name="{ row }">
         <RouterLink :to="{ name: 'show', params: { id: row.id as number } }" class="show-cell">
-          <APoster :src="(row.image_medium as string)" radius="sm" class="show-cell__img" />
+          <APoster :src="row.image_medium as string" radius="sm" class="show-cell__img" />
           <span class="show-cell__text">
             <span class="show-cell__name">{{ row.name }}</span>
-            <span class="t-muted t-mono show-cell__meta">tvmaze #{{ row.tvmaze_id }}<template v-if="row.premiered"> · {{ String(row.premiered).slice(0, 4) }}</template></span>
+            <span class="t-muted t-mono show-cell__meta"
+              >tvmaze #{{ row.tvmaze_id
+              }}<template v-if="row.premiered">
+                · {{ String(row.premiered).slice(0, 4) }}</template
+              ></span
+            >
           </span>
         </RouterLink>
       </template>
-      <template #cell-status="{ value }"><ABadge variant="muted">{{ value ?? '—' }}</ABadge></template>
+      <template #cell-status="{ value }"
+        ><ABadge variant="muted">{{ value ?? '—' }}</ABadge></template
+      >
       <template #cell-episodes_synced_at="{ value }">
         <ABadge v-if="value" variant="success">synced {{ timeAgo(String(value)) }}</ABadge>
         <ABadge v-else variant="muted">upcoming only</ABadge>
       </template>
-      <template #cell-synced_at="{ value }"><span class="t-muted">{{ value ? timeAgo(String(value)) : '—' }}</span></template>
+      <template #cell-synced_at="{ value }"
+        ><span class="t-muted">{{ value ? timeAgo(String(value)) : '—' }}</span></template
+      >
       <template #cell-actions="{ row }">
-        <AButton variant="outline" size="sm" icon="refresh" :loading="busyId === row.id" @click="refresh(row as unknown as AdminShowRow)">Refresh</AButton>
+        <AButton
+          variant="outline"
+          size="sm"
+          icon="refresh"
+          :loading="busyId === row.id"
+          @click="refresh(row as unknown as AdminShowRow)"
+          >Refresh</AButton
+        >
       </template>
     </ATable>
   </div>

@@ -4,7 +4,9 @@ export interface PillOption<T> {
   label: string
   count?: number
 }
-withDefaults(defineProps<{ options: PillOption<T>[]; mono?: boolean; ariaLabel?: string }>(), { mono: false })
+withDefaults(defineProps<{ options: PillOption<T>[]; mono?: boolean; ariaLabel?: string }>(), {
+  mono: false,
+})
 const model = defineModel<T>({ required: true })
 </script>
 

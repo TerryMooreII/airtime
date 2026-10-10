@@ -24,7 +24,15 @@ const emit = defineEmits<{ focus: []; submit: [] }>()
       @focus="emit('focus')"
       @keydown.enter="emit('submit')"
     />
-    <button v-if="model" type="button" class="a-search__clear" aria-label="Clear search" @click="model = ''"><AIcon name="close" :size="14" /></button>
+    <button
+      v-if="model"
+      type="button"
+      class="a-search__clear"
+      aria-label="Clear search"
+      @click="model = ''"
+    >
+      <AIcon name="close" :size="14" />
+    </button>
   </label>
 </template>
 

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ title: string; description?: string; stacked?: boolean }>(), { stacked: false })
+withDefaults(defineProps<{ title: string; description?: string; stacked?: boolean }>(), {
+  stacked: false,
+})
 </script>
 
 <template>

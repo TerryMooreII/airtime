@@ -1,16 +1,26 @@
+import type { Json } from '@/lib/database.types'
 import { invokeFunction, supabase } from '@/lib/supabase'
-import type { AdminStats, AdminUser, AppRole, SyncJobType, SyncQueueJob, SyncRun } from '@/types/domain'
+import type {
+  AdminStats,
+  AdminUser,
+  AppRole,
+  SyncJobType,
+  SyncQueueJob,
+  SyncRun,
+} from '@/types/domain'
 
 export async function fetchAdminStats(): Promise<AdminStats> {
   const { data, error } = await supabase.rpc('admin_stats')
   if (error) throw error
-  return data as AdminStats
+  return data as unknown as AdminStats
 }
 
 export async function fetchSyncQueue(limit = 50): Promise<SyncQueueJob[]> {
   const { data, error } = await supabase
     .from('sync_queue')
-    .select('id, job_type, payload, priority, run_after, attempts, max_attempts, status, locked_at, last_error, triggered_by, created_at')
+    .select(
+      'id, job_type, payload, priority, run_after, attempts, max_attempts, status, locked_at, last_error, triggered_by, created_at',
+    )
     .in('status', ['queued', 'running', 'failed'])
     .order('status')
     .order('priority')
@@ -30,8 +40,14 @@ export async function fetchSyncRuns(limit = 40): Promise<SyncRun[]> {
   return (data ?? []) as SyncRun[]
 }
 
-export async function enqueueSync(jobType: SyncJobType, payload: Record<string, unknown> = {}): Promise<number | null> {
-  const { data, error } = await supabase.rpc('admin_enqueue_sync', { p_job_type: jobType, p_payload: payload })
+export async function enqueueSync(
+  jobType: SyncJobType,
+  payload: Record<string, Json> = {},
+): Promise<number | null> {
+  const { data, error } = await supabase.rpc('admin_enqueue_sync', {
+    p_job_type: jobType,
+    p_payload: payload,
+  })
   if (error) throw error
   return (data as number | null) ?? null
 }
@@ -71,7 +87,9 @@ export interface AdminShowRow {
 export async function searchAdminShows(query: string, limit = 40): Promise<AdminShowRow[]> {
   let q = supabase
     .from('shows')
-    .select('id, tvmaze_id, name, status, premiered, image_medium, episodes_synced_at, synced_at, tvmaze_updated_at, user_shows(count)')
+    .select(
+      'id, tvmaze_id, name, status, premiered, image_medium, episodes_synced_at, synced_at, tvmaze_updated_at, user_shows(count)',
+    )
     .order('weight', { ascending: false })
     .limit(limit)
   if (query.trim()) q = q.ilike('name', `%${query.trim()}%`)

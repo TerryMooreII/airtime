@@ -1,6 +1,9 @@
 <script setup lang="ts">
 withDefaults(
-  defineProps<{ variant?: 'primary' | 'soft' | 'outline' | 'muted' | 'success' | 'danger' | 'warning'; mono?: boolean }>(),
+  defineProps<{
+    variant?: 'primary' | 'soft' | 'outline' | 'muted' | 'success' | 'danger' | 'warning'
+    mono?: boolean
+  }>(),
   { variant: 'soft', mono: true },
 )
 </script>

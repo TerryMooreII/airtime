@@ -1,14 +1,27 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { AButton, AEmptyState, APageHeader, APills, ASegmented, AShowCard, ASkeleton } from '@/design-system'
+import {
+  AButton,
+  AEmptyState,
+  APageHeader,
+  APills,
+  ASegmented,
+  AShowCard,
+  ASkeleton,
+} from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { fetchUpcomingEpisodes } from '@/lib/api/episodes'
 import { episodeCode, formatAirTime, relativeDayLabel, STATUS_LABELS } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
-import { USER_SHOW_STATUSES, type LibraryEntry, type UpcomingEpisode, type UserShowStatus } from '@/types/domain'
+import {
+  USER_SHOW_STATUSES,
+  type LibraryEntry,
+  type UpcomingEpisode,
+  type UserShowStatus,
+} from '@/types/domain'
 
 type Filter = UserShowStatus | 'all'
 type Sort = 'next' | 'rating' | 'az' | 'added'
@@ -35,7 +48,11 @@ onMounted(async () => {
 
 const filters = computed(() => [
   { value: 'all' as Filter, label: 'All', count: library.counts.all },
-  ...USER_SHOW_STATUSES.map((s) => ({ value: s.value as Filter, label: s.label, count: library.counts[s.value] })),
+  ...USER_SHOW_STATUSES.map((s) => ({
+    value: s.value as Filter,
+    label: s.label,
+    count: library.counts[s.value],
+  })),
 ])
 
 const entries = computed(() => {
@@ -88,15 +105,28 @@ async function unfollow(e: LibraryEntry) {
 
 <template>
   <div class="library">
-    <APageHeader title="Library" :subtitle="`${library.counts.all} show${library.counts.all === 1 ? '' : 's'} · ${rated} rated`">
+    <APageHeader
+      title="Library"
+      :subtitle="`${library.counts.all} show${library.counts.all === 1 ? '' : 's'} · ${rated} rated`"
+    >
       <ASegmented
         v-model="sort"
-        :options="[{ value: 'next', label: 'Airing next' }, { value: 'rating', label: 'Rating' }, { value: 'az', label: 'A–Z' }, { value: 'added', label: 'Recent' }]"
+        :options="[
+          { value: 'next', label: 'Airing next' },
+          { value: 'rating', label: 'Rating' },
+          { value: 'az', label: 'A–Z' },
+          { value: 'added', label: 'Recent' },
+        ]"
         aria-label="Sort"
       />
     </APageHeader>
 
-    <APills v-model="filter" :options="filters" aria-label="Status filter" class="library__filters" />
+    <APills
+      v-model="filter"
+      :options="filters"
+      aria-label="Status filter"
+      class="library__filters"
+    />
 
     <div v-if="library.loading && !library.loaded" class="grid">
       <ASkeleton v-for="i in 8" :key="i" ratio="2 / 3" />
@@ -122,7 +152,11 @@ async function unfollow(e: LibraryEntry) {
     <AEmptyState
       v-else
       :title="filter === 'all' ? 'Your library is empty' : 'No shows here yet'"
-      :description="filter === 'all' ? 'Search for the shows you watch and follow them to build your guide.' : 'Change a show\'s status from its page to see it here.'"
+      :description="
+        filter === 'all'
+          ? 'Search for the shows you watch and follow them to build your guide.'
+          : 'Change a show\'s status from its page to see it here.'
+      "
     >
       <AButton v-if="filter === 'all'" :to="{ name: 'search' }" icon="search">Find shows</AButton>
     </AEmptyState>

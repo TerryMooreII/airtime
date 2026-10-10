@@ -8,10 +8,21 @@ const ui = useUiStore()
 <template>
   <div class="a-toaster" aria-live="polite">
     <TransitionGroup name="a-toast">
-      <div v-for="t in ui.toasts" :key="t.id" class="a-toast" :class="`a-toast--${t.variant}`" role="status">
-        <AIcon :name="t.variant === 'success' ? 'check' : t.variant === 'error' ? 'warning' : 'info'" :size="16" />
+      <div
+        v-for="t in ui.toasts"
+        :key="t.id"
+        class="a-toast"
+        :class="`a-toast--${t.variant}`"
+        role="status"
+      >
+        <AIcon
+          :name="t.variant === 'success' ? 'check' : t.variant === 'error' ? 'warning' : 'info'"
+          :size="16"
+        />
         <span class="a-toast__msg">{{ t.message }}</span>
-        <button type="button" class="a-toast__close" aria-label="Dismiss" @click="ui.dismiss(t.id)"><AIcon name="close" :size="14" /></button>
+        <button type="button" class="a-toast__close" aria-label="Dismiss" @click="ui.dismiss(t.id)">
+          <AIcon name="close" :size="14" />
+        </button>
       </div>
     </TransitionGroup>
   </div>

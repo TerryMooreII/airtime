@@ -16,9 +16,28 @@ const failed = ref(false)
 
 <template>
   <div class="a-poster" :class="[`a-poster--${ratio}`, `a-poster--r-${radius}`]">
-    <img v-if="src && !failed" :src="src" :alt="alt" loading="lazy" decoding="async" class="a-poster__img" @error="failed = true" />
+    <img
+      v-if="src && !failed"
+      :src="src"
+      :alt="alt"
+      loading="lazy"
+      decoding="async"
+      class="a-poster__img"
+      @error="failed = true"
+    />
     <div v-else class="a-poster__empty" aria-hidden="true">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3zM8 22h8" /></svg>
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M3 6h18v12H3zM8 22h8" />
+      </svg>
     </div>
     <slot />
   </div>
