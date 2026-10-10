@@ -171,7 +171,6 @@ function meta(e: LibraryEntry): string {
   const n = next(e)
   const left = unwatched(e)
   return [
-    channelLabel(e.show),
     STATUS_LABELS[e.status],
     n ? episodeCode(n.season, n.number) : (e.show.status ?? '—'),
     left ? `${left} unwatched` : null,
@@ -180,9 +179,7 @@ function meta(e: LibraryEntry): string {
     .join(' · ')
 }
 function showMeta(e: LibraryEntry): string {
-  return [yearOf(e.show.premiered), e.show.genres.slice(0, 2).join(', ')]
-    .filter(Boolean)
-    .join(' · ')
+  return [yearOf(e.show.premiered), channelLabel(e.show)].filter(Boolean).join(' · ')
 }
 async function rate(e: LibraryEntry, rating: number | null) {
   try {
@@ -201,7 +198,6 @@ async function setStatus(e: LibraryEntry, status: UserShowStatus) {
 
 const columns: TableColumn[] = [
   { key: 'show', label: 'Show' },
-  { key: 'network', label: 'Network' },
   { key: 'status', label: 'My status' },
   { key: 'rating', label: 'Rating' },
   { key: 'progress', label: 'Progress' },
@@ -295,15 +291,6 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
               }}</span>
             </span>
           </RouterLink>
-        </template>
-        <template #cell-network="{ row }">
-          <ABadge
-            v-if="channelLabel((row.entry as LibraryEntry).show)"
-            variant="muted"
-            :mono="false"
-            >{{ channelLabel((row.entry as LibraryEntry).show) }}</ABadge
-          >
-          <span v-else class="t-muted">—</span>
         </template>
         <template #cell-status="{ row }">
           <select
