@@ -35,6 +35,7 @@ const nav = computed<NavItem[]>(() => {
   const items: NavItem[] = [
     { id: 'home', label: 'Guide', icon: 'guide', to: { name: 'home' } },
     { id: 'library', label: 'Library', icon: 'library', to: { name: 'library' } },
+    { id: 'discover', label: 'Discover', icon: 'discover', to: { name: 'discover' } },
     { id: 'search', label: 'Search', icon: 'search', to: { name: 'search' } },
     {
       id: 'notifications',

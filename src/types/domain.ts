@@ -132,7 +132,10 @@ export interface UpcomingEpisode {
   episode_name: string | null
   airstamp: string
   runtime: number | null
-  status: UserShowStatus
+  status: UserShowStatus | null
+  /** Only present in the catalog-wide ("Everything") feed. */
+  show_weight?: number
+  followed?: boolean
 }
 
 export interface AppNotification {
@@ -248,4 +251,40 @@ export interface Credit {
   character: string | null
   self: boolean
   voice: boolean
+}
+
+// ---------------------------------------------------------------------------
+// Discover
+// ---------------------------------------------------------------------------
+export interface ShowCardData {
+  id: number
+  tvmaze_id: number
+  name: string
+  image_medium: string | null
+  image_original: string | null
+  premiered: string | null
+  genres: string[]
+  status: string | null
+  summary_html: string | null
+  network_name: string | null
+  rating: number | null
+  /** Present on "because" anchors: the user's own rating. */
+  my_rating?: number | null
+}
+
+export interface DiscoverGenreRail {
+  genre: string
+  score: number
+  because: ShowCardData | null
+  items: ShowCardData[]
+}
+
+export interface DiscoverRails {
+  trending: ShowCardData[]
+  new_series: ShowCardData[]
+  genres: DiscoverGenreRail[]
+  network: { name: string | null; items: ShowCardData[] }
+  top_rated_show: { id: number; tvmaze_id: number; name: string; my_rating: number | null } | null
+  pick: ShowCardData | null
+  pick_reason: ShowCardData | null
 }

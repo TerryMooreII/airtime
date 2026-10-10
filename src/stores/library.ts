@@ -59,7 +59,7 @@ export const useLibraryStore = defineStore('library', () => {
 
   async function track(
     showId: number,
-    tvmazeId: number,
+    tvmazeId?: number,
     status: UserShowStatus = 'watching',
   ): Promise<void> {
     const userId = await currentUserId()
@@ -72,9 +72,11 @@ export const useLibraryStore = defineStore('library', () => {
     upsertLocal(data as unknown as LibraryEntry)
 
     // Pull the full episode list right away; the queue is the fallback if this fails.
-    invokeFunction('refresh-show', { tvmaze_id: tvmazeId }).catch((err) =>
-      console.warn('refresh-show failed, queue will handle it', err),
-    )
+    const id = tvmazeId ?? (data as unknown as LibraryEntry).show?.tvmaze_id
+    if (id)
+      invokeFunction('refresh-show', { tvmaze_id: id }).catch((err) =>
+        console.warn('refresh-show failed, queue will handle it', err),
+      )
   }
 
   /**

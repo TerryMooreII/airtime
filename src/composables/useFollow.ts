@@ -17,7 +17,7 @@ export function useFollow() {
     return pendingIds.has(showId)
   }
 
-  async function toggle(showId: number, tvmazeId: number, name?: string): Promise<void> {
+  async function toggle(showId: number, tvmazeId?: number, name?: string): Promise<void> {
     if (pendingIds.has(showId)) return
     pendingIds.add(showId)
     try {

@@ -14,6 +14,12 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'Upcoming' },
     },
     {
+      path: '/discover',
+      name: 'discover',
+      component: () => import('@/features/discover/DiscoverView.vue'),
+      meta: { requiresAuth: true, title: 'Discover' },
+    },
+    {
       path: '/search',
       name: 'search',
       component: () => import('@/features/search/SearchView.vue'),

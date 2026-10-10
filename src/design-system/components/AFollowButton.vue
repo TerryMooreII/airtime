@@ -8,8 +8,12 @@ withDefaults(
     appearance?: 'chip' | 'button'
     size?: 'md' | 'lg'
     loading?: boolean
+    /** Chip only: render in flow (not absolutely positioned on a poster). */
+    inline?: boolean
+    /** Chip only: 26px instead of 34px. */
+    small?: boolean
   }>(),
-  { appearance: 'button', size: 'md', loading: false },
+  { appearance: 'button', size: 'md', loading: false, inline: false, small: false },
 )
 const emit = defineEmits<{ toggle: [] }>()
 
@@ -25,7 +29,11 @@ function onClick(ev: Event) {
     v-if="appearance === 'chip'"
     type="button"
     class="a-follow-chip"
-    :class="{ 'a-follow-chip--on': following }"
+    :class="{
+      'a-follow-chip--on': following,
+      'a-follow-chip--inline': inline,
+      'a-follow-chip--small': small,
+    }"
     :aria-label="following ? 'Unfollow' : 'Follow'"
     :aria-pressed="following"
     :disabled="loading"
@@ -116,5 +124,17 @@ function onClick(ev: Event) {
 .a-follow-chip--on {
   background: var(--primary);
   color: var(--on-primary);
+}
+.a-follow-chip--inline {
+  position: static;
+  flex: none;
+}
+.a-follow-chip--small {
+  width: 26px;
+  height: 26px;
+}
+.a-follow-chip--small :deep(svg) {
+  width: 13px;
+  height: 13px;
 }
 </style>

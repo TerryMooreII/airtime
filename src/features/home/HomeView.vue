@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import {
   AAlert,
+  AFollowButton,
   AButton,
   AEmptyState,
   APageHeader,
@@ -13,7 +14,8 @@ import {
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { useBreakpoint } from '@/composables/useBreakpoint'
-import { fetchUpcomingEpisodes } from '@/lib/api/episodes'
+import { useFollow } from '@/composables/useFollow'
+import { fetchUpcomingEpisodes, fetchUpcomingEpisodesAll } from '@/lib/api/episodes'
 import { dayKey, episodeCode, formatAirTime, formatRuntime, relativeDayLabel } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
@@ -22,6 +24,7 @@ import type { UpcomingEpisode } from '@/types/domain'
 const auth = useAuthStore()
 const library = useLibraryStore()
 const { isMobile } = useBreakpoint()
+const follow = useFollow()
 
 const episodes = ref<UpcomingEpisode[]>([])
 const loading = ref(true)
@@ -45,6 +48,28 @@ watch(layout, (v) => {
   }
 })
 const selectedDay = ref<string | null>(null)
+
+type Scope = 'mine' | 'everything'
+const SCOPE_KEY = 'airtime:guide-scope'
+const scope = ref<Scope>(readScope())
+function readScope(): Scope {
+  try {
+    return localStorage.getItem(SCOPE_KEY) === 'everything' ? 'everything' : 'mine'
+  } catch {
+    return 'mine'
+  }
+}
+watch(scope, (v) => {
+  try {
+    localStorage.setItem(SCOPE_KEY, v)
+  } catch {
+    /* ignore */
+  }
+  void load()
+})
+function isFollowed(e: UpcomingEpisode): boolean {
+  return scope.value === 'mine' ? true : (e.followed ?? library.byShowId.has(e.show_id))
+}
 const now = ref(Date.now())
 setInterval(() => (now.value = Date.now()), 30_000)
 
@@ -54,7 +79,10 @@ async function load() {
   loading.value = true
   error.value = null
   try {
-    episodes.value = await fetchUpcomingEpisodes(range.value, 300)
+    episodes.value =
+      scope.value === 'everything'
+        ? await fetchUpcomingEpisodesAll(range.value, 1000)
+        : await fetchUpcomingEpisodes(range.value, 300)
   } catch (err) {
     error.value = errorMessage(err)
   } finally {
@@ -162,6 +190,8 @@ const selectedCalendarDay = computed(
 const subtitle = computed(() => {
   if (loading.value) return 'Loading your schedule…'
   const shows = new Set(upcoming.value.map((e) => e.show_id)).size
+  if (scope.value === 'everything')
+    return `${upcoming.value.length} episode${upcoming.value.length === 1 ? '' : 's'} from ${shows} show${shows === 1 ? '' : 's'} airing · next ${range.value} days`
   return `${upcoming.value.length} new episode${upcoming.value.length === 1 ? '' : 's'} from ${shows} show${shows === 1 ? '' : 's'} you follow · next ${range.value} days`
 })
 </script>
@@ -169,6 +199,14 @@ const subtitle = computed(() => {
 <template>
   <div class="guide">
     <APageHeader title="Your week on TV" :subtitle="subtitle">
+      <ASegmented
+        v-model="scope"
+        :options="[
+          { value: 'mine', label: 'My shows' },
+          { value: 'everything', label: 'Everything' },
+        ]"
+        aria-label="Scope"
+      />
       <ASegmented
         v-model="range"
         :options="[
@@ -198,7 +236,7 @@ const subtitle = computed(() => {
     </div>
 
     <template v-else>
-      <div v-if="hero" class="hero-grid">
+      <div v-if="hero && scope === 'mine'" class="hero-grid">
         <RouterLink :to="{ name: 'show', params: { id: hero.show_id } }" class="hero">
           <img v-if="hero.show_image" :src="hero.show_image" alt="" class="hero__bg" />
           <div class="hero__shade" />
@@ -271,7 +309,18 @@ const subtitle = computed(() => {
                 {{ e.episode_name ?? 'TBA' }}</span
               >
             </span>
-            <span class="row__rel t-mono">{{ rel(e) }}</span>
+            <span class="row__end">
+              <AFollowButton
+                v-if="scope === 'everything'"
+                :following="isFollowed(e)"
+                :loading="follow.pending(e.show_id)"
+                appearance="chip"
+                inline
+                small
+                @toggle="follow.toggle(e.show_id, undefined, e.show_name)"
+              />
+              <span class="row__rel t-mono">{{ rel(e) }}</span>
+            </span>
           </RouterLink>
         </section>
       </div>
@@ -293,6 +342,15 @@ const subtitle = computed(() => {
                 :class="{ 'cal__item--past': endOf(e) < now }"
               >
                 <APoster :src="e.show_image" radius="sm" class="cal__img" />
+                <AFollowButton
+                  v-if="scope === 'everything'"
+                  :following="isFollowed(e)"
+                  :loading="follow.pending(e.show_id)"
+                  appearance="chip"
+                  small
+                  class="cal__follow"
+                  @toggle="follow.toggle(e.show_id, undefined, e.show_name)"
+                />
                 <span class="cal__text">
                   <span class="cal__time">{{ formatAirTime(e.airstamp, tz) }}</span>
                   <span class="cal__name">{{ e.show_name }}</span>
@@ -355,6 +413,15 @@ const subtitle = computed(() => {
                   {{ e.episode_name ?? 'TBA' }}</span
                 >
               </span>
+              <AFollowButton
+                v-if="scope === 'everything'"
+                :following="isFollowed(e)"
+                :loading="follow.pending(e.show_id)"
+                appearance="chip"
+                inline
+                small
+                @toggle="follow.toggle(e.show_id, undefined, e.show_name)"
+              />
             </RouterLink>
             <AEmptyState
               v-if="!selectedCalendarDay.items.length"
@@ -596,10 +663,22 @@ const subtitle = computed(() => {
 .row__code {
   font-size: 12.5px;
 }
+.row__end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .row__rel {
   font-size: 12.5px;
   color: var(--primary-text);
   white-space: nowrap;
+}
+.cal__item {
+  position: relative;
+}
+.cal__follow {
+  top: 6px;
+  right: 6px;
 }
 .cal {
   display: flex;
@@ -762,7 +841,7 @@ const subtitle = computed(() => {
     top: 65px;
   }
   .row {
-    grid-template-columns: 56px 38px minmax(0, 1fr);
+    grid-template-columns: 56px 38px minmax(0, 1fr) auto;
   }
   .row__rel {
     display: none;

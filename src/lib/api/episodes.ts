@@ -18,6 +18,16 @@ export async function fetchUpcomingEpisodes(
   return (data ?? []) as UpcomingEpisode[]
 }
 
+/** Upcoming episodes across the whole catalog (Guide "Everything" scope). */
+export async function fetchUpcomingEpisodesAll(days = 7, limit = 400): Promise<UpcomingEpisode[]> {
+  const { data, error } = await supabase.rpc('upcoming_episodes_all', {
+    p_days: days,
+    p_limit: limit,
+  })
+  if (error) throw error
+  return (data ?? []) as UpcomingEpisode[]
+}
+
 export async function fetchEpisodesForShow(showId: number): Promise<Episode[]> {
   const { data, error } = await supabase
     .from('episodes')

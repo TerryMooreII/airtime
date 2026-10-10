@@ -728,6 +728,7 @@ export type Database = {
         Args: { p_episode_ids: number[] }
         Returns: number
       }
+      discover_rails: { Args: never; Returns: Json }
       enqueue_nightly_sync: { Args: never; Returns: undefined }
       enqueue_sync_job: {
         Args: {
@@ -828,6 +829,24 @@ export type Database = {
       text_array_to_text: { Args: { arr: string[] }; Returns: string }
       tick_push_dispatch: { Args: never; Returns: undefined }
       tick_sync_worker: { Args: never; Returns: undefined }
+      show_card: { Args: { p_show_id: number }; Returns: Json }
+      upcoming_episodes_all: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: {
+          airstamp: string
+          episode_id: number
+          episode_name: string
+          followed: boolean
+          number: number
+          runtime: number
+          season: number
+          show_id: number
+          show_image: string
+          show_name: string
+          show_weight: number
+          status: Database["public"]["Enums"]["user_show_status"]
+        }[]
+      }
       upsert_channels: { Args: { p_rows: Json }; Returns: number }
       upsert_episodes: { Args: { p_rows: Json }; Returns: Json }
       upsert_shows: { Args: { p_rows: Json }; Returns: Json }
