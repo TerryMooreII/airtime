@@ -11,6 +11,8 @@ export interface NavItem {
   icon: IconName
   to: RouteLocationRaw
   badge?: number
+  /** On phones: a bottom tab (default) or an icon button in the header. */
+  mobile?: 'tab' | 'header'
 }
 
 /**
@@ -57,6 +59,17 @@ const emit = defineEmits<{ toggleTheme: [] }>()
         /></RouterLink>
         <div class="a-shell__search"><slot name="search" /></div>
         <div class="a-shell__spacer" />
+        <RouterLink
+          v-for="n in nav.filter((i) => i.mobile === 'header')"
+          :key="n.id"
+          :to="n.to"
+          class="a-shell__headicon"
+          :class="{ 'a-shell__headicon--on': n.id === activeId }"
+          :aria-label="n.label"
+        >
+          <AIcon :name="n.icon" :size="18" />
+          <span v-if="n.badge" class="a-shell__dot" />
+        </RouterLink>
         <slot name="actions" />
         <button
           type="button"
@@ -72,7 +85,7 @@ const emit = defineEmits<{ toggleTheme: [] }>()
       </main>
       <nav class="a-shell__bottom" aria-label="Primary">
         <RouterLink
-          v-for="n in nav"
+          v-for="n in nav.filter((i) => i.mobile !== 'header')"
           :key="n.id"
           :to="n.to"
           class="a-shell__bottomitem"
@@ -229,6 +242,22 @@ const emit = defineEmits<{ toggleTheme: [] }>()
 .a-shell__bottom {
   display: none;
 }
+.a-shell__headicon {
+  display: none;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--fg);
+}
+.a-shell__headicon--on {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  border-color: transparent;
+}
 
 @media (max-width: 759px) {
   .a-shell__sidebar {
@@ -240,7 +269,8 @@ const emit = defineEmits<{ toggleTheme: [] }>()
   .a-shell__search {
     display: none;
   }
-  .a-shell__theme--icon {
+  .a-shell__theme--icon,
+  .a-shell__headicon {
     display: flex;
   }
   .a-shell__header {
@@ -258,7 +288,8 @@ const emit = defineEmits<{ toggleTheme: [] }>()
     right: 0;
     bottom: 0;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     border-top: 1px solid var(--line);
     background: var(--bg);
     padding: 6px 6px calc(10px + env(safe-area-inset-bottom));

@@ -36,7 +36,7 @@ const nav = computed<NavItem[]>(() => {
     { id: 'home', label: 'Guide', icon: 'guide', to: { name: 'home' } },
     { id: 'library', label: 'Library', icon: 'library', to: { name: 'library' } },
     { id: 'discover', label: 'Discover', icon: 'discover', to: { name: 'discover' } },
-    { id: 'search', label: 'Search', icon: 'search', to: { name: 'search' } },
+    { id: 'search', label: 'Search', icon: 'search', to: { name: 'search' }, mobile: 'header' },
     {
       id: 'notifications',
       label: 'Alerts',
@@ -47,7 +47,13 @@ const nav = computed<NavItem[]>(() => {
     { id: 'settings', label: 'Settings', icon: 'settings', to: { name: 'settings' } },
   ]
   if (auth.isAdmin)
-    items.push({ id: 'admin', label: 'Admin', icon: 'shield', to: { name: 'admin' } })
+    items.push({
+      id: 'admin',
+      label: 'Admin',
+      icon: 'shield',
+      to: { name: 'admin' },
+      mobile: 'header',
+    })
   return items
 })
 const activeId = computed(() => {
