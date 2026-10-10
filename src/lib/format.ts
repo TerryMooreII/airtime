@@ -149,3 +149,11 @@ export function browserTimeZone(): string {
     return 'UTC'
   }
 }
+
+/** Preferred channel label for a show: the TV network, else the streaming service. */
+export function channelLabel(show: {
+  network?: { name: string } | null
+  web_channel?: { name: string } | null
+}): string | null {
+  return show.network?.name ?? show.web_channel?.name ?? null
+}

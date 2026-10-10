@@ -99,6 +99,8 @@ interface TvmazeCreditEntry {
       image: TvmazeImage | null
       premiered: string | null
       status: string | null
+      network?: { name: string } | null
+      webChannel?: { name: string } | null
     }
   }
 }
@@ -167,6 +169,7 @@ export async function fetchPersonCredits(personId: number): Promise<Credit[]> {
       showName: show.name,
       showImage: show.image?.medium ?? null,
       showUrl: show.url,
+      network: show.network?.name ?? show.webChannel?.name ?? null,
       premiered: show.premiered,
       status: show.status,
       character,

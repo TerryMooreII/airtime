@@ -78,7 +78,9 @@ const meta = computed(() => {
 
 function roleLabel(c: Credit): string {
   const base = c.self ? 'As themself' : c.character ? `as ${c.character}` : ''
-  return [base, c.voice ? '(voice)' : '', yearOf(c.premiered)].filter(Boolean).join(' · ')
+  return [base, c.voice ? '(voice)' : '', c.network, yearOf(c.premiered)]
+    .filter(Boolean)
+    .join(' · ')
 }
 const inCatalog = computed(() => credits.value.filter((c) => localIds.value.has(c.showTvmazeId)))
 const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has(c.showTvmazeId)))

@@ -39,7 +39,7 @@ const subtitle = computed(() => {
 })
 
 function meta(s: SearchResult): string {
-  return [s.rating ? `★ ${s.rating}` : null, s.genres[0] ?? s.network_name ?? yearOf(s.premiered)]
+  return [s.rating ? `★ ${s.rating}` : null, s.network_name, s.genres[0] ?? yearOf(s.premiered)]
     .filter(Boolean)
     .join(' · ')
 }

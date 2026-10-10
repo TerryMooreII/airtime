@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import {
   ABadge,
+  ASelect,
   AProgressBar,
   AButton,
   AEmptyState,
@@ -26,6 +27,7 @@ import {
   STATUS_LABELS,
   timeAgo,
   yearOf,
+  channelLabel,
 } from '@/lib/format'
 import { fuzzyFilter } from '@/lib/fuzzy'
 import { useAuthStore } from '@/stores/auth'
@@ -100,8 +102,28 @@ const nextTime = (e: LibraryEntry) => {
 const searching = computed(() => query.value.trim().length > 0)
 
 /** Status filter only; sorting never adds or removes shows. */
+const network = ref<string>('all')
+/** Channels present in the user's library, most common first. */
+const networkOptions = computed(() => {
+  const counts = new Map<string, number>()
+  for (const e of library.entries) {
+    const label = channelLabel(e.show)
+    if (label) counts.set(label, (counts.get(label) ?? 0) + 1)
+  }
+  return [
+    { value: 'all', label: 'All networks' },
+    ...[...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([name, n]) => ({ value: name, label: `${name} (${n})` })),
+  ]
+})
+
 const scoped = computed(() =>
-  library.entries.filter((e) => filter.value === 'all' || e.status === filter.value),
+  library.entries.filter(
+    (e) =>
+      (filter.value === 'all' || e.status === filter.value) &&
+      (network.value === 'all' || channelLabel(e.show) === network.value),
+  ),
 )
 
 const entries = computed(() => {
@@ -149,6 +171,7 @@ function meta(e: LibraryEntry): string {
   const n = next(e)
   const left = unwatched(e)
   return [
+    channelLabel(e.show),
     STATUS_LABELS[e.status],
     n ? episodeCode(n.season, n.number) : (e.show.status ?? '—'),
     left ? `${left} unwatched` : null,
@@ -186,6 +209,7 @@ async function unfollow(e: LibraryEntry) {
 
 const columns: TableColumn[] = [
   { key: 'show', label: 'Show' },
+  { key: 'network', label: 'Network' },
   { key: 'status', label: 'My status' },
   { key: 'rating', label: 'Rating' },
   { key: 'progress', label: 'Progress' },
@@ -228,7 +252,15 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
         aria-label="Status filter"
         class="library__filters"
       />
-      <ASearchBox v-model="query" placeholder="Filter your shows" class="library__search" />
+      <div class="library__right">
+        <ASelect
+          v-if="networkOptions.length > 2"
+          v-model="network"
+          :options="networkOptions"
+          class="library__network"
+        />
+        <ASearchBox v-model="query" placeholder="Filter your shows" class="library__search" />
+      </div>
     </div>
 
     <div v-if="library.loading && !library.loaded" class="grid">
@@ -273,6 +305,15 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
               }}</span>
             </span>
           </RouterLink>
+        </template>
+        <template #cell-network="{ row }">
+          <ABadge
+            v-if="channelLabel((row.entry as LibraryEntry).show)"
+            variant="muted"
+            :mono="false"
+            >{{ channelLabel((row.entry as LibraryEntry).show) }}</ABadge
+          >
+          <span v-else class="t-muted">—</span>
         </template>
         <template #cell-status="{ row }">
           <select
@@ -393,8 +434,17 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
 .library__filters {
   min-width: 0;
 }
+.library__right {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.library__network {
+  min-width: 180px;
+}
 .library__search {
-  width: min(320px, 100%);
+  width: min(280px, 100%);
 }
 .grid {
   display: grid;

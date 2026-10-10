@@ -6,7 +6,7 @@ import { useUpcomingStore } from '@/stores/upcoming'
 import type { LibraryEntry, UserShow, UserShowStatus } from '@/types/domain'
 
 const LIBRARY_SELECT =
-  'user_id, show_id, status, rating, notes, notify, added_at, updated_at, show:shows(id, tvmaze_id, name, status, image_medium, genres, premiered, type)'
+  'user_id, show_id, status, rating, notes, notify, added_at, updated_at, show:shows(id, tvmaze_id, name, status, image_medium, genres, premiered, type, network:channels!shows_network_id_fkey(name, country_code), web_channel:channels!shows_web_channel_id_fkey(name))'
 
 /** The signed-in user's tracked shows, cached for fast "is tracked?" lookups. */
 async function currentUserId(): Promise<string> {

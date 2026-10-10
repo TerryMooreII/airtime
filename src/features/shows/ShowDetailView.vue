@@ -188,6 +188,18 @@ const nextEpisode = computed(() =>
 )
 
 const genres = computed(() => show.value?.genres ?? [])
+/** Where it airs: the TV network with its country, else the streaming service. */
+const channel = computed(() => {
+  const s = show.value
+  if (!s) return null
+  if (s.network)
+    return {
+      kind: 'network' as const,
+      label: [s.network.name, s.network.country_code].filter(Boolean).join(' · '),
+    }
+  if (s.web_channel) return { kind: 'web_channel' as const, label: s.web_channel.name }
+  return null
+})
 const meta = computed(() => {
   const s = show.value
   if (!s) return ''
@@ -339,7 +351,12 @@ async function toggleSeason() {
         <div class="hero__inner">
           <APoster :src="show.image_medium" :alt="show.name" radius="lg" class="hero__poster" />
           <div class="hero__text">
-            <div v-if="genres.length" class="hero__genres">
+            <div v-if="genres.length || channel" class="hero__genres">
+              <ABadge v-if="channel" variant="soft" :mono="false" class="hero__channel">
+                <AIcon :name="channel.kind === 'network' ? 'tv' : 'play'" :size="13" />{{
+                  channel.label
+                }}
+              </ABadge>
               <ABadge v-for="g in genres" :key="g" variant="outline" :mono="false">{{ g }}</ABadge>
             </div>
             <h1 class="hero__title">{{ show.name }}</h1>
@@ -620,6 +637,9 @@ async function toggleSeason() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.hero__channel {
+  gap: 6px;
 }
 .hero__genres {
   display: flex;

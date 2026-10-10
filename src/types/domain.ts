@@ -100,11 +100,16 @@ export interface UserShow {
 }
 
 /** A tracked show joined with its catalog row (Library view). */
+export interface ChannelRef {
+  name: string
+  country_code?: string | null
+}
+
 export interface LibraryEntry extends UserShow {
   show: Pick<
     Show,
     'id' | 'tvmaze_id' | 'name' | 'status' | 'image_medium' | 'genres' | 'premiered' | 'type'
-  >
+  > & { network: ChannelRef | null; web_channel: ChannelRef | null }
 }
 
 export interface SearchResult {
@@ -246,6 +251,7 @@ export interface Credit {
   showName: string
   showImage: string | null
   showUrl: string | null
+  network: string | null
   premiered: string | null
   status: string | null
   character: string | null
