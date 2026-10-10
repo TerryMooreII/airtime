@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 import {
   AAlert,
+  ABrandIcon,
   ABadge,
   AButton,
   AFollowButton,
@@ -12,6 +13,7 @@ import {
   ASkeleton,
   AStarRating,
   AIcon,
+  type Brand,
   type IconName,
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
@@ -163,10 +165,12 @@ interface ShowLink {
   label: string
   href: string
   icon: IconName
+  brand?: Brand
 }
 const links = computed<ShowLink[]>(() => {
   const out: ShowLink[] = []
-  if (show.value?.tvmaze_url) out.push({ label: 'TVmaze', href: show.value.tvmaze_url, icon: 'tv' })
+  if (show.value?.tvmaze_url)
+    out.push({ label: 'TVmaze', href: show.value.tvmaze_url, icon: 'tv', brand: 'tvmaze' })
   for (const x of externalIds.value) {
     const href = externalLink(x.provider, x.external_id)
     if (!href) continue
@@ -174,6 +178,7 @@ const links = computed<ShowLink[]>(() => {
       label: RATING_PROVIDER_LABELS[x.provider] ?? x.provider,
       href,
       icon: x.provider === 'imdb' ? 'film' : 'database',
+      brand: x.provider === 'imdb' ? 'imdb' : x.provider === 'thetvdb' ? 'thetvdb' : undefined,
     })
   }
   if (show.value?.official_site)
@@ -310,6 +315,7 @@ function isFuture(e: Episode): boolean {
               size="sm"
               :icon="l.icon"
             >
+              <template v-if="l.brand" #icon><ABrandIcon :brand="l.brand" :size="16" /></template>
               {{ l.label }}<AIcon name="external" :size="13" class="about__ext" />
             </AButton>
           </div>

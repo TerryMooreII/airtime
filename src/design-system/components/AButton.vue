@@ -41,7 +41,7 @@ const isDisabled = computed(() => props.disabled || props.loading)
 
 <template>
   <RouterLink v-if="to && !isDisabled" :to="to" :class="classes">
-    <AIcon v-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" />
+    <slot name="icon"><AIcon v-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" /></slot>
     <slot />
   </RouterLink>
   <a
@@ -51,7 +51,7 @@ const isDisabled = computed(() => props.disabled || props.loading)
     rel="noopener noreferrer"
     :class="classes"
   >
-    <AIcon v-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" />
+    <slot name="icon"><AIcon v-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" /></slot>
     <slot />
   </a>
   <button
@@ -62,7 +62,9 @@ const isDisabled = computed(() => props.disabled || props.loading)
     :aria-busy="loading || undefined"
   >
     <AIcon v-if="loading" name="spinner" :size="size === 'sm' ? 15 : 17" />
-    <AIcon v-else-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" />
+    <slot v-else name="icon"
+      ><AIcon v-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17"
+    /></slot>
     <slot />
   </button>
 </template>
