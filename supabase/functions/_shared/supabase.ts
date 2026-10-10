@@ -22,7 +22,10 @@ export function userClient(authHeader: string): SupabaseClient {
 }
 
 /** Unwrap a PostgREST/RPC response or throw with context. */
-export function unwrap<T>(result: { data: T | null; error: { message: string } | null }, what: string): T {
+export function unwrap<T>(
+  result: { data: T | null; error: { message: string } | null },
+  what: string,
+): T {
   if (result.error) throw new Error(`${what}: ${result.error.message}`)
   return result.data as T
 }

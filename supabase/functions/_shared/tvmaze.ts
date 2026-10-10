@@ -22,14 +22,17 @@ export async function tvmazeGet<T>(path: string): Promise<T | null> {
   const url = path.startsWith('http') ? path : `${TVMAZE_BASE}${path}`
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     await throttle()
-    const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' } })
+    const res = await fetch(url, {
+      headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
+    })
     if (res.status === 404) {
       await res.body?.cancel()
       return null
     }
     if (res.status === 429 || res.status >= 500) {
       await res.body?.cancel()
-      if (attempt === MAX_RETRIES) throw new Error(`TVMaze ${res.status} for ${path} after ${attempt} retries`)
+      if (attempt === MAX_RETRIES)
+        throw new Error(`TVMaze ${res.status} for ${path} after ${attempt} retries`)
       const backoff = Math.min(30_000, 2_000 * 2 ** attempt)
       await new Promise((r) => setTimeout(r, backoff))
       continue

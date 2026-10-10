@@ -46,7 +46,10 @@ const WORKER_ID = `edge-${crypto.randomUUID().slice(0, 8)}`
 // ---------------------------------------------------------------------------
 // Job handlers
 // ---------------------------------------------------------------------------
-async function handleCatalogPage(db: SupabaseClient, payload: Record<string, unknown>): Promise<Stats> {
+async function handleCatalogPage(
+  db: SupabaseClient,
+  payload: Record<string, unknown>,
+): Promise<Stats> {
   const page = Number(payload.page ?? 0)
   const shows = await tvmazeGet<TvmazeShow[]>(`/shows?page=${page}`)
 
@@ -55,7 +58,11 @@ async function handleCatalogPage(db: SupabaseClient, payload: Record<string, unk
     unwrap(
       await db.from('app_settings').upsert({
         key: 'catalog_import',
-        value: { last_page: page - 1, completed_at: new Date().toISOString(), started_at: await startedAt(db) },
+        value: {
+          last_page: page - 1,
+          completed_at: new Date().toISOString(),
+          started_at: await startedAt(db),
+        },
       }),
       'app_settings',
     )
@@ -66,7 +73,11 @@ async function handleCatalogPage(db: SupabaseClient, payload: Record<string, unk
   unwrap(
     await db.from('app_settings').upsert({
       key: 'catalog_import',
-      value: { last_page: page, completed_at: null, started_at: (await startedAt(db)) ?? new Date().toISOString() },
+      value: {
+        last_page: page,
+        completed_at: null,
+        started_at: (await startedAt(db)) ?? new Date().toISOString(),
+      },
     }),
     'app_settings',
   )
@@ -80,7 +91,11 @@ async function handleCatalogPage(db: SupabaseClient, payload: Record<string, unk
 }
 
 async function startedAt(db: SupabaseClient): Promise<string | null> {
-  const { data } = await db.from('app_settings').select('value').eq('key', 'catalog_import').maybeSingle()
+  const { data } = await db
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'catalog_import')
+    .maybeSingle()
   return (data?.value as { started_at?: string } | null)?.started_at ?? null
 }
 
@@ -135,7 +150,10 @@ async function handleShowUpdates(db: SupabaseClient): Promise<Stats> {
   return { reported: Object.keys(updates).length, stale: stale.length, enqueued }
 }
 
-async function handleShowRefresh(db: SupabaseClient, payload: Record<string, unknown>): Promise<Stats> {
+async function handleShowRefresh(
+  db: SupabaseClient,
+  payload: Record<string, unknown>,
+): Promise<Stats> {
   const tvmazeId = Number(payload.tvmaze_id)
   if (!tvmazeId) throw new Error('show_refresh requires payload.tvmaze_id')
 
@@ -147,7 +165,9 @@ async function handleShowRefresh(db: SupabaseClient, payload: Record<string, unk
 
   if (local?.episodes_synced_at) {
     const r = await importShowWithEpisodes(db, tvmazeId, { notify: true })
-    return r ? { tvmaze_id: tvmazeId, mode: 'show+episodes', ...r } : { tvmaze_id: tvmazeId, missing: true }
+    return r
+      ? { tvmaze_id: tvmazeId, mode: 'show+episodes', ...r }
+      : { tvmaze_id: tvmazeId, missing: true }
   }
 
   const show = await tvmazeGet<TvmazeShow>(`/shows/${tvmazeId}`)
@@ -156,7 +176,10 @@ async function handleShowRefresh(db: SupabaseClient, payload: Record<string, unk
   return { tvmaze_id: tvmazeId, mode: 'show', ...result }
 }
 
-async function handleShowEpisodes(db: SupabaseClient, payload: Record<string, unknown>): Promise<Stats> {
+async function handleShowEpisodes(
+  db: SupabaseClient,
+  payload: Record<string, unknown>,
+): Promise<Stats> {
   const tvmazeId = Number(payload.tvmaze_id)
   if (!tvmazeId) throw new Error('show_episodes requires payload.tvmaze_id')
   // Initial backfill: never notify, users would get one alert per historical episode.
@@ -197,11 +220,19 @@ async function drainQueue(db: SupabaseClient): Promise<void> {
     if (!jobs.length) break
 
     for (const job of jobs) {
-      if (Date.now() >= deadline || (job.job_type === 'catalog_page' && catalogPages >= MAX_CATALOG_PAGES_PER_RUN)) {
+      if (
+        Date.now() >= deadline ||
+        (job.job_type === 'catalog_page' && catalogPages >= MAX_CATALOG_PAGES_PER_RUN)
+      ) {
         // Hand it back untouched for the next tick.
         await db
           .from('sync_queue')
-          .update({ status: 'queued', locked_at: null, locked_by: null, attempts: Math.max(0, job.attempts - 1) })
+          .update({
+            status: 'queued',
+            locked_at: null,
+            locked_by: null,
+            attempts: Math.max(0, job.attempts - 1),
+          })
           .eq('id', job.id)
         continue
       }

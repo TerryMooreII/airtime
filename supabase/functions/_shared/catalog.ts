@@ -38,7 +38,10 @@ export async function upsertChannels(db: SupabaseClient, rows: ChannelRow[]): Pr
   for (const r of rows) unique.set(`${r.kind}:${r.tvmaze_id}`, r)
   let touched = 0
   for (const batch of chunk([...unique.values()], CHANNEL_BATCH)) {
-    touched += unwrap(await db.rpc('upsert_channels', { p_rows: batch }), 'upsert_channels') as number
+    touched += unwrap(
+      await db.rpc('upsert_channels', { p_rows: batch }),
+      'upsert_channels',
+    ) as number
   }
   return touched
 }
@@ -46,17 +49,26 @@ export async function upsertChannels(db: SupabaseClient, rows: ChannelRow[]): Pr
 export async function upsertShows(db: SupabaseClient, rows: ShowRow[]): Promise<UpsertShowsResult> {
   const total: UpsertShowsResult = { inserted: 0, updated: 0 }
   for (const batch of chunk(rows, SHOW_BATCH)) {
-    const r = unwrap(await db.rpc('upsert_shows', { p_rows: batch }), 'upsert_shows') as UpsertShowsResult
+    const r = unwrap(
+      await db.rpc('upsert_shows', { p_rows: batch }),
+      'upsert_shows',
+    ) as UpsertShowsResult
     total.inserted += r.inserted
     total.updated += r.updated
   }
   return total
 }
 
-export async function upsertEpisodes(db: SupabaseClient, rows: EpisodeRow[]): Promise<UpsertEpisodesResult> {
+export async function upsertEpisodes(
+  db: SupabaseClient,
+  rows: EpisodeRow[],
+): Promise<UpsertEpisodesResult> {
   const total: UpsertEpisodesResult = { inserted_ids: [], inserted: 0, updated: 0, skipped: 0 }
   for (const batch of chunk(rows, EPISODE_BATCH)) {
-    const r = unwrap(await db.rpc('upsert_episodes', { p_rows: batch }), 'upsert_episodes') as UpsertEpisodesResult
+    const r = unwrap(
+      await db.rpc('upsert_episodes', { p_rows: batch }),
+      'upsert_episodes',
+    ) as UpsertEpisodesResult
     total.inserted_ids.push(...(r.inserted_ids ?? []))
     total.inserted += r.inserted
     total.updated += r.updated
@@ -66,7 +78,10 @@ export async function upsertEpisodes(db: SupabaseClient, rows: EpisodeRow[]): Pr
 }
 
 /** Upsert a set of TVMaze show objects (channels first, then shows). */
-export async function storeShows(db: SupabaseClient, shows: TvmazeShow[]): Promise<UpsertShowsResult & { channels: number }> {
+export async function storeShows(
+  db: SupabaseClient,
+  shows: TvmazeShow[],
+): Promise<UpsertShowsResult & { channels: number }> {
   const channels = await upsertChannels(db, shows.flatMap(channelRows))
   const result = await upsertShows(db, shows.map(toShowRow))
   return { ...result, channels }
@@ -94,14 +109,22 @@ export async function importShowWithEpisodes(
 ): Promise<{ show: UpsertShowsResult; episodes: UpsertEpisodesResult; notified: number } | null> {
   const show = await tvmazeGet<TvmazeShow>(`/shows/${tvmazeId}`)
   if (!show) return null
-  const episodes = (await tvmazeGet<TvmazeEpisode[]>(`/shows/${tvmazeId}/episodes?specials=1`)) ?? []
+  const episodes =
+    (await tvmazeGet<TvmazeEpisode[]>(`/shows/${tvmazeId}/episodes?specials=1`)) ?? []
 
   const showResult = await storeShows(db, [show])
-  const episodeResult = await upsertEpisodes(db, episodes.map((e) => toEpisodeRow(e, tvmazeId)))
-  unwrap(await db.rpc('mark_show_episodes_synced', { p_tvmaze_id: tvmazeId }), 'mark_show_episodes_synced')
+  const episodeResult = await upsertEpisodes(
+    db,
+    episodes.map((e) => toEpisodeRow(e, tvmazeId)),
+  )
+  unwrap(
+    await db.rpc('mark_show_episodes_synced', { p_tvmaze_id: tvmazeId }),
+    'mark_show_episodes_synced',
+  )
 
-  const notified = opts.notify && episodeResult.inserted_ids.length > 0
-    ? await notifyNewEpisodes(db, episodeResult.inserted_ids)
-    : 0
+  const notified =
+    opts.notify && episodeResult.inserted_ids.length > 0
+      ? await notifyNewEpisodes(db, episodeResult.inserted_ids)
+      : 0
   return { show: showResult, episodes: episodeResult, notified }
 }

@@ -97,13 +97,23 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date().toISOString()
-    await db.from('notifications').update({ push_sent_at: now }).in('id', pending.map((n) => n.id))
+    await db
+      .from('notifications')
+      .update({ push_sent_at: now })
+      .in(
+        'id',
+        pending.map((n) => n.id),
+      )
     if (deadSubscriptionIds.size) {
-      await db.from('push_subscriptions').update({ failed_at: now }).in('id', [...deadSubscriptionIds])
+      await db
+        .from('push_subscriptions')
+        .update({ failed_at: now })
+        .in('id', [...deadSubscriptionIds])
     }
     if (sent) {
       const okIds = subs.filter((s) => !deadSubscriptionIds.has(s.id)).map((s) => s.id)
-      if (okIds.length) await db.from('push_subscriptions').update({ last_success_at: now }).in('id', okIds)
+      if (okIds.length)
+        await db.from('push_subscriptions').update({ last_success_at: now }).in('id', okIds)
     }
 
     return json({ pending: pending.length, sent, expired })

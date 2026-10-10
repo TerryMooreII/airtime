@@ -29,9 +29,13 @@ Deno.serve(async (req) => {
           .from('profiles')
           .select('id, display_name, role, timezone, created_at')
           .in('id', ids)
-        const { data: counts } = await asService.from('user_shows').select('user_id').in('user_id', ids)
+        const { data: counts } = await asService
+          .from('user_shows')
+          .select('user_id')
+          .in('user_id', ids)
         const trackedByUser = new Map<string, number>()
-        for (const row of counts ?? []) trackedByUser.set(row.user_id, (trackedByUser.get(row.user_id) ?? 0) + 1)
+        for (const row of counts ?? [])
+          trackedByUser.set(row.user_id, (trackedByUser.get(row.user_id) ?? 0) + 1)
         const profileById = new Map((profiles ?? []).map((p) => [p.id, p]))
 
         return json({

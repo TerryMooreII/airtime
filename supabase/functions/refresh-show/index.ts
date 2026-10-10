@@ -26,10 +26,16 @@ Deno.serve(async (req) => {
 
     const syncedAt = show?.episodes_synced_at ? new Date(show.episodes_synced_at).getTime() : 0
     if (show && Date.now() - syncedAt < STALE_AFTER_MS) {
-      return json({ refreshed: false, reason: 'fresh', episodes_synced_at: show.episodes_synced_at })
+      return json({
+        refreshed: false,
+        reason: 'fresh',
+        episodes_synced_at: show.episodes_synced_at,
+      })
     }
 
-    const result = await importShowWithEpisodes(asService, tvmazeId, { notify: Boolean(show?.episodes_synced_at) })
+    const result = await importShowWithEpisodes(asService, tvmazeId, {
+      notify: Boolean(show?.episodes_synced_at),
+    })
     if (!result) throw new HttpError(404, 'show not found on TVMaze')
 
     // The queue may still hold the initial backfill job for this show; it is now redundant.
