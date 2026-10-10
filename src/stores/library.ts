@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import { invokeFunction, supabase } from '@/lib/supabase'
+import { useUpcomingStore } from '@/stores/upcoming'
 import type { LibraryEntry, UserShow, UserShowStatus } from '@/types/domain'
 
 const LIBRARY_SELECT =
@@ -117,9 +118,11 @@ export const useLibraryStore = defineStore('library', () => {
       .eq('show_id', showId)
     if (error) throw error
     entries.value = entries.value.filter((e) => e.show_id !== showId)
+    useUpcomingStore().invalidate()
   }
 
   function upsertLocal(entry: LibraryEntry): void {
+    useUpcomingStore().invalidate()
     const idx = entries.value.findIndex((e) => e.show_id === entry.show_id)
     if (idx === -1) entries.value = [entry, ...entries.value]
     else entries.value.splice(idx, 1, entry)

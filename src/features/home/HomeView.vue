@@ -15,18 +15,39 @@ import {
 import { errorMessage } from '@/composables/useAsync'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useFollow } from '@/composables/useFollow'
-import { fetchUpcomingEpisodes, fetchUpcomingEpisodesAll } from '@/lib/api/episodes'
 import { dayKey, episodeCode, formatAirTime, formatRuntime, relativeDayLabel } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
+import { useUpcomingStore } from '@/stores/upcoming'
 import type { UpcomingEpisode } from '@/types/domain'
 
 const auth = useAuthStore()
 const library = useLibraryStore()
+const upcomingStore = useUpcomingStore()
 const { isMobile } = useBreakpoint()
 const follow = useFollow()
 
-const episodes = ref<UpcomingEpisode[]>([])
+type Scope = 'mine' | 'everything'
+const SCOPE_KEY = 'airtime:guide-scope'
+const scope = ref<Scope>(readScope())
+function readScope(): Scope {
+  try {
+    return localStorage.getItem(SCOPE_KEY) === 'everything' ? 'everything' : 'mine'
+  } catch {
+    return 'mine'
+  }
+}
+watch(scope, (v) => {
+  try {
+    localStorage.setItem(SCOPE_KEY, v)
+  } catch {
+    /* ignore */
+  }
+  void load()
+})
+const episodes = computed(() =>
+  upcomingStore.items(scope.value === 'everything' ? 'everything' : 'mine', range.value),
+)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const range = ref<7 | 14 | 30>(14)
@@ -49,24 +70,6 @@ watch(layout, (v) => {
 })
 const selectedDay = ref<string | null>(null)
 
-type Scope = 'mine' | 'everything'
-const SCOPE_KEY = 'airtime:guide-scope'
-const scope = ref<Scope>(readScope())
-function readScope(): Scope {
-  try {
-    return localStorage.getItem(SCOPE_KEY) === 'everything' ? 'everything' : 'mine'
-  } catch {
-    return 'mine'
-  }
-}
-watch(scope, (v) => {
-  try {
-    localStorage.setItem(SCOPE_KEY, v)
-  } catch {
-    /* ignore */
-  }
-  void load()
-})
 function isFollowed(e: UpcomingEpisode): boolean {
   return scope.value === 'mine' ? true : (e.followed ?? library.byShowId.has(e.show_id))
 }
@@ -79,10 +82,7 @@ async function load() {
   loading.value = true
   error.value = null
   try {
-    episodes.value =
-      scope.value === 'everything'
-        ? await fetchUpcomingEpisodesAll(range.value, 1000)
-        : await fetchUpcomingEpisodes(range.value, 300)
+    await upcomingStore.load(scope.value === 'everything' ? 'everything' : 'mine', range.value)
   } catch (err) {
     error.value = errorMessage(err)
   } finally {

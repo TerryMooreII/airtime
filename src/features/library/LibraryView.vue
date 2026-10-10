@@ -19,7 +19,6 @@ import {
   type TableColumn,
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
-import { fetchUpcomingEpisodes } from '@/lib/api/episodes'
 import {
   episodeCode,
   formatAirTime,
@@ -32,6 +31,7 @@ import { fuzzyFilter } from '@/lib/fuzzy'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
+import { useUpcomingStore } from '@/stores/upcoming'
 import { useWatchedStore } from '@/stores/watched'
 import {
   USER_SHOW_STATUSES,
@@ -50,12 +50,17 @@ const auth = useAuthStore()
 const library = useLibraryStore()
 const ui = useUiStore()
 const watched = useWatchedStore()
+const upcoming = useUpcomingStore()
 
 const filter = ref<Filter>('all')
 const sort = ref<Sort>('next')
 const view = ref<View>(readView())
 const query = ref('')
-const nextByShow = ref(new Map<number, UpcomingEpisode>())
+const nextByShow = computed(() => {
+  const map = new Map<number, UpcomingEpisode>()
+  for (const e of upcoming.items('all', 30)) if (!map.has(e.show_id)) map.set(e.show_id, e)
+  return map
+})
 
 function readView(): View {
   try {
@@ -75,14 +80,7 @@ watch(view, (v) => {
 onMounted(async () => {
   await library.load()
   void watched.loadProgress().catch(() => undefined)
-  try {
-    const eps = await fetchUpcomingEpisodes(30, 500, true)
-    const map = new Map<number, UpcomingEpisode>()
-    for (const e of eps) if (!map.has(e.show_id)) map.set(e.show_id, e)
-    nextByShow.value = map
-  } catch {
-    /* next-episode badges are optional */
-  }
+  void upcoming.load('all', 30).catch(() => undefined)
 })
 
 const filters = computed(() => [

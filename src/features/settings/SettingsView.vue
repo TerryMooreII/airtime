@@ -21,6 +21,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useUiStore } from '@/stores/ui'
+import { useUpcomingStore } from '@/stores/upcoming'
 import { useWatchedStore } from '@/stores/watched'
 
 const auth = useAuthStore()
@@ -78,6 +79,7 @@ async function signOut() {
   useNotificationsStore().reset()
   useLibraryStore().reset()
   useWatchedStore().reset()
+  useUpcomingStore().reset()
   await auth.signOut()
   await router.replace({ name: 'login' })
 }

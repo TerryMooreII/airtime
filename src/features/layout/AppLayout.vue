@@ -7,15 +7,15 @@ import { useTheme } from '@/composables/useTheme'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useNotificationsStore } from '@/stores/notifications'
-import { fetchUpcomingEpisodes } from '@/lib/api/episodes'
+import { useUpcomingStore } from '@/stores/upcoming'
 import { formatAirTime, relativeDayLabel } from '@/lib/format'
-import type { UpcomingEpisode } from '@/types/domain'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const library = useLibraryStore()
 const notifications = useNotificationsStore()
+const upcoming = useUpcomingStore()
 const theme = useTheme()
 
 const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
@@ -70,16 +70,13 @@ const activeId = computed(() => {
   return name
 })
 
-const soon = ref<UpcomingEpisode[]>([])
-async function loadSoon() {
-  if (!auth.isAuthenticated) return
-  try {
-    soon.value = (await fetchUpcomingEpisodes(7, 6))
-      .filter((e) => new Date(e.airstamp).getTime() > Date.now() - 3_600_000)
-      .slice(0, 6)
-  } catch {
-    soon.value = []
-  }
+const soon = computed(() =>
+  upcoming.mineSoon
+    .filter((e) => new Date(e.airstamp).getTime() > Date.now() - 3_600_000)
+    .slice(0, 6),
+)
+function loadSoon() {
+  if (auth.isAuthenticated) void upcoming.load('mine', 7).catch(() => undefined)
 }
 
 let soonTimer: ReturnType<typeof setInterval> | undefined
