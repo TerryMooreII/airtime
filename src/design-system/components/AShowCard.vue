@@ -2,7 +2,7 @@
 import { onBeforeUnmount, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import AFollowButton from './AFollowButton.vue'
+import AIcon from './AIcon.vue'
 import APoster from './APoster.vue'
 import AStarRating from './AStarRating.vue'
 
@@ -37,28 +37,39 @@ const FOLLOW_OPTIONS: { value: FollowStatus; label: string }[] = [
 ]
 
 const menuOpen = ref(false)
-let closeTimer: ReturnType<typeof setTimeout> | undefined
+const followEl = ref<HTMLElement | null>(null)
 
+function onDocumentClick(ev: MouseEvent) {
+  if (menuOpen.value && followEl.value && !followEl.value.contains(ev.target as Node)) closeMenu()
+}
+function onDocumentKey(ev: KeyboardEvent) {
+  if (ev.key === 'Escape') closeMenu()
+}
 function openMenu() {
-  clearTimeout(closeTimer)
   menuOpen.value = true
+  document.addEventListener('click', onDocumentClick, true)
+  document.addEventListener('keydown', onDocumentKey)
 }
-function scheduleClose() {
-  clearTimeout(closeTimer)
-  closeTimer = setTimeout(() => (menuOpen.value = false), 160)
+function closeMenu() {
+  menuOpen.value = false
+  document.removeEventListener('click', onDocumentClick, true)
+  document.removeEventListener('keydown', onDocumentKey)
 }
-function onChipToggle(props: { following: boolean }) {
-  // Following -> unfollow directly. Not following -> open the status menu (tap on touch screens).
-  if (props.following) emit('follow')
-  else menuOpen.value = !menuOpen.value
+/** Plus: expand the circle into the status panel. Check: unfollow directly. */
+function onChipClick(ev: Event, isFollowing: boolean) {
+  ev.preventDefault()
+  ev.stopPropagation()
+  if (isFollowing) emit('follow')
+  else if (menuOpen.value) closeMenu()
+  else openMenu()
 }
 function choose(status: FollowStatus, ev: Event) {
   ev.preventDefault()
   ev.stopPropagation()
-  menuOpen.value = false
+  closeMenu()
   emit('follow', status)
 }
-onBeforeUnmount(() => clearTimeout(closeTimer))
+onBeforeUnmount(closeMenu)
 const rating = defineModel<number | null>('rating', { default: null })
 </script>
 
@@ -73,35 +84,40 @@ const rating = defineModel<number | null>('rating', { default: null })
       <span v-if="badge" class="a-show-card__badge">{{ badge }}</span>
       <span
         v-if="showFollow"
+        ref="followEl"
         class="a-show-card__follow"
         :class="{ 'a-show-card__follow--open': menuOpen }"
-        @mouseenter="!following && openMenu()"
-        @mouseleave="scheduleClose()"
       >
-        <AFollowButton
-          :following="following"
-          :loading="followLoading"
-          appearance="chip"
-          @toggle="onChipToggle({ following })"
-        />
-        <span
-          v-if="menuOpen && !following"
-          class="a-show-card__menu"
-          role="menu"
-          @click.prevent.stop
-        >
-          <span class="a-show-card__menu-title">Add as</span>
+        <span class="a-show-card__panel" role="menu" :aria-hidden="!menuOpen" @click.prevent.stop>
+          <span class="a-show-card__panel-title">Add as</span>
           <button
-            v-for="o in FOLLOW_OPTIONS"
+            v-for="(o, i) in FOLLOW_OPTIONS"
             :key="o.value"
             type="button"
             role="menuitem"
-            class="a-show-card__menu-item"
+            class="a-show-card__panel-item"
+            :style="{ transitionDelay: menuOpen ? `${90 + i * 45}ms` : '0ms' }"
+            :tabindex="menuOpen ? 0 : -1"
             @click="choose(o.value, $event)"
           >
             {{ o.label }}
           </button>
         </span>
+        <button
+          type="button"
+          class="a-show-card__chip"
+          :class="{ 'a-show-card__chip--on': following, 'a-show-card__chip--open': menuOpen }"
+          :aria-label="following ? 'Unfollow' : menuOpen ? 'Close' : 'Follow'"
+          :aria-expanded="following ? undefined : menuOpen"
+          :disabled="followLoading"
+          @click="onChipClick($event, following)"
+        >
+          <AIcon
+            :name="followLoading ? 'spinner' : following ? 'check' : 'plus'"
+            :size="16"
+            :stroke-width="2.4"
+          />
+        </button>
       </span>
     </APoster>
     <span class="a-show-card__name truncate">{{ name }}</span>
@@ -155,47 +171,98 @@ const rating = defineModel<number | null>('rating', { default: null })
   right: 8px;
   top: 8px;
   z-index: 2;
+  width: 34px;
+  height: 34px;
 }
-.a-show-card__follow :deep(.a-follow-chip) {
-  position: static;
-}
-.a-show-card__menu {
+/* The circle behind the plus; grows into the options panel. */
+.a-show-card__panel {
   position: absolute;
   right: 0;
-  top: 40px;
-  min-width: 150px;
+  top: 0;
+  width: 168px;
   display: flex;
   flex-direction: column;
-  padding: 6px;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  border: 1px solid var(--line2);
+  gap: 2px;
+  padding: 44px 6px 6px;
+  border-radius: 17px;
+  background: rgba(20, 20, 22, 0.92);
+  backdrop-filter: blur(10px);
+  color: #f3f3f1;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  animation: ad-fade-in var(--dur-fast) var(--ease);
+  clip-path: circle(17px at calc(100% - 17px) 17px);
+  pointer-events: none;
+  transition: clip-path 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.a-show-card__menu-title {
+.a-show-card__follow--open .a-show-card__panel {
+  clip-path: circle(230px at calc(100% - 17px) 17px);
+  pointer-events: auto;
+}
+.a-show-card__panel-title {
   font: 600 10.5px var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
-  padding: 4px 8px 6px;
+  color: rgba(243, 243, 241, 0.6);
+  padding: 2px 10px 4px;
 }
-.a-show-card__menu-item {
+.a-show-card__panel-item {
   border: 0;
   background: transparent;
-  color: var(--fg);
+  color: inherit;
   text-align: left;
   font-size: 13.5px;
   font-weight: 500;
   padding: 8px 10px;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   white-space: nowrap;
+  opacity: 0;
+  transform: translateX(8px);
+  transition:
+    opacity 220ms var(--ease),
+    transform 220ms var(--ease),
+    background 120ms;
 }
-.a-show-card__menu-item:hover,
-.a-show-card__menu-item:focus-visible {
-  background: var(--primary-soft);
-  color: var(--primary-text);
+.a-show-card__follow--open .a-show-card__panel-item {
+  opacity: 1;
+  transform: none;
+}
+.a-show-card__panel-item:hover,
+.a-show-card__panel-item:focus-visible {
+  background: var(--primary);
+  color: var(--on-primary);
   outline: none;
+}
+/* The chip stays on top: a plus that turns into an x while the panel is open. */
+.a-show-card__chip {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  transition:
+    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 160ms;
+}
+.a-show-card__chip:hover {
+  transform: scale(1.06);
+}
+.a-show-card__chip--open {
+  background: transparent;
+  transform: rotate(135deg);
+}
+.a-show-card__chip--on {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.a-show-card__chip:disabled {
+  opacity: 0.7;
 }
 .a-show-card__name {
   font-size: 14.5px;
