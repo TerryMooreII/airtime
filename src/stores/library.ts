@@ -69,18 +69,36 @@ export const useLibraryStore = defineStore('library', () => {
     )
   }
 
+  /**
+   * Save changes to a tracked show. Implemented as an upsert so a stale tab (or a
+   * show that was untracked elsewhere) never fails with "0 rows": the row is
+   * recreated with the given fields and defaults for the rest.
+   */
   async function update(
     showId: number,
     patch: Partial<Pick<UserShow, 'status' | 'rating' | 'notes' | 'notify'>>,
+    tvmazeId?: number,
   ): Promise<void> {
+    const { data: userData } = await supabase.auth.getUser()
+    const userId = userData.user?.id
+    if (!userId) throw new Error('not signed in')
+
+    const existed = byShowId.value.has(showId)
     const { data, error } = await supabase
       .from('user_shows')
-      .update(patch)
-      .eq('show_id', showId)
+      .upsert({ user_id: userId, show_id: showId, ...patch }, { onConflict: 'user_id,show_id' })
       .select(LIBRARY_SELECT)
       .single()
     if (error) throw error
-    upsertLocal(data as unknown as LibraryEntry)
+    const entry = data as unknown as LibraryEntry
+    upsertLocal(entry)
+
+    // The row was (re)created: make sure its episode list gets fetched.
+    if (!existed && (tvmazeId ?? entry.show?.tvmaze_id)) {
+      invokeFunction('refresh-show', { tvmaze_id: tvmazeId ?? entry.show.tvmaze_id }).catch((err) =>
+        console.warn('refresh-show failed, queue will handle it', err),
+      )
+    }
   }
 
   async function untrack(showId: number): Promise<void> {

@@ -88,7 +88,7 @@ function meta(e: LibraryEntry): string {
 }
 async function rate(e: LibraryEntry, rating: number | null) {
   try {
-    await library.update(e.show_id, { rating })
+    await library.update(e.show_id, { rating }, e.show.tvmaze_id)
   } catch (err) {
     ui.error(errorMessage(err))
   }

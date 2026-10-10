@@ -171,8 +171,12 @@ const links = computed(() =>
 async function setRating(rating: number | null) {
   if (!show.value) return
   try {
-    if (!entry.value) await library.track(show.value.id, show.value.tvmaze_id, 'completed')
-    await library.update(show.value.id, { rating })
+    // Rating an untracked show adds it as completed; otherwise just update the rating.
+    await library.update(
+      show.value.id,
+      entry.value ? { rating } : { rating, status: 'completed' },
+      show.value.tvmaze_id,
+    )
   } catch (err) {
     ui.error(errorMessage(err))
   }
@@ -180,8 +184,7 @@ async function setRating(rating: number | null) {
 async function setStatus(status: UserShowStatus) {
   if (!show.value) return
   try {
-    if (!entry.value) await library.track(show.value.id, show.value.tvmaze_id, status)
-    else await library.update(show.value.id, { status })
+    await library.update(show.value.id, { status }, show.value.tvmaze_id)
   } catch (err) {
     ui.error(errorMessage(err))
   }
@@ -189,7 +192,7 @@ async function setStatus(status: UserShowStatus) {
 async function setNotify(notify: boolean) {
   if (!show.value) return
   try {
-    await library.update(show.value.id, { notify })
+    await library.update(show.value.id, { notify }, show.value.tvmaze_id)
     ui.toast(notify ? 'Alerts on for this show' : 'Alerts muted for this show')
   } catch (err) {
     ui.error(errorMessage(err))
