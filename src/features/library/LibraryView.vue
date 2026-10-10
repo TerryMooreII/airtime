@@ -99,7 +99,7 @@ const nextTime = (e: LibraryEntry) => {
 
 const searching = computed(() => query.value.trim().length > 0)
 
-/** Status filter, before search and sort. Sorting never removes shows. */
+/** Status filter only; sorting never adds or removes shows. */
 const scoped = computed(() =>
   library.entries.filter((e) => filter.value === 'all' || e.status === filter.value),
 )
@@ -130,45 +130,6 @@ const subtitle = computed(() => {
   if (searching.value)
     parts.push(`${entries.value.length} match${entries.value.length === 1 ? '' : 'es'}`)
   return parts.join(' · ')
-})
-
-/**
- * "Airing next" groups the list so it is obvious why a show sits where it does:
- * scheduled episodes first, then running shows with no dates, then ended series.
- * Other sorts (and search) are a single flat list.
- */
-interface Group {
-  key: string
-  title: string | null
-  hint: string
-  items: LibraryEntry[]
-}
-const groups = computed<Group[]>(() => {
-  if (sort.value !== 'next' || searching.value)
-    return [{ key: 'all', title: null, hint: '', items: entries.value }]
-  const scheduled: LibraryEntry[] = []
-  const unscheduled: LibraryEntry[] = []
-  const ended: LibraryEntry[] = []
-  for (const e of entries.value) {
-    if (next(e)) scheduled.push(e)
-    else if (e.show.status === 'Ended') ended.push(e)
-    else unscheduled.push(e)
-  }
-  return [
-    {
-      key: 'next',
-      title: 'Airing next',
-      hint: 'Episodes scheduled in the next 30 days',
-      items: scheduled,
-    },
-    {
-      key: 'unscheduled',
-      title: 'Nothing scheduled',
-      hint: 'Still running, no air dates announced yet',
-      items: unscheduled,
-    },
-    { key: 'ended', title: 'Ended', hint: 'Finished series', items: ended },
-  ].filter((g) => g.items.length > 0)
 })
 
 function next(e: LibraryEntry): UpcomingEpisode | undefined {
@@ -233,9 +194,7 @@ const columns: TableColumn[] = [
   { key: 'added_at', label: 'Added' },
   { key: 'actions', label: '', align: 'right' },
 ]
-function tableRows(items: LibraryEntry[]) {
-  return items.map((e) => ({ id: e.show_id, entry: e }))
-}
+const tableRows = computed(() => entries.value.map((e) => ({ id: e.show_id, entry: e })))
 const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.label }))
 </script>
 
@@ -278,125 +237,118 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
     </div>
 
     <template v-else-if="entries.length">
-      <section v-for="g in groups" :key="g.key" class="group">
-        <div v-if="g.title" class="group__head">
-          <span class="group__title">{{ g.title }}</span>
-          <span class="group__count t-mono">{{ g.items.length }}</span>
-          <span class="group__hint">{{ g.hint }}</span>
-        </div>
-        <div v-if="view === 'grid'" class="grid">
-          <AShowCard
-            v-for="e in g.items"
-            :key="e.show_id"
-            :show-id="e.show_id"
-            :name="e.show.name"
-            :image="e.show.image_medium"
-            :badge="badge(e)"
-            :meta="meta(e)"
-            :rating="e.rating"
-            show-rating
-            following
-            @update:rating="rate(e, $event)"
-            @follow="unfollow(e)"
-          />
-        </div>
+      <div v-if="view === 'grid'" class="grid">
+        <AShowCard
+          v-for="e in entries"
+          :key="e.show_id"
+          :show-id="e.show_id"
+          :name="e.show.name"
+          :image="e.show.image_medium"
+          :badge="badge(e)"
+          :meta="meta(e)"
+          :rating="e.rating"
+          show-rating
+          following
+          @update:rating="rate(e, $event)"
+          @follow="unfollow(e)"
+        />
+      </div>
 
-        <ATable v-else :columns="columns" :rows="tableRows(g.items)" class="table">
-          <template #cell-show="{ row }">
-            <RouterLink
-              :to="{ name: 'show', params: { id: (row.entry as LibraryEntry).show_id } }"
-              class="show-cell"
-            >
-              <APoster
-                :src="(row.entry as LibraryEntry).show.image_medium"
-                radius="sm"
-                class="show-cell__img"
-              />
-              <span class="show-cell__text">
-                <span class="show-cell__name truncate">{{
-                  (row.entry as LibraryEntry).show.name
-                }}</span>
-                <span class="show-cell__meta truncate">{{
-                  showMeta(row.entry as LibraryEntry)
-                }}</span>
-              </span>
-            </RouterLink>
-          </template>
-          <template #cell-status="{ row }">
-            <select
-              class="status-select"
-              :value="(row.entry as LibraryEntry).status"
-              :aria-label="`Status for ${(row.entry as LibraryEntry).show.name}`"
-              @change="
-                setStatus(
-                  row.entry as LibraryEntry,
-                  ($event.target as HTMLSelectElement).value as UserShowStatus,
-                )
-              "
-            >
-              <option v-for="o in statusOptions" :key="o.value" :value="o.value">
-                {{ o.label }}
-              </option>
-            </select>
-          </template>
-          <template #cell-rating="{ row }">
-            <AStarRating
-              :model-value="(row.entry as LibraryEntry).rating"
-              size="sm"
-              @update:model-value="rate(row.entry as LibraryEntry, $event)"
+      <ATable v-else :columns="columns" :rows="tableRows" class="table">
+        <template #cell-show="{ row }">
+          <RouterLink
+            :to="{ name: 'show', params: { id: (row.entry as LibraryEntry).show_id } }"
+            class="show-cell"
+          >
+            <APoster
+              :src="(row.entry as LibraryEntry).show.image_medium"
+              radius="sm"
+              class="show-cell__img"
             />
-          </template>
-          <template #cell-progress="{ row }">
-            <span
-              v-if="watched.progress.get((row.entry as LibraryEntry).show_id)?.aired"
-              class="progress-cell"
-            >
-              <AProgressBar
-                :value="watched.progress.get((row.entry as LibraryEntry).show_id)!.watched"
-                :max="watched.progress.get((row.entry as LibraryEntry).show_id)!.aired"
-                label="Watched"
-              />
-              <span class="t-muted t-mono progress-cell__label"
-                >{{ watched.progress.get((row.entry as LibraryEntry).show_id)!.watched }} /
-                {{ watched.progress.get((row.entry as LibraryEntry).show_id)!.aired }}</span
-              >
-            </span>
-            <span v-else class="t-muted">—</span>
-          </template>
-          <template #cell-next="{ row }">
-            <span v-if="next(row.entry as LibraryEntry)" class="next-cell">
-              <span class="next-cell__when">{{ badge(row.entry as LibraryEntry) }}</span>
-              <span class="t-muted t-mono next-cell__code">{{
-                episodeCode(
-                  next(row.entry as LibraryEntry)!.season,
-                  next(row.entry as LibraryEntry)!.number,
-                )
+            <span class="show-cell__text">
+              <span class="show-cell__name truncate">{{
+                (row.entry as LibraryEntry).show.name
+              }}</span>
+              <span class="show-cell__meta truncate">{{
+                showMeta(row.entry as LibraryEntry)
               }}</span>
             </span>
-            <span v-else class="t-muted">—</span>
-          </template>
-          <template #cell-show_status="{ row }">
-            <ABadge
-              :variant="(row.entry as LibraryEntry).show.status === 'Running' ? 'success' : 'muted'"
-              >{{ (row.entry as LibraryEntry).show.status ?? '—' }}</ABadge
-            >
-          </template>
-          <template #cell-added_at="{ row }"
-            ><span class="t-muted">{{
-              timeAgo((row.entry as LibraryEntry).added_at)
-            }}</span></template
+          </RouterLink>
+        </template>
+        <template #cell-status="{ row }">
+          <select
+            class="status-select"
+            :value="(row.entry as LibraryEntry).status"
+            :aria-label="`Status for ${(row.entry as LibraryEntry).show.name}`"
+            @change="
+              setStatus(
+                row.entry as LibraryEntry,
+                ($event.target as HTMLSelectElement).value as UserShowStatus,
+              )
+            "
           >
-          <template #cell-actions="{ row }">
-            <AButton
-              variant="ghost"
-              size="sm"
-              icon="close"
-              @click="unfollow(row.entry as LibraryEntry)"
-              >Unfollow</AButton
+            <option v-for="o in statusOptions" :key="o.value" :value="o.value">
+              {{ o.label }}
+            </option>
+          </select>
+        </template>
+        <template #cell-rating="{ row }">
+          <AStarRating
+            :model-value="(row.entry as LibraryEntry).rating"
+            size="sm"
+            @update:model-value="rate(row.entry as LibraryEntry, $event)"
+          />
+        </template>
+        <template #cell-progress="{ row }">
+          <span
+            v-if="watched.progress.get((row.entry as LibraryEntry).show_id)?.aired"
+            class="progress-cell"
+          >
+            <AProgressBar
+              :value="watched.progress.get((row.entry as LibraryEntry).show_id)!.watched"
+              :max="watched.progress.get((row.entry as LibraryEntry).show_id)!.aired"
+              label="Watched"
+            />
+            <span class="t-muted t-mono progress-cell__label"
+              >{{ watched.progress.get((row.entry as LibraryEntry).show_id)!.watched }} /
+              {{ watched.progress.get((row.entry as LibraryEntry).show_id)!.aired }}</span
             >
-          </template>
-        </ATable>
-      </section>
+          </span>
+          <span v-else class="t-muted">—</span>
+        </template>
+        <template #cell-next="{ row }">
+          <span v-if="next(row.entry as LibraryEntry)" class="next-cell">
+            <span class="next-cell__when">{{ badge(row.entry as LibraryEntry) }}</span>
+            <span class="t-muted t-mono next-cell__code">{{
+              episodeCode(
+                next(row.entry as LibraryEntry)!.season,
+                next(row.entry as LibraryEntry)!.number,
+              )
+            }}</span>
+          </span>
+          <span v-else class="t-muted">—</span>
+        </template>
+        <template #cell-show_status="{ row }">
+          <ABadge
+            :variant="(row.entry as LibraryEntry).show.status === 'Running' ? 'success' : 'muted'"
+            >{{ (row.entry as LibraryEntry).show.status ?? '—' }}</ABadge
+          >
+        </template>
+        <template #cell-added_at="{ row }"
+          ><span class="t-muted">{{
+            timeAgo((row.entry as LibraryEntry).added_at)
+          }}</span></template
+        >
+        <template #cell-actions="{ row }">
+          <AButton
+            variant="ghost"
+            size="sm"
+            icon="close"
+            @click="unfollow(row.entry as LibraryEntry)"
+            >Unfollow</AButton
+          >
+        </template>
+      </ATable>
     </template>
 
     <AEmptyState
@@ -444,37 +396,6 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
 }
 .library__search {
   width: min(320px, 100%);
-}
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.group + .group {
-  margin-top: 8px;
-}
-.group__head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
-}
-.group__title {
-  font-size: 18px;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-}
-.group__count {
-  font-size: 12px;
-  color: var(--muted);
-  background: var(--surface2);
-  padding: 2px 7px;
-  border-radius: 999px;
-}
-.group__hint {
-  font-size: 13px;
-  color: var(--muted);
 }
 .grid {
   display: grid;
