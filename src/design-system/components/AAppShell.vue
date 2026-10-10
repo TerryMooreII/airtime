@@ -70,7 +70,6 @@ const emit = defineEmits<{ toggleTheme: [] }>()
           <AIcon :name="n.icon" :size="18" />
           <span v-if="n.badge" class="a-shell__dot" />
         </RouterLink>
-        <slot name="actions" />
         <button
           type="button"
           class="a-shell__theme a-shell__theme--icon"
@@ -79,6 +78,7 @@ const emit = defineEmits<{ toggleTheme: [] }>()
         >
           <AIcon :name="themeIcon" :size="18" />
         </button>
+        <slot name="actions" />
       </header>
       <main class="a-shell__main">
         <div class="a-shell__page"><slot /></div>
