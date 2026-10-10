@@ -133,21 +133,32 @@ async function handleShowUpdates(db: SupabaseClient): Promise<Stats> {
   const stale = unwrap(await db.rpc('stale_shows', { p_updates: updates }), 'stale_shows') as {
     tvmaze_id: number
     episodes_synced: boolean
+    is_new: boolean
   }[]
 
-  // Shows with episodes (i.e. tracked by someone) first.
-  stale.sort((a, b) => Number(b.episodes_synced) - Number(a.episodes_synced))
+  // Tracked shows (with episodes) first, then known shows, then shows new to TVmaze.
+  const rank = (s: (typeof stale)[number]) => (s.episodes_synced ? 0 : s.is_new ? 2 : 1)
+  stale.sort((a, b) => rank(a) - rank(b))
   let enqueued = 0
+  let newShows = 0
   for (const s of stale.slice(0, MAX_SHOW_REFRESH_PER_UPDATE)) {
     const { data } = await db.rpc('enqueue_sync_job', {
       p_job_type: 'show_refresh',
       p_payload: { tvmaze_id: s.tvmaze_id },
-      p_priority: s.episodes_synced ? 40 : 70,
+      p_priority: s.episodes_synced ? 40 : s.is_new ? 80 : 70,
       p_triggered_by: 'updates',
     })
-    if (data) enqueued++
+    if (data) {
+      enqueued++
+      if (s.is_new) newShows++
+    }
   }
-  return { reported: Object.keys(updates).length, stale: stale.length, enqueued }
+  return {
+    reported: Object.keys(updates).length,
+    stale: stale.length,
+    enqueued,
+    new_shows: newShows,
+  }
 }
 
 async function handleShowRefresh(
