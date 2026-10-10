@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 
 import {
   AAlert,
+  AIcon,
+  AProgressBar,
   APersonCard,
   ATabs,
   ABrandIcon,
@@ -14,7 +16,6 @@ import {
   APoster,
   ASkeleton,
   AStarRating,
-  AIcon,
   type Brand,
   type IconName,
 } from '@/design-system'
@@ -42,6 +43,7 @@ import { invokeFunction } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
+import { useWatchedStore } from '@/stores/watched'
 import {
   USER_SHOW_STATUSES,
   type CastMember,
@@ -60,6 +62,7 @@ const auth = useAuthStore()
 const library = useLibraryStore()
 const ui = useUiStore()
 const follow = useFollow()
+const watched = useWatchedStore()
 
 const show = ref<Show | null>(null)
 const ratings = ref<ShowRating[]>([])
@@ -134,6 +137,12 @@ async function loadEpisodes() {
   if (!show.value) return
   episodes.value = await fetchEpisodesForShow(show.value.id)
   episodeRatings.value = await fetchEpisodeRatings(episodes.value.map((e) => e.id))
+  await watched
+    .loadForEpisodes(
+      show.value.id,
+      episodes.value.map((e) => e.id),
+    )
+    .catch(() => undefined)
   if (season.value === null || !seasons.value.includes(season.value)) {
     const aired = episodes.value.filter((e) => e.airstamp && new Date(e.airstamp).getTime() < now)
     season.value = (aired[aired.length - 1] ?? episodes.value[0])?.season ?? null
@@ -269,6 +278,47 @@ function openFromDrawer(e: Episode) {
 function isFuture(e: Episode): boolean {
   return !!e.airstamp && new Date(e.airstamp).getTime() > now
 }
+
+// ---------------------------------------------------------------------------
+// Watched tracking
+// ---------------------------------------------------------------------------
+const airedSeasonIds = computed(() =>
+  seasonEpisodes.value.filter((e) => !isFuture(e)).map((e) => e.id),
+)
+const seasonWatched = computed(
+  () => airedSeasonIds.value.filter((id) => watched.isWatched(id)).length,
+)
+const allSeasonWatched = computed(
+  () => airedSeasonIds.value.length > 0 && seasonWatched.value === airedSeasonIds.value.length,
+)
+const overallAired = computed(() => episodes.value.filter((e) => !isFuture(e)).length)
+const overallWatched = computed(
+  () => episodes.value.filter((e) => !isFuture(e) && watched.isWatched(e.id)).length,
+)
+
+async function toggleWatched(e: Episode, ev?: Event) {
+  ev?.stopPropagation()
+  if (isFuture(e)) return
+  try {
+    await watched.toggle(e.id)
+  } catch (err) {
+    ui.error(errorMessage(err))
+  }
+}
+async function toggleSeason() {
+  if (!show.value || season.value === null) return
+  try {
+    await watched.setSeason(
+      show.value.id,
+      season.value,
+      airedSeasonIds.value,
+      !allSeasonWatched.value,
+    )
+    ui.toast(allSeasonWatched.value ? 'Season marked watched' : 'Season marked unwatched')
+  } catch (err) {
+    ui.error(errorMessage(err))
+  }
+}
 </script>
 
 <template>
@@ -395,9 +445,24 @@ function isFuture(e: Episode): boolean {
         <div class="episodes__head">
           <span class="t-h2">Episodes</span>
           <span v-if="episodesLoading" class="episodes__sync t-mono">Syncing from TVmaze…</span>
-          <AButton v-else variant="ghost" size="sm" icon="refresh" @click="refreshEpisodes"
-            >Refresh</AButton
-          >
+          <span class="episodes__actions">
+            <AButton
+              v-if="airedSeasonIds.length"
+              variant="outline"
+              size="sm"
+              :icon="allSeasonWatched ? 'minus' : 'check'"
+              @click="toggleSeason"
+              >{{ allSeasonWatched ? 'Mark season unwatched' : 'Mark season watched' }}</AButton
+            >
+            <AButton
+              v-if="!episodesLoading"
+              variant="ghost"
+              size="sm"
+              icon="refresh"
+              @click="refreshEpisodes"
+              >Refresh</AButton
+            >
+          </span>
         </div>
         <APills
           v-if="seasons.length > 1"
@@ -407,22 +472,37 @@ function isFuture(e: Episode): boolean {
           aria-label="Season"
           @update:model-value="season = Number($event)"
         />
+        <div v-if="airedSeasonIds.length" class="episodes__progress">
+          <AProgressBar
+            :value="seasonWatched"
+            :max="airedSeasonIds.length"
+            size="md"
+            label="Season progress"
+          />
+          <span class="episodes__progress-label t-mono"
+            >{{ seasonWatched }} of {{ airedSeasonIds.length }} watched</span
+          >
+        </div>
         <span class="episodes__count"
           >{{ seasonEpisodes.length }} episode{{ seasonEpisodes.length === 1 ? '' : 's'
-          }}<template v-if="episodes.length"> · {{ episodes.length }} overall</template></span
+          }}<template v-if="overallAired">
+            · {{ overallWatched }} of {{ overallAired }} aired episodes watched overall</template
+          ></span
         >
 
         <div v-if="!episodes.length && episodesLoading" class="episodes__skeleton">
           <ASkeleton v-for="i in 4" :key="i" height="90px" />
         </div>
         <div v-else-if="seasonEpisodes.length" class="episodes__list">
-          <button
+          <div
             v-for="e in seasonEpisodes"
             :key="e.id"
-            type="button"
+            role="button"
+            tabindex="0"
             class="episode"
-            :class="{ 'episode--future': isFuture(e) }"
+            :class="{ 'episode--future': isFuture(e), 'episode--watched': watched.isWatched(e.id) }"
             @click="openEpisode = e"
+            @keydown.enter="openEpisode = e"
           >
             <APoster :src="e.image_medium ?? show.image_medium" ratio="still" radius="md" />
             <span class="episode__text">
@@ -435,7 +515,19 @@ function isFuture(e: Episode): boolean {
               <span class="episode__meta">{{ episodeMeta(e) }}</span>
               <span class="episode__sum clamp-2">{{ stripHtml(e.summary_html) }}</span>
             </span>
-          </button>
+            <button
+              v-if="!isFuture(e)"
+              type="button"
+              class="episode__check"
+              :class="{ 'episode__check--on': watched.isWatched(e.id) }"
+              :aria-label="watched.isWatched(e.id) ? 'Mark unwatched' : 'Mark watched'"
+              :aria-pressed="watched.isWatched(e.id)"
+              @click="toggleWatched(e, $event)"
+            >
+              <AIcon name="check" :size="16" :stroke-width="2.6" />
+            </button>
+            <span v-else class="episode__check episode__check--spacer" aria-hidden="true" />
+          </div>
         </div>
         <p v-else class="t-sub">No episodes listed yet.</p>
       </section>
@@ -477,6 +569,9 @@ function isFuture(e: Episode): boolean {
       :show-image="show?.image_medium ?? null"
       :timezone="tz"
       :rating="openEpisode ? episodeRatings.get(openEpisode.id) : undefined"
+      :watched="openEpisode ? watched.isWatched(openEpisode.id) : false"
+      :can-watch="openEpisode ? !isFuture(openEpisode) : false"
+      @toggle-watched="openEpisode && toggleWatched(openEpisode)"
       @close="openEpisode = null"
       @navigate="openFromDrawer"
     />
@@ -675,18 +770,65 @@ function isFuture(e: Episode): boolean {
 .episodes__list {
   gap: 0;
 }
+.episodes__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.episodes__progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.episodes__progress-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.episode__check {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line2);
+  background: transparent;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  transition:
+    background var(--dur-fast),
+    border-color var(--dur-fast),
+    color var(--dur-fast);
+}
+.episode__check:hover {
+  border-color: var(--primary);
+  color: var(--primary-text);
+}
+.episode__check--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+.episode__check--spacer {
+  border-color: transparent;
+}
+.episode--watched .episode__title {
+  color: var(--muted);
+}
 .episode {
   display: grid;
-  grid-template-columns: 160px minmax(0, 1fr);
+  grid-template-columns: 160px minmax(0, 1fr) 36px;
   gap: 16px;
   align-items: center;
   padding: 10px 8px;
   margin: 0 -8px;
   border-radius: var(--radius-lg);
-  border: 0;
   background: transparent;
   color: var(--fg);
   text-align: left;
+  cursor: pointer;
 }
 .episode:hover {
   background: var(--hover);
@@ -757,7 +899,7 @@ function isFuture(e: Episode): boolean {
     grid-template-columns: minmax(0, 1fr);
   }
   .episode {
-    grid-template-columns: 104px minmax(0, 1fr);
+    grid-template-columns: 104px minmax(0, 1fr) 36px;
   }
   .episode__sum {
     display: none;

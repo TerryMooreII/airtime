@@ -94,8 +94,22 @@ supabase/
 design/               the original Claude Design mock (reference only)
 ```
 
+## Watching progress
+
+`user_episodes` records which episodes a user has seen. The show page has a check per aired
+episode, a season progress bar and "Mark season watched"; marking a show Completed marks all
+aired episodes watched (and catches up when the episode list arrives later). The Library
+shows unwatched counts via `my_show_progress()`.
+
+## Discover and the Guide's "Everything" scope
+
+`discover_rails()` builds trending, new-series, top-genre, network and hero-pick rails from the
+local catalog and the user's ratings; the "shares cast with" rail is assembled client-side from
+TVmaze cast and credits. `upcoming_episodes_all()` powers the Guide's Everything scope (top 40
+shows per day by TVmaze weight).
+
 ## Not yet built
 
-- Discover / recommendations page from the mock.
-- Per-episode watched tracking (v1 tracks status and rating per show).
 - Email digests.
+- Onboarding flow from the mock.
+- Automated tests, CI and deploy configuration.

@@ -12,8 +12,10 @@ const props = defineProps<{
   showImage: string | null
   timezone: string
   rating?: number
+  watched?: boolean
+  canWatch?: boolean
 }>()
-const emit = defineEmits<{ close: []; navigate: [episode: Episode] }>()
+const emit = defineEmits<{ close: []; navigate: [episode: Episode]; toggleWatched: [] }>()
 
 const index = computed(() =>
   props.episode ? props.episodes.findIndex((e) => e.id === props.episode!.id) : -1,
@@ -44,6 +46,14 @@ const meta = computed(() => {
         <span class="ep__avg">{{
           rating ? `★ ${rating} average on TVmaze` : 'Not yet rated on TVmaze'
         }}</span>
+        <AButton
+          v-if="canWatch"
+          size="lg"
+          :variant="watched ? 'primary' : 'outline'"
+          :icon="watched ? 'check' : undefined"
+          @click="emit('toggleWatched')"
+          >{{ watched ? 'Watched' : 'Mark as watched' }}</AButton
+        >
         <p class="ep__summary">{{ stripHtml(episode.summary_html) || 'No synopsis yet.' }}</p>
         <div class="ep__nav">
           <AButton

@@ -288,3 +288,10 @@ export interface DiscoverRails {
   pick: ShowCardData | null
   pick_reason: ShowCardData | null
 }
+
+export interface ShowProgress {
+  show_id: number
+  aired: number
+  watched: number
+  next_unwatched_episode_id: number | null
+}

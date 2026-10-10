@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import {
   ABadge,
+  AProgressBar,
   AButton,
   AEmptyState,
   APageHeader,
@@ -31,6 +32,7 @@ import { fuzzyFilter } from '@/lib/fuzzy'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
+import { useWatchedStore } from '@/stores/watched'
 import {
   USER_SHOW_STATUSES,
   type LibraryEntry,
@@ -47,6 +49,7 @@ const VIEW_KEY = 'airtime:library-view'
 const auth = useAuthStore()
 const library = useLibraryStore()
 const ui = useUiStore()
+const watched = useWatchedStore()
 
 const filter = ref<Filter>('all')
 const sort = ref<Sort>('next')
@@ -71,6 +74,7 @@ watch(view, (v) => {
 
 onMounted(async () => {
   await library.load()
+  void watched.loadProgress().catch(() => undefined)
   try {
     const eps = await fetchUpcomingEpisodes(30, 500, true)
     const map = new Map<number, UpcomingEpisode>()
@@ -155,9 +159,20 @@ function badge(e: LibraryEntry): string | undefined {
     ? `${shortDayLabel(n.airstamp, auth.timezone)} ${formatAirTime(n.airstamp, auth.timezone)}`
     : undefined
 }
+function unwatched(e: LibraryEntry): number {
+  const p = watched.progress.get(e.show_id)
+  return p ? Math.max(0, p.aired - p.watched) : 0
+}
 function meta(e: LibraryEntry): string {
   const n = next(e)
-  return `${STATUS_LABELS[e.status]} · ${n ? episodeCode(n.season, n.number) : (e.show.status ?? '—')}`
+  const left = unwatched(e)
+  return [
+    STATUS_LABELS[e.status],
+    n ? episodeCode(n.season, n.number) : (e.show.status ?? '—'),
+    left ? `${left} unwatched` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }
 function showMeta(e: LibraryEntry): string {
   return [yearOf(e.show.premiered), e.show.genres.slice(0, 2).join(', ')]
@@ -191,6 +206,7 @@ const columns: TableColumn[] = [
   { key: 'show', label: 'Show' },
   { key: 'status', label: 'My status' },
   { key: 'rating', label: 'Rating' },
+  { key: 'progress', label: 'Progress' },
   { key: 'next', label: 'Next episode' },
   { key: 'show_status', label: 'Show' },
   { key: 'added_at', label: 'Added' },
@@ -300,6 +316,23 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
             size="sm"
             @update:model-value="rate(row.entry as LibraryEntry, $event)"
           />
+        </template>
+        <template #cell-progress="{ row }">
+          <span
+            v-if="watched.progress.get((row.entry as LibraryEntry).show_id)?.aired"
+            class="progress-cell"
+          >
+            <AProgressBar
+              :value="watched.progress.get((row.entry as LibraryEntry).show_id)!.watched"
+              :max="watched.progress.get((row.entry as LibraryEntry).show_id)!.aired"
+              label="Watched"
+            />
+            <span class="t-muted t-mono progress-cell__label"
+              >{{ watched.progress.get((row.entry as LibraryEntry).show_id)!.watched }} /
+              {{ watched.progress.get((row.entry as LibraryEntry).show_id)!.aired }}</span
+            >
+          </span>
+          <span v-else class="t-muted">—</span>
         </template>
         <template #cell-next="{ row }">
           <span v-if="next(row.entry as LibraryEntry)" class="next-cell">
@@ -428,6 +461,15 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
 }
 .status-select:hover {
   background-color: var(--hover);
+}
+.progress-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 110px;
+}
+.progress-cell__label {
+  font-size: 11.5px;
 }
 .next-cell {
   display: flex;

@@ -606,6 +606,39 @@ export type Database = {
           },
         ]
       }
+      user_episodes: {
+        Row: {
+          episode_id: number
+          user_id: string
+          watched_at: string
+        }
+        Insert: {
+          episode_id: number
+          user_id: string
+          watched_at?: string
+        }
+        Update: {
+          episode_id?: number
+          user_id?: string
+          watched_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_episodes_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_episodes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_shows: {
         Row: {
           added_at: string
@@ -764,6 +797,10 @@ export type Database = {
           type: string
         }[]
       }
+      mark_season_watched: {
+        Args: { p_season: number; p_show_id: number }
+        Returns: number
+      }
       mark_show_episodes_synced: {
         Args: { p_tvmaze_id: number }
         Returns: undefined
@@ -781,6 +818,15 @@ export type Database = {
           show_image: string
           show_name: string
           status: Database["public"]["Enums"]["user_show_status"]
+        }[]
+      }
+      my_show_progress: {
+        Args: never
+        Returns: {
+          aired: number
+          next_unwatched_episode_id: number
+          show_id: number
+          watched: number
         }[]
       }
       my_upcoming_episodes: {

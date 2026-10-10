@@ -21,6 +21,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useUiStore } from '@/stores/ui'
+import { useWatchedStore } from '@/stores/watched'
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -76,6 +77,7 @@ async function togglePush(on: boolean) {
 async function signOut() {
   useNotificationsStore().reset()
   useLibraryStore().reset()
+  useWatchedStore().reset()
   await auth.signOut()
   await router.replace({ name: 'login' })
 }
