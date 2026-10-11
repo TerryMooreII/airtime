@@ -44,12 +44,14 @@ export const useUpcomingStore = defineStore('upcoming', () => {
     const fresh = current && current.days >= wantDays && Date.now() - current.loadedAt < TTL_MS
     if (current?.promise) await current.promise
     else if (!fresh || force) {
-      const feed: Feed = {
+      // Mutate the reactive proxy, not the plain object: the Map stores the raw object and
+      // hands out a proxy, so writes to the raw object would never notify computeds.
+      const feed = reactive<Feed>({
         items: current?.items ?? [],
         loadedAt: current?.loadedAt ?? 0,
         days: wantDays,
         promise: null,
-      }
+      }) as Feed
       feed.promise = fetchFeed(scope, wantDays)
       feeds.set(scope, feed)
       try {
