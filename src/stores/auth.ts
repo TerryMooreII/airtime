@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import { supabase } from '@/lib/supabase'
+import { appUrl } from '@/lib/url'
 import type { Profile } from '@/types/domain'
 
 /**
@@ -70,7 +71,7 @@ export const useAuthStore = defineStore('auth', () => {
       password,
       options: {
         data: { display_name: displayName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: appUrl('/auth/callback'),
       },
     })
     if (error) throw error
@@ -84,7 +85,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function requestPasswordReset(email: string): Promise<void> {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo: appUrl('/auth/reset-password'),
     })
     if (error) throw error
   }
@@ -98,7 +99,7 @@ export const useAuthStore = defineStore('auth', () => {
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: appUrl('/auth/callback') },
     })
     if (error) throw error
   }

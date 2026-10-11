@@ -1,9 +1,10 @@
 import { computed, ref } from 'vue'
 
 import { supabase } from '@/lib/supabase'
+import { BASE_PATH, publicAsset } from '@/lib/url'
 
 /**
- * Web Push subscription management. The service worker lives at /sw.js and the
+ * Web Push subscription management. The service worker lives at <base>/sw.js and the
  * VAPID public key comes from VITE_VAPID_PUBLIC_KEY.
  */
 export function usePushSubscription() {
@@ -24,8 +25,11 @@ export function usePushSubscription() {
   const error = ref<string | null>(null)
 
   async function registration(): Promise<ServiceWorkerRegistration> {
-    const existing = await navigator.serviceWorker.getRegistration('/')
-    return existing ?? (await navigator.serviceWorker.register('/sw.js', { scope: '/' }))
+    const existing = await navigator.serviceWorker.getRegistration(BASE_PATH)
+    return (
+      existing ??
+      (await navigator.serviceWorker.register(publicAsset('sw.js'), { scope: BASE_PATH }))
+    )
   }
 
   async function refresh(): Promise<void> {

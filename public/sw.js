@@ -3,7 +3,10 @@ self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
 
 self.addEventListener('push', (event) => {
-  let payload = { title: 'Airtime', body: '', url: '/notifications', icon: '/favicon.svg' }
+  // Paths in the payload are app routes ("/shows/1"); resolve them under the deploy base,
+  // which is the worker's scope ("/" locally, "/<repo>/" on GitHub Pages).
+  const base = self.registration.scope
+  let payload = { title: 'Airtime', body: '', url: '/notifications', icon: base + 'favicon.svg' }
   try {
     payload = { ...payload, ...event.data.json() }
   } catch {
@@ -13,16 +16,16 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(payload.title, {
       body: payload.body,
       icon: payload.icon,
-      badge: '/favicon.svg',
+      badge: base + 'favicon.svg',
       tag: payload.notificationId ? `airtime-${payload.notificationId}` : undefined,
-      data: { url: payload.url },
+      data: { url: new URL(String(payload.url).replace(/^\//, ''), base).href },
     }),
   )
 })
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const url = new URL(event.notification.data?.url || '/', self.location.origin).href
+  const url = event.notification.data?.url || self.registration.scope
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       const existing = clients.find((c) => c.url.startsWith(self.location.origin))

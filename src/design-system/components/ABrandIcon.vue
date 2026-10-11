@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { publicAsset } from '@/lib/url'
+
 export type Brand = 'imdb' | 'thetvdb' | 'tvmaze'
 
 /**
@@ -9,9 +11,14 @@ export type Brand = 'imdb' | 'thetvdb' | 'tvmaze'
  * (TVmaze is a black outline, TheTVDB has white lettering).
  */
 const BRANDS: Record<Brand, { src: string; label: string; ratio: number; backing?: string }> = {
-  imdb: { src: '/brands/imdb.svg', label: 'IMDb', ratio: 1 },
-  thetvdb: { src: '/brands/thetvdb.svg', label: 'TheTVDB', ratio: 100 / 54, backing: '#141416' },
-  tvmaze: { src: '/brands/tvmaze.png', label: 'TVmaze', ratio: 1, backing: '#ffffff' },
+  imdb: { src: publicAsset('brands/imdb.svg'), label: 'IMDb', ratio: 1 },
+  thetvdb: {
+    src: publicAsset('brands/thetvdb.svg'),
+    label: 'TheTVDB',
+    ratio: 100 / 54,
+    backing: '#141416',
+  },
+  tvmaze: { src: publicAsset('brands/tvmaze.png'), label: 'TVmaze', ratio: 1, backing: '#ffffff' },
 }
 
 const props = withDefaults(defineProps<{ brand: Brand; size?: number }>(), { size: 16 })

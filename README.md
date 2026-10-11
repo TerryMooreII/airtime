@@ -6,11 +6,11 @@ show data from [TVmaze](https://www.tvmaze.com) (CC BY-SA).
 
 ## Stack
 
-| Layer | Choice |
-| --- | --- |
-| Frontend | Vue 3.5, Vite 8, TypeScript, Pinia, Vue Router, plain CSS design tokens (`src/design-system`) |
-| Backend | Supabase project `nhpwcxarlkdsdqlrjaxh`: Postgres + RLS, Auth (email/password), Edge Functions (Deno), pg_cron + pg_net |
-| Data | Full TVmaze show catalog mirrored locally; episodes for tracked shows; nightly schedule feed for upcoming episodes |
+| Layer    | Choice                                                                                                                  |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Frontend | Vue 3.5, Vite 8, TypeScript, Pinia, Vue Router, plain CSS design tokens (`src/design-system`)                           |
+| Backend  | Supabase project `nhpwcxarlkdsdqlrjaxh`: Postgres + RLS, Auth (email/password), Edge Functions (Deno), pg_cron + pg_net |
+| Data     | Full TVmaze show catalog mirrored locally; episodes for tracked shows; nightly schedule feed for upcoming episodes      |
 
 ## Local development
 
@@ -108,8 +108,26 @@ local catalog and the user's ratings; the "shares cast with" rail is assembled c
 TVmaze cast and credits. `upcoming_episodes_all()` powers the Guide's Everything scope (top 40
 shows per day by TVmaze weight).
 
+## Deploying to GitHub Pages
+
+`.github/workflows/deploy.yml` lints, builds and publishes `dist/` on every push to `main`
+(or manually from the Actions tab). One-time setup:
+
+1. Repository **Settings → Pages → Source: GitHub Actions**.
+2. **Settings → Secrets and variables → Actions → Secrets**: `VITE_SUPABASE_URL`,
+   `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY` (the values from `.env`).
+3. The site is served from `/<repo name>/`. For a custom domain or a `<user>.github.io`
+   repository add the **variable** `PAGES_BASE` = `/`.
+4. In Supabase **Authentication → URL Configuration** add the published origin as the Site
+   URL and `<origin>/<base>/auth/callback` and `<origin>/<base>/auth/reset-password` as
+   redirect URLs, otherwise verification and reset emails will link back to localhost.
+
+The build copies `index.html` to `404.html` so deep links work without server rewrites, and
+all in-app paths (router, service worker, brand icons, auth redirects) go through
+`import.meta.env.BASE_URL` via `src/lib/url.ts`.
+
 ## Not yet built
 
 - Email digests.
 - Onboarding flow from the mock.
-- Automated tests, CI and deploy configuration.
+- Automated tests.

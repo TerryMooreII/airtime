@@ -1,0 +1,72 @@
+# Builds the Vue app and publishes it to GitHub Pages on every push to main.
+#
+# One-time setup in the repository settings:
+#   Pages → Build and deployment → Source: "GitHub Actions".
+#   Secrets and variables → Actions → Secrets:
+#     VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_VAPID_PUBLIC_KEY (same values as .env).
+#   Optional variable PAGES_BASE: the path the site is served from. Defaults to
+#   "/<repo name>/" for a project site; set it to "/" when using a custom domain or a
+#   <user>.github.io repository.
+#
+# Remember to add the published origin to Supabase Auth → URL Configuration
+# (Site URL plus redirect URLs for /auth/callback and /auth/reset-password).
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; a newer push supersedes a queued one but never cancels an in-flight deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - name: Build
+        env:
+          BASE_PATH: ${{ vars.PAGES_BASE || format('/{0}/', github.event.repository.name) }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
+        run: npm run build
+
+      # Pages has no rewrite rules: serve the SPA shell for unknown paths so deep links
+      # (/shows/123, /auth/callback) load the app and Vue Router takes over.
+      - name: SPA fallback
+        run: cp dist/index.html dist/404.html && touch dist/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
