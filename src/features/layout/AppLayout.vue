@@ -7,15 +7,12 @@ import { useTheme } from '@/composables/useTheme'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useNotificationsStore } from '@/stores/notifications'
-import { useUpcomingStore } from '@/stores/upcoming'
-import { formatAirTime, relativeDayLabel } from '@/lib/format'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const library = useLibraryStore()
 const notifications = useNotificationsStore()
-const upcoming = useUpcomingStore()
 const theme = useTheme()
 
 const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
@@ -70,33 +67,16 @@ const activeId = computed(() => {
   return name
 })
 
-const soon = computed(() =>
-  upcoming.mineSoon
-    .filter((e) => new Date(e.airstamp).getTime() > Date.now() - 3_600_000)
-    .slice(0, 6),
-)
-function loadSoon() {
-  if (auth.isAuthenticated) void upcoming.load('mine', 7).catch(() => undefined)
-}
-
-let soonTimer: ReturnType<typeof setInterval> | undefined
 onMounted(async () => {
   await auth.init()
   if (auth.user) {
     void library.load()
     void notifications.refreshUnreadCount()
     notifications.subscribe(auth.user.id)
-    void loadSoon()
-    soonTimer = setInterval(loadSoon, 5 * 60_000)
   }
 })
-watch(
-  () => library.entries.length,
-  () => void loadSoon(),
-)
 onBeforeUnmount(() => {
   notifications.unsubscribe()
-  clearInterval(soonTimer)
 })
 </script>
 
@@ -110,28 +90,6 @@ onBeforeUnmount(() => {
   >
     <template #search>
       <ASearchBox v-model="query" placeholder="Search any show" />
-    </template>
-
-    <template #rail>
-      <div v-if="soon.length" class="rail">
-        <div class="t-label rail__title">Airing soon</div>
-        <RouterLink
-          v-for="e in soon"
-          :key="e.episode_id"
-          :to="{ name: 'show', params: { id: e.show_id } }"
-          class="rail__item"
-        >
-          <img v-if="e.show_image" :src="e.show_image" alt="" class="rail__img" />
-          <span v-else class="rail__img" />
-          <span class="rail__text">
-            <span class="rail__name truncate">{{ e.show_name }}</span>
-            <span class="rail__when"
-              >{{ relativeDayLabel(e.airstamp, auth.timezone) }} ·
-              {{ formatAirTime(e.airstamp, auth.timezone) }}</span
-            >
-          </span>
-        </RouterLink>
-      </div>
     </template>
 
     <template #actions>
@@ -155,42 +113,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.rail__title {
-  padding: 0 12px 4px;
-}
-.rail__item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border-radius: var(--radius-md);
-  color: var(--fg);
-}
-.rail__item:hover {
-  background: var(--hover);
-}
-.rail__img {
-  width: 26px;
-  height: 38px;
-  object-fit: cover;
-  border-radius: 4px;
-  background: var(--surface2);
-  flex: none;
-}
-.rail__text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.rail__name {
-  font-size: 13px;
-  font-weight: 600;
-}
-.rail__when {
-  font: 500 11.5px var(--font-mono);
-  color: var(--primary-text);
-}
 .bell {
   position: relative;
   width: 40px;
