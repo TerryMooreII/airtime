@@ -126,6 +126,20 @@ The build copies `index.html` to `404.html` so deep links work without server re
 all in-app paths (router, service worker, brand icons, auth redirects) go through
 `import.meta.env.BASE_URL` via `src/lib/url.ts`.
 
+## Secrets
+
+Public by design and fine to commit or ship: the Supabase project URL, the anon key (it is in
+every browser bundle; Row Level Security and explicit grants are what protect the data) and
+the VAPID public key.
+
+Never committed: `.env`, `.vapid-keys.local` (VAPID private key), the service-role key, the
+`sync_secret` row in `app_settings` and anything in `supabase/.temp`. All are gitignored, and
+every Edge Function reads its secrets from `Deno.env`, Vault or `app_settings`. Migrations
+that need a secret (`0012`) leave a placeholder and document the manual step.
+
+In the GitHub repository turn on **Settings → Code security → Secret scanning** and **Push
+protection** (free on public repos) as a safety net.
+
 ## Not yet built
 
 - Email digests.

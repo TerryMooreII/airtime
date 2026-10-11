@@ -38,8 +38,8 @@ insert into public.app_settings (key, value)
 values ('sync_secret', to_jsonb(encode(gen_random_bytes(32), 'hex')))
 on conflict do nothing;
 
--- The anon key is public (it ships in the frontend bundle); it only has to be a valid JWT.
-select vault.create_secret(
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ocHdjeGFybGtkc2RxbHJqYXhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NTY5MTUsImV4cCI6MjEwNzIzMjkxNX0.UbrAcIOQoLHsiLpHfb7RNbmZecAdld3U6_qeLX4Vq9U',
-  'anon_key')
- where not exists (select 1 from vault.secrets where name = 'anon_key');
+-- The anon key is public (it ships in the frontend bundle) but is still kept out of
+-- source control. Create the vault secret once by hand in the SQL editor with the value
+-- from Settings -> API (this project already has it):
+--   select vault.create_secret('<anon key>', 'anon_key')
+--    where not exists (select 1 from vault.secrets where name = 'anon_key');
