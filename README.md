@@ -79,6 +79,14 @@ The schema is provider-agnostic:
 Add a new `sync_job_type` (for example `omdb_ratings`), a handler in `sync-worker` that looks up shows by
 `external_id`, and insert rows with `provider = 'imdb'`. The show page renders every provider it finds.
 
+## Installable app (PWA)
+
+`vite-plugin-pwa` generates the web manifest and builds `src/sw.js` with Workbox: the app shell
+is precached (so the installed app opens offline), navigations fall back to `index.html`,
+TVmaze posters and web fonts are cached at runtime, and the same worker shows Web Push
+notifications. Updates install automatically and reload the page. Icons live in
+`public/icons/` (`icon.svg` is the source; PNGs are rendered from it).
+
 ## Project layout
 
 ```

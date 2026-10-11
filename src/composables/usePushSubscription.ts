@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { BASE_PATH, publicAsset } from '@/lib/url'
 
 /**
- * Web Push subscription management. The service worker lives at <base>/sw.js and the
+ * Web Push subscription management. The service worker (src/sw.js, registered by
+ * vite-plugin-pwa) lives at <base>/sw.js and the
  * VAPID public key comes from VITE_VAPID_PUBLIC_KEY.
  */
 export function usePushSubscription() {
