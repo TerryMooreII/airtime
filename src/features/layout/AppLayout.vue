@@ -20,8 +20,9 @@ watch(query, (q) => {
   if (q.trim()) void router.replace({ name: 'search', query: { q } })
   else if (route.name === 'search') void router.replace({ name: 'search' })
 })
+// Only the Search page owns `q`; other pages keep their own query params.
 watch(
-  () => route.query.q,
+  () => (route.name === 'search' ? route.query.q : undefined),
   (q) => {
     if (typeof q === 'string' && q !== query.value) query.value = q
     if (q === undefined && route.name !== 'search') query.value = ''

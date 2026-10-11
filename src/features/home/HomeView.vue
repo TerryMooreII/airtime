@@ -15,6 +15,7 @@ import {
 import { errorMessage } from '@/composables/useAsync'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useFollow } from '@/composables/useFollow'
+import { useQueryParam } from '@/composables/useQueryParam'
 import { dayKey, episodeCode, formatAirTime, formatRuntime, relativeDayLabel } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
@@ -28,45 +29,28 @@ const { isMobile } = useBreakpoint()
 const follow = useFollow()
 
 type Scope = 'mine' | 'everything'
-const SCOPE_KEY = 'airtime:guide-scope'
-const scope = ref<Scope>(readScope())
-function readScope(): Scope {
-  try {
-    return localStorage.getItem(SCOPE_KEY) === 'everything' ? 'everything' : 'mine'
-  } catch {
-    return 'mine'
-  }
-}
-watch(scope, (v) => {
-  try {
-    localStorage.setItem(SCOPE_KEY, v)
-  } catch {
-    /* ignore */
-  }
-  void load()
+// Scope, range and layout live in the URL so a refresh or the back button restores them.
+const scope = useQueryParam<Scope>('scope', {
+  defaultValue: 'mine',
+  parse: (r) => (r === 'mine' || r === 'everything' ? r : undefined),
+  remember: 'airtime:guide-scope',
 })
+watch(scope, () => void load())
 const episodes = computed(() =>
   upcomingStore.items(scope.value === 'everything' ? 'everything' : 'mine', range.value),
 )
 const loading = ref(true)
 const error = ref<string | null>(null)
-const range = ref<7 | 14 | 30>(14)
+const range = useQueryParam<7 | 14 | 30>('days', {
+  defaultValue: 14,
+  parse: (r) => ([7, 14, 30] as const).find((n) => String(n) === r),
+})
+watch(range, () => void load())
 type Layout = 'agenda' | 'calendar'
-const LAYOUT_KEY = 'airtime:guide-layout'
-const layout = ref<Layout>(readLayout())
-function readLayout(): Layout {
-  try {
-    return localStorage.getItem(LAYOUT_KEY) === 'calendar' ? 'calendar' : 'agenda'
-  } catch {
-    return 'agenda'
-  }
-}
-watch(layout, (v) => {
-  try {
-    localStorage.setItem(LAYOUT_KEY, v)
-  } catch {
-    /* ignore */
-  }
+const layout = useQueryParam<Layout>('layout', {
+  defaultValue: 'agenda',
+  parse: (r) => (r === 'agenda' || r === 'calendar' ? r : undefined),
+  remember: 'airtime:guide-layout',
 })
 const selectedDay = ref<string | null>(null)
 
@@ -207,7 +191,6 @@ const subtitle = computed(() => {
           { value: 30, label: '30 days' },
         ]"
         aria-label="Range"
-        @update:model-value="load"
       />
     </APageHeader>
 

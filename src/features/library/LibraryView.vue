@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import {
@@ -20,6 +20,7 @@ import {
   type TableColumn,
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
+import { useQueryParam } from '@/composables/useQueryParam'
 import {
   episodeCode,
   formatAirTime,
@@ -46,37 +47,32 @@ type Filter = UserShowStatus | 'all'
 type Sort = 'next' | 'rating' | 'az' | 'added'
 type View = 'grid' | 'table'
 
-const VIEW_KEY = 'airtime:library-view'
-
 const auth = useAuthStore()
 const library = useLibraryStore()
 const ui = useUiStore()
 const watched = useWatchedStore()
 const upcoming = useUpcomingStore()
 
-const filter = ref<Filter>('all')
-const sort = ref<Sort>('next')
-const view = ref<View>(readView())
-const query = ref('')
+// Filters live in the URL so a refresh or the back button lands on the same view.
+const filter = useQueryParam<Filter>('status', {
+  defaultValue: 'all',
+  parse: (r) =>
+    r === 'all' || USER_SHOW_STATUSES.some((s) => s.value === r) ? (r as Filter) : undefined,
+})
+const sort = useQueryParam<Sort>('sort', {
+  defaultValue: 'next',
+  parse: (r) => (['next', 'rating', 'az', 'added'] as const).find((v) => v === r),
+})
+const view = useQueryParam<View>('view', {
+  defaultValue: 'grid',
+  parse: (r) => (r === 'grid' || r === 'table' ? r : undefined),
+  remember: 'airtime:library-view',
+})
+const query = useQueryParam<string>('find', { defaultValue: '', parse: (r) => r })
 const nextByShow = computed(() => {
   const map = new Map<number, UpcomingEpisode>()
   for (const e of upcoming.items('all', 30)) if (!map.has(e.show_id)) map.set(e.show_id, e)
   return map
-})
-
-function readView(): View {
-  try {
-    return localStorage.getItem(VIEW_KEY) === 'table' ? 'table' : 'grid'
-  } catch {
-    return 'grid'
-  }
-}
-watch(view, (v) => {
-  try {
-    localStorage.setItem(VIEW_KEY, v)
-  } catch {
-    /* ignore */
-  }
 })
 
 onMounted(async () => {
@@ -102,7 +98,7 @@ const nextTime = (e: LibraryEntry) => {
 const searching = computed(() => query.value.trim().length > 0)
 
 /** Status filter only; sorting never adds or removes shows. */
-const network = ref<string>('all')
+const network = useQueryParam<string>('network', { defaultValue: 'all', parse: (r) => r })
 /** Channels present in the user's library, most common first. */
 const networkOptions = computed(() => {
   const counts = new Map<string, number>()
