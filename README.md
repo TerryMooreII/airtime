@@ -51,6 +51,9 @@ TVmaze ──/updates/shows─▶ show_updates (nightly) ──▶ show_refresh 
 user tracks a show ──▶ trigger enqueues show_episodes ──▶ full episode history (refresh-show does it instantly)
 hourly ──▶ create_airing_today_notifications() at each user's chosen local hour
 every minute ──▶ tick_sync_worker() / tick_push_dispatch() wake the Edge Functions when there is work
+
+Notifications respect three switches: the profile's in-app / push toggles, each followed show's
+`notify` flag, and the show's status. Dropped shows never notify.
 ```
 
 All writes go through set-based SQL functions (`upsert_shows`, `upsert_episodes`, ...) so the Edge
