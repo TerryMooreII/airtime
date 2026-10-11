@@ -175,6 +175,12 @@ async function signOut() {
         />
       </ASettingsRow>
       <ASettingsRow title="Browser push" :description="pushDescription">
+        <AToggle
+          :model-value="pushOn"
+          label="Browser push"
+          :disabled="!push.configured.value || push.busy.value"
+          @update:model-value="togglePush"
+        />
         <AButton
           variant="ghost"
           size="sm"
@@ -183,12 +189,6 @@ async function signOut() {
           @click="sendTest"
           >Send test</AButton
         >
-        <AToggle
-          :model-value="pushOn"
-          label="Browser push"
-          :disabled="!push.configured.value || push.busy.value"
-          @update:model-value="togglePush"
-        />
       </ASettingsRow>
       <AAlert v-if="push.error.value" variant="warning" class="push-error">{{
         push.error.value
