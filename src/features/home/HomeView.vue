@@ -200,14 +200,6 @@ const subtitle = computed(() => {
   <div class="guide">
     <APageHeader title="Your week on TV" :subtitle="subtitle">
       <ASegmented
-        v-model="scope"
-        :options="[
-          { value: 'mine', label: 'My shows' },
-          { value: 'everything', label: 'Everything' },
-        ]"
-        aria-label="Scope"
-      />
-      <ASegmented
         v-model="range"
         :options="[
           { value: 7, label: '7 days' },
@@ -216,14 +208,6 @@ const subtitle = computed(() => {
         ]"
         aria-label="Range"
         @update:model-value="load"
-      />
-      <ASegmented
-        v-model="layout"
-        :options="[
-          { value: 'agenda', label: 'Agenda' },
-          { value: 'calendar', label: 'Calendar' },
-        ]"
-        aria-label="Layout"
       />
     </APageHeader>
 
@@ -272,6 +256,26 @@ const subtitle = computed(() => {
           </RouterLink>
           <AEmptyState v-if="!then.length" title="Nothing else yet" compact :dashed="false" />
         </div>
+      </div>
+
+      <!-- Scope and layout sit right above the list they change. -->
+      <div class="guide__tools">
+        <ASegmented
+          v-model="scope"
+          :options="[
+            { value: 'mine', label: 'My shows' },
+            { value: 'everything', label: 'Everything' },
+          ]"
+          aria-label="Scope"
+        />
+        <ASegmented
+          v-model="layout"
+          :options="[
+            { value: 'agenda', label: 'Agenda' },
+            { value: 'calendar', label: 'Calendar' },
+          ]"
+          aria-label="Layout"
+        />
       </div>
 
       <div v-if="groups.length && layout === 'agenda'" class="agenda">
@@ -452,6 +456,14 @@ const subtitle = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+.guide__tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: -8px;
 }
 .guide__skeleton {
   display: flex;
