@@ -37,7 +37,8 @@ becomes an admin automatically on sign-up. Admins can promote other users from A
    include `_shared/*`) or the Supabase CLI.
 4. **Web push**: generate a VAPID key pair (`npx web-push generate-vapid-keys`), set
    `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` as Edge Function secrets, and put the public
-   key in `VITE_VAPID_PUBLIC_KEY`.
+   key in `VITE_VAPID_PUBLIC_KEY`. Then Settings → Notifications → turn on browser push and click **Send test** to
+   confirm delivery end to end.
 5. **Vault secrets** `project_url` and `anon_key` plus `app_settings.sync_secret` let pg_cron call the
    Edge Functions (see `0012_internal_auth.sql`). They are created by the migrations; nothing to paste.
 

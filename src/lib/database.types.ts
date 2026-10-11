@@ -875,6 +875,7 @@ export type Database = {
         Args: { p_older_than?: string }
         Returns: number
       }
+      send_test_notification: { Args: never; Returns: number }
       search_shows: {
         Args: { p_limit?: number; p_offset?: number; p_query: string }
         Returns: {

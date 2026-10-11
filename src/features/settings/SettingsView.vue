@@ -16,6 +16,7 @@ import {
 import { errorMessage } from '@/composables/useAsync'
 import { usePushSubscription } from '@/composables/usePushSubscription'
 import { useTheme, type ThemeMode } from '@/composables/useTheme'
+import { sendTestNotification } from '@/lib/api/notifications'
 import { browserTimeZone } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
@@ -65,6 +66,19 @@ async function saveName() {
   savingName.value = true
   await save({ display_name: displayName.value.trim() || null }, 'Name updated')
   savingName.value = false
+}
+const pushOn = computed(() => (auth.profile?.notify_push ?? false) && push.subscribed.value)
+const sendingTest = ref(false)
+async function sendTest() {
+  sendingTest.value = true
+  try {
+    await sendTestNotification()
+    ui.toast('Test sent. It should pop up in a moment and appear under Alerts.')
+  } catch (err) {
+    ui.error(errorMessage(err))
+  } finally {
+    sendingTest.value = false
+  }
 }
 async function togglePush(on: boolean) {
   if (on) {
@@ -161,8 +175,16 @@ async function signOut() {
             : 'Not supported by this browser.'
         "
       >
+        <AButton
+          variant="ghost"
+          size="sm"
+          :disabled="!pushOn || sendingTest"
+          :loading="sendingTest"
+          @click="sendTest"
+          >Send test</AButton
+        >
         <AToggle
-          :model-value="(auth.profile?.notify_push ?? false) && push.subscribed.value"
+          :model-value="pushOn"
           label="Browser push"
           :disabled="!push.configured.value || push.busy.value"
           @update:model-value="togglePush"

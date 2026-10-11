@@ -71,7 +71,8 @@ Deno.serve(async (req) => {
       const payload = JSON.stringify({
         title: n.title,
         body: n.body ?? '',
-        icon: (n.data?.image as string | undefined) ?? '/favicon.svg',
+        // No default icon: the service worker falls back to the app icon under its own base path.
+        icon: (n.data?.image as string | undefined) ?? undefined,
         url: n.show_id ? `/shows/${n.show_id}` : '/notifications',
         notificationId: n.id,
       })
