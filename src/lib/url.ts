@@ -1,5 +1,5 @@
 /**
- * URL helpers that respect the deploy base path (Vite's `base`, e.g. "/bingeTV/" on a
+ * URL helpers that respect the deploy base path (Vite's `base`, e.g. "/airtime/" on a
  * GitHub Pages project site). Use these instead of hard-coding paths that start with "/".
  */
 
