@@ -16,6 +16,18 @@ export function usePushSubscription() {
       'PushManager' in window &&
       'Notification' in window,
   )
+  /**
+   * iOS only exposes push inside a Home Screen web app, so a Safari tab reports
+   * "unsupported" even though installing the app would enable it.
+   */
+  const needsHomeScreen = computed(() => {
+    if (supported.value || typeof navigator === 'undefined') return false
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent)
+    const standalone =
+      (navigator as Navigator & { standalone?: boolean }).standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches
+    return ios && !standalone
+  })
   const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY ?? ''
   const configured = computed(() => supported.value && vapidKey.length > 0)
   const permission = ref<NotificationPermission>(
@@ -105,7 +117,18 @@ export function usePushSubscription() {
     }
   }
 
-  return { supported, configured, permission, subscribed, busy, error, refresh, enable, disable }
+  return {
+    supported,
+    configured,
+    needsHomeScreen,
+    permission,
+    subscribed,
+    busy,
+    error,
+    refresh,
+    enable,
+    disable,
+  }
 }
 
 function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {

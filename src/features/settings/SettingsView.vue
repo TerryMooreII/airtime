@@ -67,6 +67,15 @@ async function saveName() {
   await save({ display_name: displayName.value.trim() || null }, 'Name updated')
   savingName.value = false
 }
+const pushDescription = computed(() => {
+  if (push.supported.value)
+    return push.configured.value
+      ? 'Get a notification even when Airtime is closed.'
+      : 'Not configured on this deployment (missing VAPID public key).'
+  if (push.needsHomeScreen.value)
+    return 'On iPhone, add Airtime to your Home Screen (Share → Add to Home Screen) to turn on push.'
+  return 'Not supported by this browser.'
+})
 const pushOn = computed(() => (auth.profile?.notify_push ?? false) && push.subscribed.value)
 const sendingTest = ref(false)
 async function sendTest() {
@@ -165,16 +174,7 @@ async function signOut() {
           @update:model-value="save({ notify_in_app: $event })"
         />
       </ASettingsRow>
-      <ASettingsRow
-        title="Browser push"
-        :description="
-          push.supported.value
-            ? push.configured.value
-              ? 'Get a notification even when Airtime is closed.'
-              : 'Not configured on this deployment.'
-            : 'Not supported by this browser.'
-        "
-      >
+      <ASettingsRow title="Browser push" :description="pushDescription">
         <AButton
           variant="ghost"
           size="sm"
