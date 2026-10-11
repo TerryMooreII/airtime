@@ -47,7 +47,7 @@ export function usePushSubscription() {
 
   async function refresh(): Promise<void> {
     if (!supported.value) return
-    const reg = await navigator.serviceWorker.getRegistration('/')
+    const reg = await navigator.serviceWorker.getRegistration(BASE_PATH)
     const sub = await reg?.pushManager.getSubscription()
     subscribed.value = Boolean(sub)
     permission.value = Notification.permission
@@ -103,7 +103,7 @@ export function usePushSubscription() {
     busy.value = true
     error.value = null
     try {
-      const reg = await navigator.serviceWorker.getRegistration('/')
+      const reg = await navigator.serviceWorker.getRegistration(BASE_PATH)
       const sub = await reg?.pushManager.getSubscription()
       if (sub) {
         await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
