@@ -498,13 +498,17 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
   }
   .library__right {
     width: 100%;
+    min-width: 0;
   }
   .library__network {
-    width: 44%;
+    flex: 0 1 44%;
+    width: auto;
+    min-width: 0;
   }
   .library__search {
-    flex: 1;
+    flex: 1 1 0;
     width: auto;
+    min-width: 0;
   }
 }
 </style>

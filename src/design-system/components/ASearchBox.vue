@@ -39,6 +39,7 @@ const emit = defineEmits<{ focus: []; submit: [] }>()
 <style scoped>
 .a-search {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 10px;
   background: var(--surface2);
@@ -59,6 +60,7 @@ const emit = defineEmits<{ focus: []; submit: [] }>()
 }
 .a-search__input {
   flex: 1;
+  width: 100%;
   min-width: 0;
   border: 0;
   outline: 0;
@@ -85,5 +87,12 @@ const emit = defineEmits<{ focus: []; submit: [] }>()
 }
 .a-search__clear:hover {
   color: var(--fg);
+}
+
+/* iOS zooms into inputs smaller than 16px; keep phones at 16px. */
+@media (max-width: 759px) {
+  .a-search__input {
+    font-size: 16px;
+  }
 }
 </style>

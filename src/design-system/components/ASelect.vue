@@ -86,4 +86,10 @@ const id = useId()
   font-size: 12.5px;
   color: var(--muted);
 }
+
+@media (max-width: 759px) {
+  .a-select__el {
+    font-size: 16px;
+  }
+}
 </style>

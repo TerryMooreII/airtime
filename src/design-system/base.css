@@ -119,6 +119,10 @@ p {
   .t-h1 {
     font-size: var(--text-h1-mobile);
   }
+  html,
+  body {
+    overflow-x: hidden;
+  }
 }
 
 /* ---- Motion ------------------------------------------------------------- */

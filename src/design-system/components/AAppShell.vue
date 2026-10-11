@@ -283,6 +283,8 @@ const emit = defineEmits<{ toggleTheme: [] }>()
   }
   .a-shell__body {
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    /* No sideways page scroll; wide content (tables) scrolls inside its own wrapper. */
+    overflow-x: clip;
   }
   .a-shell__bottom {
     position: fixed;

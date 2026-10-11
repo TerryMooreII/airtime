@@ -132,4 +132,10 @@ const inputType = computed(() => (props.type === 'password' && reveal.value ? 't
 .a-field__msg--error {
   color: var(--danger);
 }
+
+@media (max-width: 759px) {
+  .a-field__input {
+    font-size: 16px;
+  }
+}
 </style>

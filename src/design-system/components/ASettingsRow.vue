@@ -34,6 +34,8 @@ withDefaults(defineProps<{ title: string; description?: string; stacked?: boolea
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex: 1 1 200px;
+  overflow-wrap: anywhere;
 }
 .a-settings-row__title {
   font-size: 15px;
@@ -46,8 +48,10 @@ withDefaults(defineProps<{ title: string; description?: string; stacked?: boolea
 .a-settings-row__control {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   min-width: 0;
+  max-width: 100%;
 }
 .a-settings-row--stacked .a-settings-row__control {
   align-self: flex-start;
