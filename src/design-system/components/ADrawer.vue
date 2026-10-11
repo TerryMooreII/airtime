@@ -107,6 +107,7 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 90%;
     border-radius: 22px 22px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   .a-drawer-enter-from .a-drawer__panel,
   .a-drawer-leave-to .a-drawer__panel {

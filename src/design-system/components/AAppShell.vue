@@ -273,26 +273,30 @@ const emit = defineEmits<{ toggleTheme: [] }>()
   .a-shell__headicon {
     display: flex;
   }
+  /* Installed as a PWA the page runs under the status bar: keep the header below it. */
   .a-shell__header {
     padding: var(--head-pad-mobile);
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
   }
   .a-shell__page {
     padding: var(--page-pad-mobile);
   }
   .a-shell__body {
-    padding-bottom: 72px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
   .a-shell__bottom {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
+    /* Overhang the viewport edge by a pixel: fractional viewport heights on phones
+       otherwise leave a hairline where scrolling content shows through. */
+    bottom: -1px;
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
     border-top: 1px solid var(--line);
     background: var(--bg);
-    padding: 6px 6px calc(10px + env(safe-area-inset-bottom));
+    padding: 6px 6px calc(11px + env(safe-area-inset-bottom, 0px));
     z-index: var(--z-header);
   }
   .a-shell__bottomitem {
