@@ -131,13 +131,17 @@ function onClick(ev: Event) {
   background: var(--primary);
   color: var(--on-primary);
 }
+/* Open: the x sits on the Add-as panel, so match its glass exactly (no extra blur layer). */
 .a-follow-chip--open,
 .a-follow-chip--open:hover {
-  background: transparent;
+  background: var(--glass-bg);
+  backdrop-filter: none;
   transform: rotate(135deg);
 }
 .a-follow-chip--inline {
   position: relative;
+  /* Drop the corner offsets: relative positioning would otherwise nudge the chip. */
+  inset: auto;
   flex: none;
 }
 .a-follow-chip:disabled {

@@ -79,37 +79,38 @@ const rating = defineModel<number | null>('rating', { default: null })
   >
     <APoster :src="image" :alt="name" radius="lg">
       <span v-if="badge" class="a-show-card__badge">{{ badge }}</span>
-      <span
-        v-if="showFollow"
-        ref="followEl"
-        class="a-show-card__follow"
-        :class="{ 'a-show-card__follow--open': menuOpen }"
-      >
-        <span class="a-show-card__panel" role="menu" :aria-hidden="!menuOpen" @click.prevent.stop>
-          <span class="a-show-card__panel-title">Add as</span>
-          <button
-            v-for="(o, i) in followOptions ?? []"
-            :key="o.value"
-            type="button"
-            role="menuitem"
-            class="a-show-card__panel-item"
-            :style="{ '--stagger': menuOpen ? `${90 + i * 45}ms` : '0ms' }"
-            :tabindex="menuOpen ? 0 : -1"
-            @click="choose(o.value, $event)"
-          >
-            {{ o.label }}
-          </button>
-        </span>
-        <AFollowButton
-          appearance="chip"
-          inline
-          :following="following"
-          :loading="followLoading"
-          :open="menuOpen"
-          @toggle="onChip(following, !!followOptions?.length)"
-        />
-      </span>
     </APoster>
+    <!-- Outside the poster so its overflow clipping cannot cut the open panel off. -->
+    <span
+      v-if="showFollow"
+      ref="followEl"
+      class="a-show-card__follow"
+      :class="{ 'a-show-card__follow--open': menuOpen }"
+    >
+      <span class="a-show-card__panel" role="menu" :aria-hidden="!menuOpen" @click.prevent.stop>
+        <span class="a-show-card__panel-title">Add as</span>
+        <button
+          v-for="(o, i) in followOptions ?? []"
+          :key="o.value"
+          type="button"
+          role="menuitem"
+          class="a-show-card__panel-item"
+          :style="{ '--stagger': menuOpen ? `${90 + i * 45}ms` : '0ms' }"
+          :tabindex="menuOpen ? 0 : -1"
+          @click="choose(o.value, $event)"
+        >
+          {{ o.label }}
+        </button>
+      </span>
+      <AFollowButton
+        appearance="chip"
+        inline
+        :following="following"
+        :loading="followLoading"
+        :open="menuOpen"
+        @toggle="onChip(following, !!followOptions?.length)"
+      />
+    </span>
     <span class="a-show-card__name truncate">{{ name }}</span>
     <AStarRating
       v-if="showRating"
@@ -124,6 +125,7 @@ const rating = defineModel<number | null>('rating', { default: null })
 
 <style scoped>
 .a-show-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -160,20 +162,29 @@ const rating = defineModel<number | null>('rating', { default: null })
 .a-show-card--no-follow .a-show-card__badge {
   max-width: calc(100% - 16px);
 }
+/* Spans the poster's top strip so the panel can size against the card, not the 34px chip.
+   Only the chip and the open panel take clicks; the rest falls through to the card link. */
 .a-show-card__follow {
   position: absolute;
+  left: 8px;
   right: 8px;
   top: 8px;
   z-index: 2;
-  width: 34px;
   height: 34px;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+.a-show-card__follow > :deep(.a-follow-chip) {
+  pointer-events: auto;
 }
 /* The circle behind the plus; grows into the options panel. */
 .a-show-card__panel {
   position: absolute;
   right: 0;
   top: 0;
-  width: 168px;
+  /* Preferred width, but never wider than the card (rail cards are 156px / 132px). */
+  width: min(168px, 100%);
   display: flex;
   flex-direction: column;
   gap: var(--space-0_5);
