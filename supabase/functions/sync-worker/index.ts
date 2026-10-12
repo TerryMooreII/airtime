@@ -6,10 +6,12 @@
  * time budget is used up or the queue is empty. Each job writes a sync_runs row.
  */
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
-import { handleOptions, json } from '../_shared/cors.ts'
-import { HttpError, requireInternal } from '../_shared/auth.ts'
+import { json } from '../_shared/cors.ts'
+import { requireInternal } from '../_shared/auth.ts'
+import { serve } from '../_shared/serve.ts'
 import { serviceClient, unwrap } from '../_shared/supabase.ts'
 import {
+  getLocalShow,
   importShowWithEpisodes,
   notifyNewEpisodes,
   storeShows,
@@ -53,16 +55,14 @@ async function handleCatalogPage(
   const page = Number(payload.page ?? 0)
   const shows = await tvmazeGet<TvmazeShow[]>(`/shows?page=${page}`)
 
+  const started = (await startedAt(db)) ?? new Date().toISOString()
+
   if (shows === null) {
     // 404 means we ran past the last page: the catalog import is complete.
     unwrap(
       await db.from('app_settings').upsert({
         key: 'catalog_import',
-        value: {
-          last_page: page - 1,
-          completed_at: new Date().toISOString(),
-          started_at: await startedAt(db),
-        },
+        value: { last_page: page - 1, completed_at: new Date().toISOString(), started_at: started },
       }),
       'app_settings',
     )
@@ -73,30 +73,28 @@ async function handleCatalogPage(
   unwrap(
     await db.from('app_settings').upsert({
       key: 'catalog_import',
-      value: {
-        last_page: page,
-        completed_at: null,
-        started_at: (await startedAt(db)) ?? new Date().toISOString(),
-      },
+      value: { last_page: page, completed_at: null, started_at: started },
     }),
     'app_settings',
   )
-  await db.rpc('enqueue_sync_job', {
-    p_job_type: 'catalog_page',
-    p_payload: { page: page + 1 },
-    p_priority: 50,
-    p_triggered_by: 'catalog',
-  })
+  unwrap(
+    await db.rpc('enqueue_sync_job', {
+      p_job_type: 'catalog_page',
+      p_payload: { page: page + 1 },
+      p_priority: 50,
+      p_triggered_by: 'catalog',
+    }),
+    'enqueue next catalog page',
+  )
   return { page, shows: shows.length, ...result }
 }
 
 async function startedAt(db: SupabaseClient): Promise<string | null> {
-  const { data } = await db
-    .from('app_settings')
-    .select('value')
-    .eq('key', 'catalog_import')
-    .maybeSingle()
-  return (data?.value as { started_at?: string } | null)?.started_at ?? null
+  const row = unwrap(
+    await db.from('app_settings').select('value').eq('key', 'catalog_import').maybeSingle(),
+    'app_settings',
+  ) as { value?: { started_at?: string } } | null
+  return row?.value?.started_at ?? null
 }
 
 async function handleFullSchedule(db: SupabaseClient): Promise<Stats> {
@@ -130,35 +128,12 @@ async function handleFullSchedule(db: SupabaseClient): Promise<Stats> {
 
 async function handleShowUpdates(db: SupabaseClient): Promise<Stats> {
   const updates = (await tvmazeGet<Record<string, number>>('/updates/shows?since=day')) ?? {}
-  const stale = unwrap(await db.rpc('stale_shows', { p_updates: updates }), 'stale_shows') as {
-    tvmaze_id: number
-    episodes_synced: boolean
-    is_new: boolean
-  }[]
-
-  // Tracked shows (with episodes) first, then known shows, then shows new to TVmaze.
-  const rank = (s: (typeof stale)[number]) => (s.episodes_synced ? 0 : s.is_new ? 2 : 1)
-  stale.sort((a, b) => rank(a) - rank(b))
-  let enqueued = 0
-  let newShows = 0
-  for (const s of stale.slice(0, MAX_SHOW_REFRESH_PER_UPDATE)) {
-    const { data } = await db.rpc('enqueue_sync_job', {
-      p_job_type: 'show_refresh',
-      p_payload: { tvmaze_id: s.tvmaze_id },
-      p_priority: s.episodes_synced ? 40 : s.is_new ? 80 : 70,
-      p_triggered_by: 'updates',
-    })
-    if (data) {
-      enqueued++
-      if (s.is_new) newShows++
-    }
-  }
-  return {
-    reported: Object.keys(updates).length,
-    stale: stale.length,
-    enqueued,
-    new_shows: newShows,
-  }
+  // One statement ranks the stale shows (tracked first, then known, then new) and enqueues them.
+  const result = unwrap(
+    await db.rpc('enqueue_stale_shows', { p_updates: updates, p_max: MAX_SHOW_REFRESH_PER_UPDATE }),
+    'enqueue_stale_shows',
+  ) as { stale: number; enqueued: number; new_shows: number }
+  return { reported: Object.keys(updates).length, ...result }
 }
 
 async function handleShowRefresh(
@@ -168,11 +143,7 @@ async function handleShowRefresh(
   const tvmazeId = Number(payload.tvmaze_id)
   if (!tvmazeId) throw new Error('show_refresh requires payload.tvmaze_id')
 
-  const { data: local } = await db
-    .from('shows')
-    .select('episodes_synced_at')
-    .eq('tvmaze_id', tvmazeId)
-    .maybeSingle()
+  const local = await getLocalShow(db, tvmazeId)
 
   if (local?.episodes_synced_at) {
     const r = await importShowWithEpisodes(db, tvmazeId, { notify: true })
@@ -248,23 +219,33 @@ async function drainQueue(db: SupabaseClient): Promise<void> {
         continue
       }
       const started = Date.now()
+      // Renew the lease per job: tick_sync_worker() starts another worker when no job has been
+      // locked for 2 minutes, which a long batch (full_schedule) would otherwise trigger.
+      await db
+        .from('sync_queue')
+        .update({ locked_at: new Date(started).toISOString() })
+        .eq('id', job.id)
       try {
         const stats = await runJob(db, job)
-        await db.rpc('complete_sync_job', {
-          p_job_id: job.id,
-          p_ok: true,
-          p_stats: { ...stats, duration_ms: Date.now() - started },
-        })
+        unwrap(
+          await db.rpc('complete_sync_job', {
+            p_job_id: job.id,
+            p_ok: true,
+            p_stats: { ...stats, duration_ms: Date.now() - started },
+          }),
+          'complete_sync_job',
+        )
         if (job.job_type === 'catalog_page') catalogPages++
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
         console.error(`[${WORKER_ID}] job ${job.id} (${job.job_type}) failed: ${message}`)
-        await db.rpc('complete_sync_job', {
+        const done = await db.rpc('complete_sync_job', {
           p_job_id: job.id,
           p_ok: false,
           p_stats: { duration_ms: Date.now() - started },
           p_error: message.slice(0, 2000),
         })
+        if (done.error) console.error(`[${WORKER_ID}] complete_sync_job failed`, done.error)
       }
       processed++
     }
@@ -273,16 +254,8 @@ async function drainQueue(db: SupabaseClient): Promise<void> {
   console.log(`[${WORKER_ID}] processed ${processed} job(s)`)
 }
 
-Deno.serve(async (req) => {
-  const options = handleOptions(req)
-  if (options) return options
-
-  try {
-    await requireInternal(req)
-  } catch (err) {
-    const status = err instanceof HttpError ? err.status : 500
-    return json({ error: err instanceof Error ? err.message : 'error' }, status)
-  }
+serve('sync-worker', async (req) => {
+  await requireInternal(req)
 
   const db = serviceClient()
   const work = drainQueue(db).catch((err) => console.error(`[${WORKER_ID}] drain failed`, err))

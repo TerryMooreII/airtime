@@ -14,7 +14,12 @@ revoke execute on function public.handle_new_user() from authenticated;
 revoke execute on function public.protect_profile() from authenticated;
 revoke execute on function public.enqueue_episodes_for_tracked_show() from authenticated;
 revoke execute on function public.set_updated_at() from authenticated;
-revoke execute on function public.rls_auto_enable() from authenticated;
+do $$ begin
+  -- rls_auto_enable() exists only on projects where it was created by hand.
+  if to_regprocedure('public.rls_auto_enable()') is not null then
+    revoke execute on function public.rls_auto_enable() from authenticated;
+  end if;
+end $$;
 
 -- Keep what signed-in users legitimately need.
 grant execute on function public.is_admin() to authenticated;

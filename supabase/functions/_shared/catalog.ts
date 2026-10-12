@@ -98,15 +98,40 @@ export async function notifyNewEpisodes(db: SupabaseClient, episodeIds: number[]
   return count
 }
 
+export interface LocalShow {
+  id: number
+  episodes_synced_at: string | null
+}
+
+/** The catalog row for a TVmaze id, or null when the show is not stored locally. */
+export async function getLocalShow(db: SupabaseClient, tvmazeId: number): Promise<LocalShow | null> {
+  return unwrap(
+    await db.from('shows').select('id, episodes_synced_at').eq('tvmaze_id', tvmazeId).maybeSingle(),
+    'local show',
+  ) as LocalShow | null
+}
+
+export type ImportResult =
+  | { show: UpsertShowsResult; episodes: UpsertEpisodesResult; notified: number }
+  | { in_progress: true }
+  | null
+
 /**
  * Fetch one show plus its complete episode list (specials included) and store both.
- * Returns null when TVMaze has no such show.
+ * Returns null when TVMaze has no such show, and { in_progress } when another worker or
+ * refresh-show call holds the per-show lock (begin_show_refresh, 2-minute lease).
  */
 export async function importShowWithEpisodes(
   db: SupabaseClient,
   tvmazeId: number,
   opts: { notify: boolean },
-): Promise<{ show: UpsertShowsResult; episodes: UpsertEpisodesResult; notified: number } | null> {
+): Promise<ImportResult> {
+  const locked = unwrap(
+    await db.rpc('begin_show_refresh', { p_tvmaze_id: tvmazeId }),
+    'begin_show_refresh',
+  ) as boolean
+  if (!locked) return { in_progress: true }
+
   const show = await tvmazeGet<TvmazeShow>(`/shows/${tvmazeId}`)
   if (!show) return null
   const episodes =

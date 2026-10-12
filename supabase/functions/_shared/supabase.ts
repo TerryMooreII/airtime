@@ -6,11 +6,14 @@ export function env(name: string): string {
   return value
 }
 
-/** Service-role client: bypasses RLS. Only use inside trusted server code. */
+let service: SupabaseClient | null = null
+
+/** Service-role client: bypasses RLS. Only use inside trusted server code. One per isolate. */
 export function serviceClient(): SupabaseClient {
-  return createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), {
+  service ??= createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), {
     auth: { persistSession: false, autoRefreshToken: false },
   })
+  return service
 }
 
 /** Client acting as the calling user (RLS applies). */

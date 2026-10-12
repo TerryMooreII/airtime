@@ -53,7 +53,8 @@ export interface CallerContext {
   isAdmin: boolean
 }
 
-export async function requireUser(req: Request): Promise<CallerContext> {
+/** Verify the caller's session. The profile role is only read when `withRole` is set. */
+export async function requireUser(req: Request, withRole = false): Promise<CallerContext> {
   const authHeader = req.headers.get('authorization')
   if (!authHeader) throw new HttpError(401, 'missing authorization header')
 
@@ -62,17 +63,22 @@ export async function requireUser(req: Request): Promise<CallerContext> {
   if (error || !data.user) throw new HttpError(401, 'invalid session')
 
   const asService = serviceClient()
-  const { data: profile } = await asService
-    .from('profiles')
-    .select('role')
-    .eq('id', data.user.id)
-    .maybeSingle()
+  let isAdmin = false
+  if (withRole) {
+    const { data: profile, error: profileError } = await asService
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .maybeSingle()
+    if (profileError) throw new HttpError(500, `profile lookup: ${profileError.message}`)
+    isAdmin = profile?.role === 'admin'
+  }
 
-  return { user: data.user, asUser, asService, isAdmin: profile?.role === 'admin' }
+  return { user: data.user, asUser, asService, isAdmin }
 }
 
 export async function requireAdmin(req: Request): Promise<CallerContext> {
-  const ctx = await requireUser(req)
+  const ctx = await requireUser(req, true)
   if (!ctx.isAdmin) throw new HttpError(403, 'admin only')
   return ctx
 }
