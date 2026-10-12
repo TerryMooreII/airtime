@@ -16,5 +16,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true
   },
+  "vueCompilerOptions": {
+    /* A component used in a template but not imported is an error, not a silent custom element. */
+    "checkUnknownComponents": true
+  },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.d.ts"]
 }

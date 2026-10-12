@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
-import { AAlert, ABadge, AButton, ASearchBox, ATable, type TableColumn } from '@/design-system'
+import {
+  AAlert,
+  ABadge,
+  AButton,
+  AMediaRow,
+  ASearchBox,
+  ATable,
+  type TableColumn,
+} from '@/design-system'
 import { useBusyAction } from '@/composables/useBusyAction'
 import { useDebouncedQuery } from '@/composables/useDebouncedQuery'
 import { enqueueSync, searchAdminShows, type AdminShowRow } from '@/lib/api/admin'

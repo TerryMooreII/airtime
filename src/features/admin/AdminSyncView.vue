@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { AAlert, ABadge, AButton, ACard, ATable, type TableColumn } from '@/design-system'
+import { AAlert, ABadge, AButton, ACard, AHeader, ATable, type TableColumn } from '@/design-system'
 import { useAsync } from '@/composables/useAsync'
 import { useBusyAction } from '@/composables/useBusyAction'
 import { enqueueSync, fetchSyncQueue, fetchSyncRuns, syncStatusVariant } from '@/lib/api/admin'

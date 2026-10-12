@@ -2,7 +2,15 @@
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { AButton, AEmptyState, AHeader, AIcon, APoster, ASkeleton } from '@/design-system'
+import {
+  AButton,
+  AEmptyState,
+  AHeader,
+  AIcon,
+  ALoadMore,
+  APoster,
+  ASkeleton,
+} from '@/design-system'
 import { timeAgo } from '@/lib/format'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useUiStore } from '@/stores/ui'

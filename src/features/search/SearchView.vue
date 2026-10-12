@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 
-import { AAlert, AEmptyState, ASearchBox, AShowCard, ASkeleton } from '@/design-system'
+import {
+  AAlert,
+  AEmptyState,
+  ALoadMore,
+  ASearchBox,
+  AShowCard,
+  AShowGrid,
+  ASkeleton,
+} from '@/design-system'
 import { useFollow } from '@/composables/useFollow'
 import { useQueryParam } from '@/composables/useQueryParam'
 import { useShowSearch } from '@/composables/useShowSearch'

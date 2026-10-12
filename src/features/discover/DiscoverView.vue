@@ -7,6 +7,7 @@ import {
   AEmptyState,
   AFollowButton,
   AHeader,
+  AMediaHero,
   APoster,
   AShowCard,
   ASkeleton,
