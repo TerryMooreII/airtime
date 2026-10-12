@@ -128,11 +128,15 @@ shows per day by TVmaze weight).
 1. Repository **Settings → Pages → Source: GitHub Actions**.
 2. **Settings → Secrets and variables → Actions → Secrets**: `VITE_SUPABASE_URL`,
    `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY` (the values from `.env`).
-3. The site is served from `/<repo name>/`. For a custom domain or a `<user>.github.io`
-   repository add the **variable** `PAGES_BASE` = `/`.
-4. In Supabase **Authentication → URL Configuration** add the published origin as the Site
-   URL and `<origin>/<base>/auth/callback` and `<origin>/<base>/auth/reset-password` as
-   redirect URLs, otherwise verification and reset emails will link back to localhost.
+3. The site lives at **https://airtime.terrymooreii.dev** (`public/CNAME`, base path `/`).
+   DNS: a `CNAME` record `airtime` → `terrymooreii.github.io`, then **Settings → Pages →
+   Custom domain** = `airtime.terrymooreii.dev` with "Enforce HTTPS" once the certificate is
+   issued. To serve from a project-site path instead, remove `public/CNAME` and set the
+   **variable** `PAGES_BASE` = `/<repo name>/`.
+4. In Supabase **Authentication → URL Configuration** set the Site URL to
+   `https://airtime.terrymooreii.dev` and add `https://airtime.terrymooreii.dev/auth/callback`
+   and `https://airtime.terrymooreii.dev/auth/reset-password` as redirect URLs, otherwise
+   verification and reset emails will link back to the old origin.
 
 The build copies `index.html` to `404.html` so deep links work without server rewrites, and
 all in-app paths (router, service worker, brand icons, auth redirects) go through
