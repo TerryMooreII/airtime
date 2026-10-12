@@ -23,16 +23,9 @@ import {
 import { errorMessage } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
 import { useNow } from '@/composables/useNow'
-import { fetchEpisodeRatings, fetchEpisodesForShow } from '@/lib/api/episodes'
+import { fetchShowEpisodes } from '@/lib/api/episodes'
 import { fetchShowCast } from '@/lib/tvmaze'
-import {
-  externalLink,
-  fetchShow,
-  fetchShowExternalIds,
-  fetchShowRatings,
-  RATING_PROVIDER_LABELS,
-  refreshShow,
-} from '@/lib/api/shows'
+import { externalLink, fetchShowDetail, RATING_PROVIDER_LABELS, refreshShow } from '@/lib/api/shows'
 import {
   episodeCode,
   formatPlainDate,
@@ -109,24 +102,26 @@ const entry = computed(() => library.entryFor(showId.value))
 const tz = computed(() => auth.timezone)
 const now = useNow(60_000)
 
+/** Everything is keyed by the route's show id, so the whole page is one round of requests. */
 async function load() {
   loading.value = true
   error.value = null
   try {
-    const [s] = await Promise.all([fetchShow(showId.value), library.load()])
-    show.value = s
-    if (!s) {
+    const [detail] = await Promise.all([
+      fetchShowDetail(showId.value),
+      loadEpisodes(),
+      library.load(),
+    ])
+    if (!detail) {
+      show.value = null
       error.value = 'This show is not in the catalog.'
       return
     }
-    const [r, x] = await Promise.all([fetchShowRatings(s.id), fetchShowExternalIds(s.id)])
-    ratings.value = r
-    externalIds.value = x
-    await loadEpisodes()
-    if (
-      !s.episodes_synced_at ||
-      Date.now() - new Date(s.episodes_synced_at).getTime() > 6 * 3_600_000
-    )
+    show.value = detail.show
+    ratings.value = detail.ratings
+    externalIds.value = detail.externalIds
+    const syncedAt = detail.show.episodes_synced_at
+    if (!syncedAt || Date.now() - new Date(syncedAt).getTime() > 6 * 3_600_000)
       void refreshEpisodes()
   } catch (err) {
     error.value = errorMessage(err)
@@ -136,15 +131,12 @@ async function load() {
 }
 
 async function loadEpisodes() {
-  if (!show.value) return
-  episodes.value = await fetchEpisodesForShow(show.value.id)
-  episodeRatings.value = await fetchEpisodeRatings(episodes.value.map((e) => e.id))
-  await watched
-    .loadForEpisodes(
-      show.value.id,
-      episodes.value.map((e) => e.id),
-    )
-    .catch(() => undefined)
+  const [list] = await Promise.all([
+    fetchShowEpisodes(showId.value),
+    watched.loadForShow(showId.value).catch(() => undefined),
+  ])
+  episodes.value = list.episodes
+  episodeRatings.value = list.ratings
   if (season.value === null || !seasons.value.includes(season.value)) {
     const aired = episodes.value.filter((e) => e.airstamp && new Date(e.airstamp).getTime() < now.value)
     season.value = (aired[aired.length - 1] ?? episodes.value[0])?.season ?? null
@@ -158,8 +150,8 @@ async function refreshEpisodes() {
   try {
     const res = await refreshShow(show.value.tvmaze_id)
     if (res.refreshed) {
-      show.value = (await fetchShow(showId.value)) ?? show.value
-      await loadEpisodes()
+      const [detail] = await Promise.all([fetchShowDetail(showId.value), loadEpisodes()])
+      if (detail) show.value = detail.show
     }
   } catch (err) {
     console.warn('refresh-show failed', err)

@@ -1,6 +1,7 @@
 import { ref, watch } from 'vue'
 
-import { supabase } from '@/lib/supabase'
+import { errorMessage } from '@/composables/useAsync'
+import { searchShows } from '@/lib/api/shows'
 import type { SearchResult } from '@/types/domain'
 
 import { useDebouncedRef } from './useDebouncedRef'
@@ -31,18 +32,17 @@ export function useShowSearch() {
     }
     loading.value = true
     error.value = null
-    const { data, error: err } = await supabase.rpc('search_shows', {
-      p_query: trimmed,
-      p_limit: PAGE,
-      p_offset: offset,
-    })
-    if (id !== requestId) return
-    loading.value = false
-    if (err) {
-      error.value = err.message
+    let rows: SearchResult[]
+    try {
+      rows = await searchShows(trimmed, PAGE, offset)
+    } catch (err) {
+      if (id !== requestId) return
+      loading.value = false
+      error.value = errorMessage(err)
       return
     }
-    const rows = (data ?? []) as SearchResult[]
+    if (id !== requestId) return
+    loading.value = false
     results.value = offset === 0 ? rows : [...results.value, ...rows]
     hasMore.value = rows.length === PAGE
   }

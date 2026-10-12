@@ -1,47 +1,53 @@
+import { CHANNEL_EMBEDS, many, mapChunks, num, one } from '@/lib/api/_query'
 import { invokeFunction, supabase } from '@/lib/supabase'
-import type { Show, ShowExternalId, ShowRating } from '@/types/domain'
+import type { SearchResult, Show, ShowExternalId, ShowRating } from '@/types/domain'
 
-const SHOW_SELECT =
-  'id, tvmaze_id, name, type, language, genres, status, runtime, average_runtime, premiered, ended, official_site, schedule_time, schedule_days, weight, image_medium, image_original, summary_html, tvmaze_url, episodes_synced_at, network:channels!shows_network_id_fkey(id, kind, name, country_code, timezone), web_channel:channels!shows_web_channel_id_fkey(id, kind, name, country_code, timezone)'
+const SHOW_SELECT = `id, tvmaze_id, name, type, language, genres, status, runtime, average_runtime, premiered, ended, official_site, schedule_time, schedule_days, weight, image_medium, image_original, summary_html, tvmaze_url, episodes_synced_at, ${CHANNEL_EMBEDS}`
 
-export async function fetchShow(id: number): Promise<Show | null> {
-  const { data, error } = await supabase
-    .from('shows')
-    .select(SHOW_SELECT)
-    .eq('id', id)
-    .maybeSingle()
-  if (error) throw error
-  return (data as unknown as Show | null) ?? null
+export interface ShowDetail {
+  show: Show
+  ratings: ShowRating[]
+  externalIds: ShowExternalId[]
 }
 
-export async function fetchShowRatings(showId: number): Promise<ShowRating[]> {
-  const { data, error } = await supabase
-    .from('show_ratings')
-    .select('provider, value, scale, vote_count')
-    .eq('show_id', showId)
-  if (error) throw error
-  return (data ?? []).map(
-    (r: {
-      provider: string
-      value: string | number
-      scale: string | number
-      vote_count: number | null
-    }) => ({
+interface RawRating {
+  provider: string
+  value: string | number
+  scale: string | number
+  vote_count: number | null
+}
+
+/** The show with its ratings and external ids in one request. */
+export async function fetchShowDetail(id: number): Promise<ShowDetail | null> {
+  const row = await one<Show & { show_ratings: RawRating[]; show_external_ids: ShowExternalId[] }>(
+    supabase
+      .from('shows')
+      .select(
+        `${SHOW_SELECT}, show_ratings(provider, value, scale, vote_count), show_external_ids(provider, external_id)`,
+      )
+      .eq('id', id)
+      .maybeSingle(),
+  )
+  if (!row) return null
+  const { show_ratings, show_external_ids, ...show } = row
+  return {
+    show,
+    ratings: show_ratings.map((r) => ({
       provider: r.provider,
       value: Number(r.value),
       scale: Number(r.scale),
       vote_count: r.vote_count,
-    }),
-  )
+    })),
+    externalIds: show_external_ids,
+  }
 }
 
-export async function fetchShowExternalIds(showId: number): Promise<ShowExternalId[]> {
-  const { data, error } = await supabase
-    .from('show_external_ids')
-    .select('provider, external_id')
-    .eq('show_id', showId)
-  if (error) throw error
-  return (data ?? []) as ShowExternalId[]
+/** Full-text + trigram search over the local catalog (search_shows RPC). */
+export async function searchShows(query: string, limit = 24, offset = 0): Promise<SearchResult[]> {
+  const rows = await many<SearchResult>(
+    supabase.rpc('search_shows', { p_query: query, p_limit: limit, p_offset: offset }),
+  )
+  return rows.map((r) => ({ ...r, rating: num(r.rating) }))
 }
 
 export interface RefreshShowResult {
@@ -89,16 +95,11 @@ export function externalLink(provider: string, id: string): string | null {
 
 /** Map TVmaze show ids to local catalog ids (only ids present locally are returned). */
 export async function resolveLocalShows(tvmazeIds: number[]): Promise<Map<number, number>> {
-  const out = new Map<number, number>()
   const unique = [...new Set(tvmazeIds)]
-  for (let i = 0; i < unique.length; i += 200) {
-    const { data, error } = await supabase
-      .from('shows')
-      .select('id, tvmaze_id')
-      .in('tvmaze_id', unique.slice(i, i + 200))
-    if (error) throw error
-    for (const row of (data ?? []) as { id: number; tvmaze_id: number }[])
-      out.set(row.tvmaze_id, row.id)
-  }
-  return out
+  const batches = await mapChunks(unique, 200, (ids) =>
+    many<{ id: number; tvmaze_id: number }>(
+      supabase.from('shows').select('id, tvmaze_id').in('tvmaze_id', ids),
+    ),
+  )
+  return new Map(batches.flat().map((row) => [row.tvmaze_id, row.id]))
 }

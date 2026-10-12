@@ -14,12 +14,10 @@ import {
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
-import { fetchDiscoverRails } from '@/lib/api/discover'
-import { resolveLocalShows } from '@/lib/api/shows'
+import { fetchDiscoverRails, fetchSharedCastRail } from '@/lib/api/discover'
 import { stripHtml, yearOf } from '@/lib/format'
-import { fetchPersonCredits, fetchShowCast } from '@/lib/tvmaze'
 import { useLibraryStore } from '@/stores/library'
-import type { DiscoverRails, ShowCardData } from '@/types/domain'
+import type { CastRailItem, DiscoverRails, ShowCardData } from '@/types/domain'
 
 const library = useLibraryStore()
 const follow = useFollow()
@@ -28,9 +26,6 @@ const rails = ref<DiscoverRails | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 
-interface CastRailItem extends ShowCardData {
-  via: string
-}
 const castRail = ref<CastRailItem[]>([])
 const castRailLoading = ref(false)
 
@@ -51,42 +46,10 @@ onMounted(load)
 
 /** "Shares cast with <top-rated show>": built from TVmaze cast + person credits. */
 async function loadCastRail(r: DiscoverRails) {
-  const top = r.top_rated_show
-  if (!top) return
+  if (!r.top_rated_show) return
   castRailLoading.value = true
   try {
-    const cast = (await fetchShowCast(top.tvmaze_id)).filter((c) => !c.self).slice(0, 3)
-    const creditLists = await Promise.all(cast.map((c) => fetchPersonCredits(c.personId)))
-    const byShow = new Map<number, { via: string; credit: (typeof creditLists)[number][number] }>()
-    creditLists.forEach((list, i) => {
-      for (const credit of list) {
-        if (
-          credit.showTvmazeId === top.tvmaze_id ||
-          !credit.showImage ||
-          byShow.has(credit.showTvmazeId)
-        )
-          continue
-        byShow.set(credit.showTvmazeId, { via: cast[i]!.name, credit })
-      }
-    })
-    const local = await resolveLocalShows([...byShow.keys()])
-    castRail.value = [...byShow.entries()]
-      .filter(([tvmazeId]) => local.has(tvmazeId) && !library.byShowId.has(local.get(tvmazeId)!))
-      .slice(0, 14)
-      .map(([tvmazeId, { via, credit }]) => ({
-        id: local.get(tvmazeId)!,
-        tvmaze_id: tvmazeId,
-        name: credit.showName,
-        image_medium: credit.showImage,
-        image_original: null,
-        premiered: credit.premiered,
-        genres: [],
-        status: credit.status,
-        summary_html: null,
-        network_name: null,
-        rating: null,
-        via,
-      }))
+    castRail.value = await fetchSharedCastRail(r.top_rated_show, library.byShowId)
   } catch {
     castRail.value = []
   } finally {

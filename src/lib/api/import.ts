@@ -1,21 +1,10 @@
+import { many, mapChunks, num } from '@/lib/api/_query'
+import { upsertUserShows } from '@/lib/api/library'
+import { requireUserId } from '@/lib/api/session'
 import { supabase } from '@/lib/supabase'
-import type { UserShowStatus } from '@/types/domain'
+import type { LibraryEntry, MatchCandidate, SearchResult, UserShowStatus } from '@/types/domain'
 
-export interface MatchCandidate {
-  id: number
-  tvmaze_id: number
-  name: string
-  type: string | null
-  status: string | null
-  premiered: string | null
-  image_medium: string | null
-  network_name: string | null
-  rating: number | null
-  score: number
-  is_exact: boolean
-}
-
-/** Candidates per input name, keyed by the exact input string. */
+/** Candidates per input name, keyed by the exact (trimmed) input string. */
 export async function matchShowCandidates(
   names: string[],
   limit = 5,
@@ -23,20 +12,34 @@ export async function matchShowCandidates(
   const unique = [...new Set(names.map((n) => n.trim()).filter(Boolean))]
   const out = new Map<string, MatchCandidate[]>()
   for (const n of unique) out.set(n, [])
-  // Keep each RPC payload modest.
-  for (let i = 0; i < unique.length; i += 40) {
-    const batch = unique.slice(i, i + 40)
-    const { data, error } = await supabase.rpc('match_show_candidates', {
-      p_names: batch,
-      p_limit: limit,
-    })
-    if (error) throw error
-    for (const row of (data ?? []) as (MatchCandidate & { query_name: string })[]) {
-      const { query_name, ...candidate } = row
-      out.get(query_name)?.push(candidate)
-    }
+  // Modest RPC payloads, a few in flight at a time.
+  const batches = await mapChunks(unique, 40, (batch) =>
+    many<MatchCandidate & { query_name: string }>(
+      supabase.rpc('match_show_candidates', { p_names: batch, p_limit: limit }),
+    ),
+  )
+  for (const row of batches.flat()) {
+    const { query_name, ...candidate } = row
+    out.get(query_name)?.push({ ...candidate, rating: num(candidate.rating) })
   }
   return out
+}
+
+/** A search hit chosen by hand in the import flow, in candidate form. */
+export function toMatchCandidate(result: SearchResult): MatchCandidate {
+  return {
+    id: result.id,
+    tvmaze_id: result.tvmaze_id,
+    name: result.name,
+    type: result.type,
+    status: result.status,
+    premiered: result.premiered,
+    image_medium: result.image_medium,
+    network_name: result.network_name,
+    rating: result.rating,
+    score: 1,
+    is_exact: false,
+  }
 }
 
 export interface ImportItem {
@@ -44,19 +47,14 @@ export interface ImportItem {
   rating: number | null
 }
 
-/** Upsert tracked shows in one request; existing rows keep their status unless overridden. */
-export async function importTrackedShows(
+/** Upsert tracked shows in one request and return the stored rows for the library store. */
+export function importTrackedShows(
   items: ImportItem[],
   status: UserShowStatus,
-): Promise<number> {
-  if (!items.length) return 0
-  const { data: userData } = await supabase.auth.getUser()
-  const userId = userData.user?.id
-  if (!userId) throw new Error('not signed in')
-  const rows = items.map((i) => ({ user_id: userId, show_id: i.showId, status, rating: i.rating }))
-  const { error, count } = await supabase
-    .from('user_shows')
-    .upsert(rows, { onConflict: 'user_id,show_id', count: 'exact' })
-  if (error) throw error
-  return count ?? rows.length
+): Promise<LibraryEntry[]> {
+  if (!items.length) return Promise.resolve([])
+  const userId = requireUserId()
+  return upsertUserShows(
+    items.map((i) => ({ user_id: userId, show_id: i.showId, status, rating: i.rating })),
+  )
 }

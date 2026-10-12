@@ -21,13 +21,6 @@ export function formatAirTime(iso: string | null, timeZone: string): string {
   return formatter(timeZone, { hour: 'numeric', minute: '2-digit' }).format(new Date(iso))
 }
 
-export function formatAirDate(iso: string | null, timeZone: string): string {
-  if (!iso) return 'TBA'
-  return formatter(timeZone, { weekday: 'short', month: 'short', day: 'numeric' }).format(
-    new Date(iso),
-  )
-}
-
 export function formatDateTime(iso: string | null, timeZone: string): string {
   if (!iso) return 'TBA'
   return formatter(timeZone, {

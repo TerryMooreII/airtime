@@ -1,12 +1,11 @@
 import { defineStore } from 'pinia'
-import { computed, reactive } from 'vue'
+import { reactive } from 'vue'
 
 import { fetchUpcomingEpisodes, fetchUpcomingEpisodesAll } from '@/lib/api/episodes'
-import type { UpcomingEpisode } from '@/types/domain'
+import type { UpcomingEpisode, UserShowStatus } from '@/types/domain'
 
 /**
- * One cached copy of the upcoming-episode feeds, shared by the sidebar rail, the
- * Guide and the Library. Each feed is fetched once per session (5 minute TTL),
+ * One cached copy of the upcoming-episode feeds, shared by the Guide and the Library. Each feed is fetched once per session (5 minute TTL),
  * in-flight requests are de-duplicated, and library changes refresh it.
  */
 export type UpcomingScope = 'mine' | 'all' | 'everything'
@@ -72,20 +71,33 @@ export const useUpcomingStore = defineStore('upcoming', () => {
     return feed.items.filter((e) => new Date(e.airstamp).getTime() < horizon)
   }
 
-  function isLoading(scope: UpcomingScope): boolean {
-    return !!feeds.get(scope)?.promise
+  /** Refetch the per-user feeds already in use (the catalog-wide feed is patched in place). */
+  function invalidate(): void {
+    for (const [scope, feed] of feeds)
+      if (scope !== 'everything' && !feed.promise) void load(scope, feed.days, true)
   }
 
-  /** Library changed (follow, unfollow, status): refetch every feed already in use. */
-  function invalidate(): void {
-    for (const [scope, feed] of feeds) if (!feed.promise) void load(scope, feed.days, true)
+  /**
+   * One show was followed, unfollowed or changed status. The per-user feeds are refetched;
+   * the 1,000-row "everything" feed only needs its followed/status flags flipped.
+   */
+  function onLibraryChange(
+    showId: number,
+    state: { followed: boolean; status: UserShowStatus | null },
+  ): void {
+    const everything = feeds.get('everything')
+    if (everything)
+      for (const e of everything.items)
+        if (e.show_id === showId) {
+          e.followed = state.followed
+          e.status = state.status
+        }
+    invalidate()
   }
 
   function reset(): void {
     feeds.clear()
   }
 
-  const mineSoon = computed(() => items('mine', 7))
-
-  return { feeds, load, items, isLoading, invalidate, reset, mineSoon }
+  return { load, items, invalidate, onLibraryChange, reset }
 })

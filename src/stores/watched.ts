@@ -1,70 +1,49 @@
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
 
-import { supabase } from '@/lib/supabase'
+import { requireUserId } from '@/lib/api/session'
+import {
+  fetchShowProgress,
+  fetchWatchedEpisodeIds,
+  markSeasonWatched,
+  markWatched,
+  unmarkWatched,
+} from '@/lib/api/watched'
 import type { ShowProgress } from '@/types/domain'
-
-async function currentUserId(): Promise<string> {
-  const { data } = await supabase.auth.getUser()
-  const id = data.user?.id
-  if (!id) throw new Error('not signed in')
-  return id
-}
 
 /** Which episodes the signed-in user has watched, loaded per show on demand. */
 export const useWatchedStore = defineStore('watched', () => {
   const watched = reactive(new Set<number>())
-  const loadedShows = reactive(new Set<number>())
+  /** Episode ids loaded per show, so a reload can drop stale ones. Not reactive on purpose. */
+  const idsByShow = new Map<number, number[]>()
   const progress = ref(new Map<number, ShowProgress>())
 
-  async function loadForEpisodes(showId: number, episodeIds: number[]): Promise<void> {
-    if (!episodeIds.length) {
-      loadedShows.add(showId)
-      return
-    }
-    const userId = await currentUserId()
-    const { data, error } = await supabase
-      .from('user_episodes')
-      .select('episode_id')
-      .eq('user_id', userId)
-      .in('episode_id', episodeIds)
-    if (error) throw error
-    for (const id of episodeIds) watched.delete(id)
-    for (const row of (data ?? []) as { episode_id: number }[]) watched.add(row.episode_id)
-    loadedShows.add(showId)
+  async function loadForShow(showId: number): Promise<void> {
+    const ids = await fetchWatchedEpisodeIds(showId)
+    for (const id of idsByShow.get(showId) ?? []) watched.delete(id)
+    for (const id of ids) watched.add(id)
+    idsByShow.set(showId, ids)
   }
 
   function isWatched(episodeId: number): boolean {
     return watched.has(episodeId)
   }
 
+  /** Optimistic toggle; the set is rolled back if the request fails. */
   async function toggle(episodeId: number): Promise<boolean> {
-    const userId = await currentUserId()
-    if (watched.has(episodeId)) {
-      watched.delete(episodeId)
-      const { error } = await supabase
-        .from('user_episodes')
-        .delete()
-        .eq('user_id', userId)
-        .eq('episode_id', episodeId)
-      if (error) {
-        watched.add(episodeId)
-        throw error
-      }
-      return false
+    const userId = requireUserId()
+    const wasWatched = watched.has(episodeId)
+    if (wasWatched) watched.delete(episodeId)
+    else watched.add(episodeId)
+    try {
+      if (wasWatched) await unmarkWatched(userId, [episodeId])
+      else await markWatched(userId, episodeId)
+    } catch (err) {
+      if (wasWatched) watched.add(episodeId)
+      else watched.delete(episodeId)
+      throw err
     }
-    watched.add(episodeId)
-    const { error } = await supabase
-      .from('user_episodes')
-      .upsert(
-        { user_id: userId, episode_id: episodeId },
-        { onConflict: 'user_id,episode_id', ignoreDuplicates: true },
-      )
-    if (error) {
-      watched.delete(episodeId)
-      throw error
-    }
-    return true
+    return !wasWatched
   }
 
   /** Mark or clear every aired episode of a season. `airedIds` are the season's aired episode ids. */
@@ -75,45 +54,23 @@ export const useWatchedStore = defineStore('watched', () => {
     value: boolean,
   ): Promise<void> {
     if (value) {
-      const { error } = await supabase.rpc('mark_season_watched', {
-        p_show_id: showId,
-        p_season: season,
-      })
-      if (error) throw error
+      await markSeasonWatched(showId, season)
       for (const id of airedIds) watched.add(id)
     } else {
-      const userId = await currentUserId()
-      const { error } = await supabase
-        .from('user_episodes')
-        .delete()
-        .eq('user_id', userId)
-        .in('episode_id', airedIds)
-      if (error) throw error
+      await unmarkWatched(requireUserId(), airedIds)
       for (const id of airedIds) watched.delete(id)
     }
   }
 
   async function loadProgress(): Promise<void> {
-    const { data, error } = await supabase.rpc('my_show_progress')
-    if (error) throw error
-    progress.value = new Map(((data ?? []) as ShowProgress[]).map((p) => [p.show_id, p]))
+    progress.value = new Map((await fetchShowProgress()).map((p) => [p.show_id, p]))
   }
 
   function reset(): void {
     watched.clear()
-    loadedShows.clear()
+    idsByShow.clear()
     progress.value = new Map()
   }
 
-  return {
-    watched,
-    loadedShows,
-    progress,
-    loadForEpisodes,
-    isWatched,
-    toggle,
-    setSeason,
-    loadProgress,
-    reset,
-  }
+  return { watched, progress, loadForShow, isWatched, toggle, setSeason, loadProgress, reset }
 })

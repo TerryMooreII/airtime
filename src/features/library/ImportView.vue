@@ -17,13 +17,18 @@ import {
   AStarRating,
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
-import { importTrackedShows, matchShowCandidates, type MatchCandidate } from '@/lib/api/import'
+import { importTrackedShows, matchShowCandidates, toMatchCandidate } from '@/lib/api/import'
+import { searchShows } from '@/lib/api/shows'
 import { parseShowCsv, type CsvParseResult } from '@/lib/csv'
 import { yearOf } from '@/lib/format'
-import { supabase } from '@/lib/supabase'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
-import { USER_SHOW_STATUSES, type SearchResult, type UserShowStatus } from '@/types/domain'
+import {
+  USER_SHOW_STATUSES,
+  type MatchCandidate,
+  type SearchResult,
+  type UserShowStatus,
+} from '@/types/domain'
 
 type Decision = 'pending' | 'confirmed' | 'skipped' | 'unknown'
 
@@ -65,9 +70,13 @@ watch(manualQuery, (q) => {
   }
   manualTimer = setTimeout(async () => {
     manualLoading.value = true
-    const { data } = await supabase.rpc('search_shows', { p_query: q.trim(), p_limit: 8 })
-    manualResults.value = (data ?? []) as SearchResult[]
-    manualLoading.value = false
+    try {
+      manualResults.value = await searchShows(q.trim(), 8)
+    } catch (err) {
+      ui.error(errorMessage(err))
+    } finally {
+      manualLoading.value = false
+    }
   }, 250)
 })
 
@@ -195,19 +204,7 @@ function confirmAllExact() {
 function useManual(result: SearchResult) {
   const row = current.value
   if (!row) return
-  const candidate: MatchCandidate = {
-    id: result.id,
-    tvmaze_id: result.tvmaze_id,
-    name: result.name,
-    type: result.type,
-    status: result.status,
-    premiered: result.premiered,
-    image_medium: result.image_medium,
-    network_name: result.network_name,
-    rating: result.rating,
-    score: 1,
-    is_exact: false,
-  }
+  const candidate = toMatchCandidate(result)
   if (!row.candidates.some((c) => c.id === candidate.id)) row.candidates.unshift(candidate)
   select(row, candidate)
   manualQuery.value = ''
@@ -231,8 +228,9 @@ async function finish() {
       .map((r) => ({ showId: r.selected!.id, rating: r.rating }))
     // The same show may appear twice; keep the last rating.
     const byShow = new Map(items.map((i) => [i.showId, i]))
-    imported.value = await importTrackedShows([...byShow.values()], importStatus.value)
-    await library.load(true)
+    const stored = await importTrackedShows([...byShow.values()], importStatus.value)
+    imported.value = stored.length
+    library.mergeEntries(stored)
     step.value = 'done'
   } catch (err) {
     error.value = errorMessage(err)

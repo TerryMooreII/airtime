@@ -75,8 +75,9 @@ const nextByShow = computed(() => {
   return map
 })
 
-onMounted(async () => {
-  await library.load()
+onMounted(() => {
+  // Three independent requests; the progress and next-air data only decorate the rows.
+  void library.load()
   void watched.loadProgress().catch(() => undefined)
   void upcoming.load('all', 30).catch(() => undefined)
 })

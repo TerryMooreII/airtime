@@ -35,6 +35,7 @@ const KIND: Record<AppNotification['type'], string> = {
   new_episode: 'New episode',
   airing_today: 'Airing today',
   show_status_changed: 'Show update',
+  test: 'Test',
 }
 </script>
 

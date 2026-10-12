@@ -1,11 +1,14 @@
-/** Application-level types. Column names mirror the public schema. */
+/**
+ * Application-level types. Row and enum shapes are derived from the generated schema
+ * (src/lib/database.types.ts) so a migration that changes a column fails type-check here.
+ */
+import type { Enums, Tables } from '@/lib/database.types'
 
-export type AppRole = 'user' | 'admin'
-export type UserShowStatus = 'watching' | 'completed' | 'dropped' | 'plan_to_watch'
-export type NotificationType = 'new_episode' | 'airing_today' | 'show_status_changed'
-export type SyncJobType =
-  'catalog_page' | 'full_schedule' | 'show_updates' | 'show_refresh' | 'show_episodes'
-export type SyncStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled'
+export type AppRole = Enums<'app_role'>
+export type UserShowStatus = Enums<'user_show_status'>
+export type NotificationType = Enums<'notification_type'>
+export type SyncJobType = Enums<'sync_job_type'>
+export type SyncStatus = Enums<'sync_status'>
 
 export const USER_SHOW_STATUSES: { value: UserShowStatus; label: string }[] = [
   { value: 'watching', label: 'Watching' },
@@ -14,26 +17,9 @@ export const USER_SHOW_STATUSES: { value: UserShowStatus; label: string }[] = [
   { value: 'dropped', label: 'Dropped' },
 ]
 
-export interface Profile {
-  id: string
-  display_name: string | null
-  avatar_url: string | null
-  timezone: string
-  role: AppRole
-  notify_in_app: boolean
-  notify_push: boolean
-  airing_digest_hour: number
-  created_at: string
-  updated_at: string
-}
+export type Profile = Tables<'profiles'>
 
-export interface Channel {
-  id: number
-  kind: 'network' | 'web_channel'
-  name: string
-  country_code: string | null
-  timezone: string | null
-}
+export type Channel = Pick<Tables<'channels'>, 'id' | 'kind' | 'name' | 'country_code' | 'timezone'>
 
 export interface Show {
   id: number
@@ -72,32 +58,22 @@ export interface ShowExternalId {
   external_id: string
 }
 
-export interface Episode {
-  id: number
-  tvmaze_id: number
-  show_id: number
-  season: number
-  number: number | null
-  type: string
-  name: string | null
-  airdate: string | null
-  airtime: string | null
-  airstamp: string | null
-  runtime: number | null
-  image_medium: string | null
-  summary_html: string | null
-}
+export type Episode = Pick<
+  Tables<'episodes'>,
+  | 'id'
+  | 'season'
+  | 'number'
+  | 'type'
+  | 'name'
+  | 'airdate'
+  | 'airtime'
+  | 'airstamp'
+  | 'runtime'
+  | 'image_medium'
+  | 'summary_html'
+>
 
-export interface UserShow {
-  user_id: string
-  show_id: number
-  status: UserShowStatus
-  rating: number | null
-  notes: string | null
-  notify: boolean
-  added_at: string
-  updated_at: string
-}
+export type UserShow = Tables<'user_shows'>
 
 /** A tracked show joined with its catalog row (Library view). */
 export interface ChannelRef {
@@ -112,19 +88,30 @@ export interface LibraryEntry extends UserShow {
   > & { network: ChannelRef | null; web_channel: ChannelRef | null }
 }
 
-export interface SearchResult {
+/** The fields every "show as a card or row" payload shares (search, discover, import). */
+export interface ShowSummary {
   id: number
   tvmaze_id: number
   name: string
-  type: string | null
   status: string | null
   premiered: string | null
-  genres: string[]
   image_medium: string | null
-  language: string | null
   network_name: string | null
   rating: number | null
+}
+
+export interface SearchResult extends ShowSummary {
+  type: string | null
+  genres: string[]
+  language: string | null
   rank: number
+}
+
+/** A fuzzy-match candidate for one CSV import row (match_show_candidates RPC). */
+export interface MatchCandidate extends ShowSummary {
+  type: string | null
+  score: number
+  is_exact: boolean
 }
 
 export interface UpcomingEpisode {
@@ -143,49 +130,27 @@ export interface UpcomingEpisode {
   followed?: boolean
 }
 
-export interface AppNotification {
-  id: number
-  user_id: string
-  type: NotificationType
-  title: string
-  body: string | null
-  show_id: number | null
-  episode_id: number | null
-  data: {
-    season?: number
-    number?: number | null
-    airstamp?: string
-    episode_name?: string | null
-    show_name?: string
-    image?: string | null
-  }
-  read_at: string | null
-  created_at: string
+export interface NotificationData {
+  season?: number
+  number?: number | null
+  airstamp?: string
+  episode_name?: string | null
+  show_name?: string
+  image?: string | null
+  test?: boolean
 }
 
-export interface SyncQueueJob {
-  id: number
-  job_type: SyncJobType
-  payload: Record<string, unknown>
-  priority: number
-  run_after: string
-  attempts: number
-  max_attempts: number
-  status: SyncStatus
-  locked_at: string | null
-  last_error: string | null
-  triggered_by: string
-  created_at: string
+export type AppNotification = Omit<Tables<'notifications'>, 'data' | 'push_sent_at'> & {
+  data: NotificationData
 }
 
-export interface SyncRun {
-  id: number
-  job_type: SyncJobType
-  status: SyncStatus
-  started_at: string
-  finished_at: string
+export type SyncQueueJob = Omit<
+  Tables<'sync_queue'>,
+  'payload' | 'locked_by' | 'updated_at'
+> & { payload: Record<string, unknown> }
+
+export type SyncRun = Omit<Tables<'sync_runs'>, 'stats' | 'job_id' | 'worker'> & {
   stats: Record<string, unknown>
-  error: string | null
 }
 
 export interface AdminStats {
@@ -262,20 +227,17 @@ export interface Credit {
 // ---------------------------------------------------------------------------
 // Discover
 // ---------------------------------------------------------------------------
-export interface ShowCardData {
-  id: number
-  tvmaze_id: number
-  name: string
-  image_medium: string | null
+export interface ShowCardData extends ShowSummary {
   image_original: string | null
-  premiered: string | null
   genres: string[]
-  status: string | null
   summary_html: string | null
-  network_name: string | null
-  rating: number | null
   /** Present on "because" anchors: the user's own rating. */
   my_rating?: number | null
+}
+
+/** A card in the "shares cast with" rail: which cast member links the two shows. */
+export interface CastRailItem extends ShowCardData {
+  via: string
 }
 
 export interface DiscoverGenreRail {
