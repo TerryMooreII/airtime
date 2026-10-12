@@ -1,32 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, watch } from 'vue'
 
 import { AAlert, AButton, AEmptyState, ASearchBox, AShowCard, ASkeleton } from '@/design-system'
-import { useShowSearch } from '@/composables/useShowSearch'
 import { useFollow } from '@/composables/useFollow'
-import { yearOf } from '@/lib/format'
-import type { SearchResult } from '@/types/domain'
+import { useQueryParam } from '@/composables/useQueryParam'
+import { useShowSearch } from '@/composables/useShowSearch'
+import { catalogMeta, plural } from '@/lib/format'
+import { FOLLOW_OPTIONS } from '@/types/domain'
 
-const route = useRoute()
-const router = useRouter()
 const search = useShowSearch()
 const follow = useFollow()
 
-onMounted(() => {
-  if (typeof route.query.q === 'string') search.query.value = route.query.q
-})
-watch(
-  () => route.query.q,
-  (q) => {
-    if (typeof q === 'string' && q !== search.query.value) search.query.value = q
-    if (q === undefined && search.query.value) search.query.value = ''
-  },
-)
-watch(search.query, (q) => {
-  const current = typeof route.query.q === 'string' ? route.query.q : ''
-  if (q !== current) void router.replace({ name: 'search', query: q ? { q } : {} })
-})
+// The query lives in the URL (?q=) so the header box, refresh and back button all agree.
+const q = useQueryParam<string>('q', { defaultValue: '', parse: (r) => r })
+watch(q, (v) => (search.query.value = v), { immediate: true })
+watch(search.query, (v) => (q.value = v))
 
 const title = computed(() =>
   search.query.value.trim() ? `Results for “${search.query.value.trim()}”` : 'Search',
@@ -35,14 +23,9 @@ const subtitle = computed(() => {
   if (search.loading.value) return 'Searching…'
   if (search.query.value.trim().length < 2)
     return 'Find any show in the catalog and add it to your library.'
-  return `${search.results.value.length}${search.hasMore.value ? '+' : ''} show${search.results.value.length === 1 ? '' : 's'} found`
+  return `${plural(search.results.value.length, 'show')}${search.hasMore.value ? '+' : ''} found`
 })
-
-function meta(s: SearchResult): string {
-  return [s.rating ? `★ ${s.rating}` : null, s.network_name, s.genres[0] ?? yearOf(s.premiered)]
-    .filter(Boolean)
-    .join(' · ')
-}
+const meta = catalogMeta
 </script>
 
 <template>
@@ -73,6 +56,7 @@ function meta(s: SearchResult): string {
         :meta="meta(s)"
         :following="follow.isFollowing(s.id)"
         :follow-loading="follow.pending(s.id)"
+        :follow-options="FOLLOW_OPTIONS"
         @follow="(status) => follow.toggle(s.id, s.tvmaze_id, s.name, status)"
       />
     </div>

@@ -66,8 +66,8 @@ const refreshInFlight = new Map<number, Promise<RefreshShowResult>>()
 export function refreshShow(tvmazeId: number): Promise<RefreshShowResult> {
   const existing = refreshInFlight.get(tvmazeId)
   if (existing) return existing
-  const p = invokeFunction<RefreshShowResult>('refresh-show', { tvmaze_id: tvmazeId }).finally(
-    () => refreshInFlight.delete(tvmazeId),
+  const p = invokeFunction<RefreshShowResult>('refresh-show', { tvmaze_id: tvmazeId }).finally(() =>
+    refreshInFlight.delete(tvmazeId),
   )
   refreshInFlight.set(tvmazeId, p)
   return p

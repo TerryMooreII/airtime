@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { AAlert, AButton } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
 import { useSignOut } from '@/composables/useSignOut'
 import { useAuthStore } from '@/stores/auth'
 
@@ -15,23 +15,17 @@ const route = useRoute()
 const email = computed(
   () => (typeof route.query.email === 'string' ? route.query.email : auth.user?.email) ?? '',
 )
-const sending = ref(false)
 const sent = ref(false)
-const error = ref<string | null>(null)
 
-async function resend() {
+const {
+  loading: sending,
+  error,
+  run: resend,
+} = useAsync(async () => {
   if (!email.value) return
-  sending.value = true
-  error.value = null
-  try {
-    await auth.resendVerification(email.value)
-    sent.value = true
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    sending.value = false
-  }
-}
+  await auth.resendVerification(email.value)
+  sent.value = true
+})
 
 const signOut = useSignOut()
 </script>

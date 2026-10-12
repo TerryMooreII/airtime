@@ -13,13 +13,13 @@ import {
   AShowCard,
   ASkeleton,
 } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
 import { resolveLocalShows } from '@/lib/api/shows'
-import { formatPlainDate, yearOf } from '@/lib/format'
+import { formatPlainDate, joinMeta, plural, yearOf } from '@/lib/format'
 import { fetchPerson, fetchPersonCredits } from '@/lib/tvmaze'
 import { useLibraryStore } from '@/stores/library'
-import type { Credit, Person } from '@/types/domain'
+import { FOLLOW_OPTIONS, type Credit, type Person } from '@/types/domain'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
@@ -29,15 +29,15 @@ const follow = useFollow()
 const person = ref<Person | null>(null)
 const credits = ref<Credit[]>([])
 const localIds = ref(new Map<number, number>())
-const loading = ref(true)
-const error = ref<string | null>(null)
 
-async function load() {
-  loading.value = true
-  error.value = null
-  person.value = null
-  credits.value = []
-  try {
+const {
+  loading,
+  error,
+  run: load,
+} = useAsync(
+  async () => {
+    person.value = null
+    credits.value = []
     const personId = Number(props.id)
     const [p, c] = await Promise.all([
       fetchPerson(personId),
@@ -47,12 +47,9 @@ async function load() {
     person.value = p
     credits.value = c
     localIds.value = await resolveLocalShows(c.map((x) => x.showTvmazeId))
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+  },
+  { initialLoading: true },
+)
 onMounted(load)
 watch(() => props.id, load)
 
@@ -78,9 +75,7 @@ const meta = computed(() => {
 
 function roleLabel(c: Credit): string {
   const base = c.self ? 'As themself' : c.character ? `as ${c.character}` : ''
-  return [base, c.voice ? '(voice)' : '', c.network, yearOf(c.premiered)]
-    .filter(Boolean)
-    .join(' · ')
+  return joinMeta(base, c.voice ? '(voice)' : '', c.network, yearOf(c.premiered))
 }
 const inCatalog = computed(() => credits.value.filter((c) => localIds.value.has(c.showTvmazeId)))
 const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has(c.showTvmazeId)))
@@ -120,9 +115,7 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
       <section class="credits">
         <div class="credits__head">
           <span class="t-h2">Shows</span>
-          <span class="t-muted credits__count"
-            >{{ credits.length }} credit{{ credits.length === 1 ? '' : 's' }}</span
-          >
+          <span class="t-muted credits__count">{{ plural(credits.length, 'credit') }}</span>
         </div>
         <AEmptyState
           v-if="!credits.length"
@@ -140,6 +133,7 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
             :meta="roleLabel(c)"
             :following="follow.isFollowing(localIds.get(c.showTvmazeId)!)"
             :follow-loading="follow.pending(localIds.get(c.showTvmazeId)!)"
+            :follow-options="FOLLOW_OPTIONS"
             @follow="
               (status) =>
                 follow.toggle(localIds.get(c.showTvmazeId)!, c.showTvmazeId, c.showName, status)

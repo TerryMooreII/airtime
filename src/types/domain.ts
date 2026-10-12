@@ -16,6 +16,8 @@ export const USER_SHOW_STATUSES: { value: UserShowStatus; label: string }[] = [
   { value: 'plan_to_watch', label: 'Plan to watch' },
   { value: 'dropped', label: 'Dropped' },
 ]
+/** Statuses offered when following from a card (nobody follows a show to drop it). */
+export const FOLLOW_OPTIONS = USER_SHOW_STATUSES.filter((s) => s.value !== 'dropped')
 
 export type Profile = Tables<'profiles'>
 
@@ -144,10 +146,9 @@ export type AppNotification = Omit<Tables<'notifications'>, 'data' | 'push_sent_
   data: NotificationData
 }
 
-export type SyncQueueJob = Omit<
-  Tables<'sync_queue'>,
-  'payload' | 'locked_by' | 'updated_at'
-> & { payload: Record<string, unknown> }
+export type SyncQueueJob = Omit<Tables<'sync_queue'>, 'payload' | 'locked_by' | 'updated_at'> & {
+  payload: Record<string, unknown>
+}
 
 export type SyncRun = Omit<Tables<'sync_runs'>, 'stats' | 'job_id' | 'worker'> & {
   stats: Record<string, unknown>

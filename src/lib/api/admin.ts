@@ -18,7 +18,13 @@ export async function fetchAdminStats(): Promise<AdminStats> {
 
 /** Badge variant for a sync job/run status (shared by the dashboard and the sync page). */
 export function syncStatusVariant(s: SyncStatus): 'success' | 'danger' | 'soft' | 'muted' {
-  return s === 'succeeded' ? 'success' : s === 'failed' ? 'danger' : s === 'running' ? 'soft' : 'muted'
+  return s === 'succeeded'
+    ? 'success'
+    : s === 'failed'
+      ? 'danger'
+      : s === 'running'
+        ? 'soft'
+        : 'muted'
 }
 
 export async function fetchSyncQueue(limit = 50): Promise<SyncQueueJob[]> {

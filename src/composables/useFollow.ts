@@ -1,6 +1,5 @@
 import { reactive } from 'vue'
 
-import { errorMessage } from '@/composables/useAsync'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
 import type { UserShowStatus } from '@/types/domain'
@@ -35,7 +34,7 @@ export function useFollow() {
         ui.success(name ? `Following ${name}` : 'Added to your library')
       }
     } catch (err) {
-      ui.error(errorMessage(err))
+      ui.error(err)
     } finally {
       pendingIds.delete(showId)
     }

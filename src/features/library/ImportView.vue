@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import {
@@ -16,11 +16,12 @@ import {
   ASegmented,
   AStarRating,
 } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
+import { useDebouncedQuery } from '@/composables/useDebouncedQuery'
 import { importTrackedShows, matchShowCandidates, toMatchCandidate } from '@/lib/api/import'
 import { searchShows } from '@/lib/api/shows'
 import { parseShowCsv, type CsvParseResult } from '@/lib/csv'
-import { yearOf } from '@/lib/format'
+import { joinMeta, plural, starString, yearOf } from '@/lib/format'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
 import {
@@ -51,34 +52,16 @@ const parsed = ref<CsvParseResult | null>(null)
 const fileName = ref('')
 const rows = ref<ReviewRow[]>([])
 const index = ref(0)
-const matching = ref(false)
-const importing = ref(false)
-const error = ref<string | null>(null)
+const parseError = ref<string | null>(null)
 const importStatus = ref<UserShowStatus>('completed')
 const imported = ref(0)
 
 // Inline catalog search for rows with no good candidate.
-const manualQuery = ref('')
-const manualResults = ref<SearchResult[]>([])
-const manualLoading = ref(false)
-let manualTimer: ReturnType<typeof setTimeout> | undefined
-watch(manualQuery, (q) => {
-  clearTimeout(manualTimer)
-  if (q.trim().length < 2) {
-    manualResults.value = []
-    return
-  }
-  manualTimer = setTimeout(async () => {
-    manualLoading.value = true
-    try {
-      manualResults.value = await searchShows(q.trim(), 8)
-    } catch (err) {
-      ui.error(errorMessage(err))
-    } finally {
-      manualLoading.value = false
-    }
-  }, 250)
-})
+const {
+  query: manualQuery,
+  results: manualResults,
+  loading: manualLoading,
+} = useDebouncedQuery((q) => searchShows(q, 8), { empty: [] as SearchResult[], minLength: 2 })
 
 const current = computed(() => rows.value[index.value] ?? null)
 const counts = computed(() => {
@@ -106,42 +89,38 @@ async function onFile(file: File) {
   parse()
 }
 function parse() {
-  error.value = null
+  parseError.value = null
   parsed.value = parseShowCsv(pasted.value)
   if (!parsed.value.rows.length)
-    error.value = 'No rows found. Expected one show per line: name, rating (1–5).'
+    parseError.value = 'No rows found. Expected one show per line: name, rating (1–5).'
 }
 
-async function startReview() {
+const {
+  loading: matching,
+  error: matchError,
+  run: startReview,
+} = useAsync(async () => {
   if (!parsed.value?.rows.length) return
-  matching.value = true
-  error.value = null
-  try {
-    const names = parsed.value.rows.map((r) => r.name)
-    const matches = await matchShowCandidates(names, 6)
-    rows.value = parsed.value.rows.map((r) => {
-      const candidates = matches.get(r.name.trim()) ?? []
-      const exact = candidates.find((c) => c.is_exact)
-      const best = exact ?? (candidates[0] && candidates[0].score >= 0.55 ? candidates[0] : null)
-      return {
-        line: r.line,
-        name: r.name,
-        rating: r.rating,
-        ratingText: r.ratingText,
-        candidates,
-        selected: best,
-        decision: candidates.length ? 'pending' : 'unknown',
-      }
-    })
-    index.value = 0
-    step.value = 'review'
-    jumpToNextPending(-1)
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    matching.value = false
-  }
-}
+  const names = parsed.value.rows.map((r) => r.name)
+  const matches = await matchShowCandidates(names, 6)
+  rows.value = parsed.value.rows.map((r) => {
+    const candidates = matches.get(r.name.trim()) ?? []
+    const exact = candidates.find((c) => c.is_exact)
+    const best = exact ?? (candidates[0] && candidates[0].score >= 0.55 ? candidates[0] : null)
+    return {
+      line: r.line,
+      name: r.name,
+      rating: r.rating,
+      ratingText: r.ratingText,
+      candidates,
+      selected: best,
+      decision: candidates.length ? 'pending' : 'unknown',
+    }
+  })
+  index.value = 0
+  step.value = 'review'
+  jumpToNextPending(-1)
+})
 
 // ---------------------------------------------------------------------------
 // Step 2: review one row at a time
@@ -197,7 +176,7 @@ function confirmAllExact() {
       n++
     }
   }
-  ui.toast(`Confirmed ${n} exact match${n === 1 ? '' : 'es'}`)
+  ui.toast(`Confirmed ${plural(n, 'exact match', 'exact matches')}`)
   if (counts.value.pending === 0) step.value = 'summary'
   else jumpToNextPending(-1)
 }
@@ -219,35 +198,33 @@ function onKey(e: KeyboardEvent) {
 // ---------------------------------------------------------------------------
 // Step 3: import
 // ---------------------------------------------------------------------------
-async function finish() {
-  importing.value = true
-  error.value = null
-  try {
-    const items = confirmedRows.value
-      .filter((r) => r.selected)
-      .map((r) => ({ showId: r.selected!.id, rating: r.rating }))
-    // The same show may appear twice; keep the last rating.
-    const byShow = new Map(items.map((i) => [i.showId, i]))
-    const stored = await importTrackedShows([...byShow.values()], importStatus.value)
-    imported.value = stored.length
-    library.mergeEntries(stored)
-    step.value = 'done'
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    importing.value = false
-  }
-}
+const {
+  loading: importing,
+  error: importError,
+  run: finish,
+} = useAsync(async () => {
+  const items = confirmedRows.value
+    .filter((r) => r.selected)
+    .map((r) => ({ showId: r.selected!.id, rating: r.rating }))
+  // The same show may appear twice; keep the last rating.
+  const byShow = new Map(items.map((i) => [i.showId, i]))
+  const stored = await importTrackedShows([...byShow.values()], importStatus.value)
+  imported.value = stored.length
+  library.mergeEntries(stored)
+  step.value = 'done'
+})
+const error = computed(() => parseError.value ?? matchError.value ?? importError.value)
+
 function reset() {
   step.value = 'upload'
   pasted.value = ''
   parsed.value = null
   rows.value = []
   fileName.value = ''
-  error.value = null
+  parseError.value = null
 }
 function meta(c: MatchCandidate): string {
-  return [yearOf(c.premiered), c.network_name, c.type].filter(Boolean).join(' · ')
+  return joinMeta(yearOf(c.premiered), c.network_name, c.type)
 }
 </script>
 
@@ -314,7 +291,7 @@ function meta(c: MatchCandidate): string {
                 <td class="t-mono t-muted">{{ r.line }}</td>
                 <td>{{ r.name }}</td>
                 <td>
-                  <span v-if="r.rating">{{ '★'.repeat(r.rating) }}</span
+                  <span v-if="r.rating">{{ starString(r.rating) }}</span
                   ><span v-else class="t-muted">{{ r.ratingText || '—' }}</span>
                 </td>
               </tr>
@@ -416,7 +393,7 @@ function meta(c: MatchCandidate): string {
                 <span class="manual__text"
                   ><span class="manual__name truncate">{{ r.name }}</span
                   ><span class="t-muted t-mono manual__meta">{{
-                    [yearOf(r.premiered), r.network_name].filter(Boolean).join(' · ')
+                    joinMeta(yearOf(r.premiered), r.network_name)
                   }}</span></span
                 >
               </button>
@@ -509,7 +486,7 @@ function meta(c: MatchCandidate): string {
               :disabled="!counts.confirmed"
               @click="finish"
             >
-              Import {{ counts.confirmed }} show{{ counts.confirmed === 1 ? '' : 's' }}
+              Import {{ plural(counts.confirmed, 'show') }}
             </AButton>
             <AButton size="lg" variant="outline" icon="back" @click="backToReview"
               >Back to review</AButton
@@ -530,7 +507,7 @@ function meta(c: MatchCandidate): string {
                   >from “{{ r.name }}”</span
                 >
               </span>
-              <span class="summary__stars">{{ r.rating ? '★'.repeat(r.rating) : '—' }}</span>
+              <span class="summary__stars">{{ starString(r.rating) || '—' }}</span>
               <AButton variant="ghost" size="sm" @click="reviewRow(r)">Change</AButton>
             </li>
           </ul>
@@ -556,7 +533,7 @@ function meta(c: MatchCandidate): string {
     <template v-else-if="step === 'done'">
       <div class="done">
         <AAlert variant="success" title="Import complete">
-          {{ imported }} show{{ imported === 1 ? '' : 's' }} added to your library as “{{
+          {{ plural(imported, 'show') }} added to your library as “{{
             USER_SHOW_STATUSES.find((s) => s.value === importStatus)?.label
           }}”. Episode lists are being fetched in the background.
         </AAlert>
@@ -569,7 +546,7 @@ function meta(c: MatchCandidate): string {
           <ul class="done__list">
             <li v-for="r in unknownRows" :key="r.line">
               <span>{{ r.name }}</span
-              ><span class="t-muted">{{ r.rating ? '★'.repeat(r.rating) : '' }}</span>
+              ><span class="t-muted">{{ starString(r.rating) }}</span>
             </li>
           </ul>
         </ACard>

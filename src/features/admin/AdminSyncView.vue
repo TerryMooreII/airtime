@@ -2,32 +2,25 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { AAlert, ABadge, AButton, ACard, ATable, type TableColumn } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
+import { useBusyAction } from '@/composables/useBusyAction'
 import { enqueueSync, fetchSyncQueue, fetchSyncRuns, syncStatusVariant } from '@/lib/api/admin'
 import { timeAgo } from '@/lib/format'
-import { useUiStore } from '@/stores/ui'
 import type { Json } from '@/lib/database.types'
 import type { SyncJobType, SyncQueueJob, SyncRun, SyncStatus } from '@/types/domain'
 
-const ui = useUiStore()
 const queue = ref<SyncQueueJob[]>([])
 const runs = ref<SyncRun[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-const busy = ref<string | null>(null)
+const { busy, run: act } = useBusyAction<string>()
 let timer: ReturnType<typeof setInterval> | undefined
 
-async function load() {
-  loading.value = true
-  error.value = null
-  try {
-    ;[queue.value, runs.value] = await Promise.all([fetchSyncQueue(), fetchSyncRuns()])
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  loading,
+  error,
+  run: load,
+} = useAsync(async () => {
+  ;[queue.value, runs.value] = await Promise.all([fetchSyncQueue(), fetchSyncRuns()])
+})
 onMounted(() => {
   void load()
   timer = setInterval(load, 15_000)
@@ -44,18 +37,13 @@ const JOBS: { type: SyncJobType; label: string; payload?: Record<string, Json>; 
     hint: 'Walk every /shows page again',
   },
 ]
-async function enqueue(job: (typeof JOBS)[number]) {
-  busy.value = job.type
-  try {
-    const id = await enqueueSync(job.type, job.payload ?? {})
-    ui.success(id ? `${job.label} queued` : `${job.label} is already queued`)
-    await load()
-  } catch (err) {
-    ui.error(errorMessage(err))
-  } finally {
-    busy.value = null
-  }
-}
+const enqueue = (job: (typeof JOBS)[number]) =>
+  act(
+    job.type,
+    () => enqueueSync(job.type, job.payload ?? {}),
+    (id) => (id ? `${job.label} queued` : `${job.label} is already queued`),
+    load,
+  )
 
 const badge = syncStatusVariant
 const queueColumns: TableColumn[] = [

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import {
@@ -11,47 +11,27 @@ import {
   ATable,
   type TableColumn,
 } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
-import { useDebouncedRef } from '@/composables/useDebouncedRef'
+import { useBusyAction } from '@/composables/useBusyAction'
+import { useDebouncedQuery } from '@/composables/useDebouncedQuery'
 import { enqueueSync, searchAdminShows, type AdminShowRow } from '@/lib/api/admin'
 import { timeAgo } from '@/lib/format'
-import { useUiStore } from '@/stores/ui'
 
-const ui = useUiStore()
-const query = ref('')
-const debounced = useDebouncedRef('', 250)
-const rows = ref<AdminShowRow[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-const busyId = ref<number | null>(null)
-
-watch(query, (q) => (debounced.value = q))
-watch(debounced, () => void load())
-
-async function load() {
-  loading.value = true
-  error.value = null
-  try {
-    rows.value = await searchAdminShows(debounced.value)
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  query,
+  results: rows,
+  loading,
+  error,
+  refresh: load,
+} = useDebouncedQuery((q) => searchAdminShows(q), { empty: [] as AdminShowRow[] })
 onMounted(load)
 
-async function refresh(row: AdminShowRow) {
-  busyId.value = row.id
-  try {
-    const id = await enqueueSync('show_refresh', { tvmaze_id: row.tvmaze_id })
-    ui.success(id ? `Refresh queued for ${row.name}` : 'Already queued')
-  } catch (err) {
-    ui.error(errorMessage(err))
-  } finally {
-    busyId.value = null
-  }
-}
+const { busy: busyId, run: act } = useBusyAction<number>()
+const refresh = (row: AdminShowRow) =>
+  act(
+    row.id,
+    () => enqueueSync('show_refresh', { tvmaze_id: row.tvmaze_id }),
+    (id) => (id ? `Refresh queued for ${row.name}` : 'Already queued'),
+  )
 
 const columns: TableColumn[] = [
   { key: 'name', label: 'Show' },
@@ -69,8 +49,8 @@ const columns: TableColumn[] = [
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
     <ATable :columns="columns" :rows="rows" :loading="loading" empty-text="No shows match.">
       <template #cell-name="{ row }">
-        <RouterLink :to="{ name: 'show', params: { id: row.id as number } }" class="show-cell">
-          <APoster :src="row.image_medium as string" radius="sm" class="show-cell__img" />
+        <RouterLink :to="{ name: 'show', params: { id: row.id } }" class="show-cell">
+          <APoster :src="row.image_medium" radius="sm" class="show-cell__img" />
           <span class="show-cell__text">
             <span class="show-cell__name">{{ row.name }}</span>
             <span class="t-muted t-mono show-cell__meta"
@@ -90,7 +70,7 @@ const columns: TableColumn[] = [
         <ABadge v-else variant="muted">upcoming only</ABadge>
       </template>
       <template #cell-synced_at="{ value }"
-        ><span class="t-muted">{{ value ? timeAgo(String(value)) : '—' }}</span></template
+        ><span class="t-muted">{{ timeAgo(value as string | null) }}</span></template
       >
       <template #cell-actions="{ row }">
         <AButton
@@ -98,7 +78,7 @@ const columns: TableColumn[] = [
           size="sm"
           icon="refresh"
           :loading="busyId === row.id"
-          @click="refresh(row as unknown as AdminShowRow)"
+          @click="refresh(row)"
           >Refresh</AButton
         >
       </template>

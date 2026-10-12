@@ -2,30 +2,26 @@
 import { computed, onMounted, ref } from 'vue'
 
 import { AAlert, ABadge, AButton, ACard, ASkeleton, AStat } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
+import { useBusyAction } from '@/composables/useBusyAction'
 import { enqueueSync, fetchAdminStats, fetchSyncRuns, syncStatusVariant } from '@/lib/api/admin'
 import { timeAgo } from '@/lib/format'
-import { useUiStore } from '@/stores/ui'
 import type { AdminStats, SyncRun } from '@/types/domain'
 
-const ui = useUiStore()
 const stats = ref<AdminStats | null>(null)
 const runs = ref<SyncRun[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
-const busy = ref<string | null>(null)
+const { busy, run: act } = useBusyAction<string>()
 
-async function load() {
-  loading.value = true
-  error.value = null
-  try {
+const {
+  loading,
+  error,
+  run: load,
+} = useAsync(
+  async () => {
     ;[stats.value, runs.value] = await Promise.all([fetchAdminStats(), fetchSyncRuns(8)])
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+  },
+  { initialLoading: true },
+)
 onMounted(load)
 
 const catalog = computed(() => stats.value?.catalog_import)
@@ -36,20 +32,14 @@ const catalogLabel = computed(() => {
 })
 const queue = computed(() => stats.value?.queue ?? null)
 
-async function run(job: 'full_schedule' | 'show_updates') {
-  busy.value = job
-  try {
-    const id = await enqueueSync(job)
-    ui.success(
+const run = (job: 'full_schedule' | 'show_updates') =>
+  act(
+    job,
+    () => enqueueSync(job),
+    (id) =>
       id ? 'Job queued; the worker picks it up within a minute.' : 'That job is already queued.',
-    )
-    await load()
-  } catch (err) {
-    ui.error(errorMessage(err))
-  } finally {
-    busy.value = null
-  }
-}
+    load,
+  )
 const fmt = (n: number | undefined) => (n ?? 0).toLocaleString()
 </script>
 

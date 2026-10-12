@@ -1,59 +1,42 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import { AAlert, AButton, AInput } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
-import { supabase } from '@/lib/supabase'
+import { useAsync } from '@/composables/useAsync'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 
 import AuthFormShell from './AuthFormShell.vue'
+import { usePasswordPair } from './usePasswordPair'
 
 const auth = useAuthStore()
 const ui = useUiStore()
 const router = useRouter()
 
-const password = ref('')
-const confirm = ref('')
-const loading = ref(false)
+const { password, confirm, passwordError, confirmError, valid } = usePasswordPair()
 const ready = ref(false)
-const error = ref<string | null>(null)
 
-const passwordError = computed(() =>
-  password.value && password.value.length < 8 ? 'Use at least 8 characters.' : null,
-)
-const confirmError = computed(() =>
-  confirm.value && confirm.value !== password.value ? 'Passwords do not match.' : null,
-)
+const BAD_LINK = 'This reset link is invalid or has expired. Request a new one.'
 
-onMounted(async () => {
-  // The recovery link lands here with a code (PKCE) or a hash fragment; the client exchanges it.
-  const code = new URLSearchParams(window.location.search).get('code')
-  if (code) {
-    const { error: err } = await supabase.auth.exchangeCodeForSession(code)
-    if (err) error.value = 'This reset link is invalid or has expired. Request a new one.'
-  }
-  await auth.init()
-  const { data } = await supabase.auth.getSession()
-  ready.value = Boolean(data.session)
-  if (!ready.value && !error.value)
-    error.value = 'This reset link is invalid or has expired. Request a new one.'
+const {
+  loading,
+  error,
+  run: submit,
+} = useAsync(async () => {
+  if (!valid.value) return
+  await auth.updatePassword(password.value)
+  ui.success('Password updated')
+  await router.replace({ name: 'home' })
 })
 
-async function submit() {
-  if (passwordError.value || confirmError.value) return
-  loading.value = true
-  try {
-    await auth.updatePassword(password.value)
-    ui.success('Password updated')
-    await router.replace({ name: 'home' })
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+onMounted(async () => {
+  // The recovery link lands here with a PKCE code; the client exchanges it for a session.
+  const failed = await auth.exchangeCodeFromUrl()
+  await auth.init()
+  ready.value = auth.isAuthenticated
+  if (failed || !ready.value) error.value = BAD_LINK
+})
 </script>
 
 <template>

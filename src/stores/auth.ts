@@ -78,6 +78,20 @@ export const useAuthStore = defineStore('auth', () => {
     return { needsVerification: !data.session }
   }
 
+  /**
+   * Finish a PKCE flow (email confirmation, password reset) from the current URL.
+   * Returns an error message when the link is bad, null when there was nothing to do or it worked.
+   */
+  async function exchangeCodeFromUrl(): Promise<string | null> {
+    const params = new URLSearchParams(window.location.search)
+    const described = params.get('error_description')
+    if (described) return described
+    const code = params.get('code')
+    if (!code) return null
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    return error ? error.message : null
+  }
+
   async function signOut(): Promise<void> {
     await supabase.auth.signOut()
     profile.value = null
@@ -139,6 +153,7 @@ export const useAuthStore = defineStore('auth', () => {
     timezone,
     init,
     loadProfile,
+    exchangeCodeFromUrl,
     signIn,
     signUp,
     signOut,

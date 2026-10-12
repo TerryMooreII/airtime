@@ -1,4 +1,5 @@
 /** Formatting helpers. All date output respects the given IANA timezone. */
+import { USER_SHOW_STATUSES, type UserShowStatus } from '@/types/domain'
 
 const dateTimeCache = new Map<string, Intl.DateTimeFormat>()
 
@@ -30,6 +31,11 @@ export function formatDateTime(iso: string | null, timeZone: string): string {
     hour: 'numeric',
     minute: '2-digit',
   }).format(new Date(iso))
+}
+
+/** "Oct 13" in the user's timezone. */
+export function formatMonthDay(iso: string, timeZone: string): string {
+  return formatter(timeZone, { month: 'short', day: 'numeric' }).format(new Date(iso))
 }
 
 /** Calendar day key (YYYY-MM-DD) in the user's timezone, for grouping. */
@@ -98,7 +104,8 @@ export function episodeCode(season: number, number: number | null): string {
   return number === null ? `S${s}` : `S${s}E${String(number).padStart(2, '0')}`
 }
 
-export function timeAgo(iso: string): string {
+export function timeAgo(iso: string | null | undefined, fallback = '—'): string {
+  if (!iso) return fallback
   const diff = Date.now() - new Date(iso).getTime()
   const minutes = Math.round(diff / 60_000)
   if (minutes < 1) return 'just now'
@@ -128,11 +135,37 @@ export function initials(name: string | null | undefined, fallback = '?'): strin
     .join('')
 }
 
-export const STATUS_LABELS: Record<string, string> = {
-  watching: 'Watching',
-  completed: 'Completed',
-  dropped: 'Dropped',
-  plan_to_watch: 'Plan to watch',
+export const STATUS_LABELS = Object.fromEntries(
+  USER_SHOW_STATUSES.map((s) => [s.value, s.label]),
+) as Record<UserShowStatus, string>
+
+/** "3 shows", "1 episode". */
+export function plural(n: number, singular: string, pluralForm = `${singular}s`): string {
+  return `${n.toLocaleString()} ${n === 1 ? singular : pluralForm}`
+}
+
+/** Join the truthy parts with a middle dot: joinMeta(year, network, genre). */
+export function joinMeta(...parts: (string | number | null | undefined | false)[]): string {
+  return parts.filter(Boolean).join(' · ')
+}
+
+/** "★★★★" for a 1–5 rating, '' when unrated. */
+export function starString(n: number | null | undefined): string {
+  return n ? '★'.repeat(n) : ''
+}
+
+/** The one-line meta under a catalog card: rating, network, first genre or year. */
+export function catalogMeta(s: {
+  rating: number | null
+  network_name: string | null
+  genres?: string[]
+  premiered: string | null
+}): string {
+  return joinMeta(
+    s.rating ? `★ ${s.rating}` : null,
+    s.network_name,
+    s.genres?.[0] ?? yearOf(s.premiered),
+  )
 }
 
 export function browserTimeZone(): string {

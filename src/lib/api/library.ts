@@ -37,7 +37,10 @@ export async function upsertUserShow(row: UserShowPatch): Promise<LibraryEntry> 
 /** Bulk upsert (CSV import); returns the stored rows so the store can merge them. */
 export function upsertUserShows(rows: UserShowPatch[]): Promise<LibraryEntry[]> {
   return many<LibraryEntry>(
-    supabase.from('user_shows').upsert(rows, { onConflict: 'user_id,show_id' }).select(LIBRARY_SELECT),
+    supabase
+      .from('user_shows')
+      .upsert(rows, { onConflict: 'user_id,show_id' })
+      .select(LIBRARY_SELECT),
   )
 }
 

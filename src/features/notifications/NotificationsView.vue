@@ -3,7 +3,6 @@ import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { AButton, AEmptyState, AIcon, APageHeader, APoster, ASkeleton } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
 import { timeAgo } from '@/lib/format'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useUiStore } from '@/stores/ui'
@@ -17,20 +16,8 @@ onMounted(() => void notifications.load(true))
 async function open(n: AppNotification) {
   if (!n.read_at) await notifications.markRead([n.id]).catch(() => undefined)
 }
-async function markAll() {
-  try {
-    await notifications.markAllRead()
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
-}
-async function remove(n: AppNotification) {
-  try {
-    await notifications.remove(n.id)
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
-}
+const markAll = () => ui.attempt(() => notifications.markAllRead())
+const remove = (n: AppNotification) => ui.attempt(() => notifications.remove(n.id))
 const KIND: Record<AppNotification['type'], string> = {
   new_episode: 'New episode',
   airing_today: 'Airing today',

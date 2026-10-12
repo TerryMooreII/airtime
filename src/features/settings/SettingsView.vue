@@ -12,7 +12,6 @@ import {
   ASettingsRow,
   AToggle,
 } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
 import { usePushSubscription } from '@/composables/usePushSubscription'
 import { useSignOut } from '@/composables/useSignOut'
 import { useTheme, type ThemeMode } from '@/composables/useTheme'
@@ -50,12 +49,7 @@ const themeOptions: { value: ThemeMode; label: string }[] = [
 onMounted(() => void push.refresh())
 
 async function save(patch: Parameters<typeof auth.updateProfile>[0], message = 'Saved') {
-  try {
-    await auth.updateProfile(patch)
-    ui.success(message)
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
+  await ui.attempt(() => auth.updateProfile(patch), message)
 }
 async function saveName() {
   savingName.value = true
@@ -75,14 +69,11 @@ const pushOn = computed(() => (auth.profile?.notify_push ?? false) && push.subsc
 const sendingTest = ref(false)
 async function sendTest() {
   sendingTest.value = true
-  try {
-    await sendTestNotification()
-    ui.toast('Test sent. It should pop up in a moment and appear under Alerts.')
-  } catch (err) {
-    ui.error(errorMessage(err))
-  } finally {
-    sendingTest.value = false
-  }
+  await ui.attempt(
+    sendTestNotification,
+    'Test sent. It should pop up in a moment and appear under Alerts.',
+  )
+  sendingTest.value = false
 }
 async function togglePush(on: boolean) {
   if (on) {

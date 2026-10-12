@@ -3,10 +3,11 @@ import { ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { AAlert, AButton, AInput } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
 import { useAuthStore } from '@/stores/auth'
 
 import AuthFormShell from './AuthFormShell.vue'
+import EmailField from './EmailField.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -14,37 +15,23 @@ const router = useRouter()
 
 const email = ref('')
 const password = ref('')
-const loading = ref(false)
-const error = ref<string | null>(null)
 
-async function submit() {
-  loading.value = true
-  error.value = null
-  try {
-    await auth.signIn(email.value.trim(), password.value)
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
-    await router.replace(redirect)
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  loading,
+  error,
+  run: submit,
+} = useAsync(async () => {
+  await auth.signIn(email.value.trim(), password.value)
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
+  await router.replace(redirect)
+})
 </script>
 
 <template>
   <AuthFormShell title="Welcome back" subtitle="Sign in to see what's airing this week.">
     <form @submit.prevent="submit">
       <AAlert v-if="error" variant="error">{{ error }}</AAlert>
-      <AInput
-        v-model="email"
-        label="Email"
-        type="email"
-        autocomplete="email"
-        icon="mail"
-        placeholder="you@example.com"
-        required
-      />
+      <EmailField v-model="email" />
       <AInput
         v-model="password"
         label="Password"

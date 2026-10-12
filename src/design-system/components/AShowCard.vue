@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="S extends string">
 import { onBeforeUnmount, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -6,9 +6,15 @@ import AIcon from './AIcon.vue'
 import APoster from './APoster.vue'
 import AStarRating from './AStarRating.vue'
 
+export interface FollowOption<S extends string = string> {
+  value: S
+  label: string
+}
+
 /**
  * Poster card used in Search, Discover rails and the Library grid.
- * Emits `follow` when the chip is pressed; rating is a v-model.
+ * Emits `follow` when the chip is pressed (with the chosen status when `followOptions` are
+ * given); rating is a v-model.
  */
 withDefaults(
   defineProps<{
@@ -20,21 +26,15 @@ withDefaults(
     following?: boolean
     followLoading?: boolean
     showFollow?: boolean
+    /** Statuses offered in the "Add as" menu; without them the plus follows directly. */
+    followOptions?: FollowOption<S>[]
     showRating?: boolean
     /** Fixed width for horizontal rails. */
     width?: string
   }>(),
   { following: false, followLoading: false, showFollow: true, showRating: false },
 )
-const emit = defineEmits<{ follow: [status?: FollowStatus] }>()
-
-/** Status choices offered when following from a card. */
-export type FollowStatus = 'watching' | 'plan_to_watch' | 'completed'
-const FOLLOW_OPTIONS: { value: FollowStatus; label: string }[] = [
-  { value: 'watching', label: 'Watching' },
-  { value: 'plan_to_watch', label: 'Plan to watch' },
-  { value: 'completed', label: 'Completed' },
-]
+const emit = defineEmits<{ follow: [status?: S] }>()
 
 const menuOpen = ref(false)
 const followEl = ref<HTMLElement | null>(null)
@@ -55,15 +55,15 @@ function closeMenu() {
   document.removeEventListener('click', onDocumentClick, true)
   document.removeEventListener('keydown', onDocumentKey)
 }
-/** Plus: expand the circle into the status panel. Check: unfollow directly. */
-function onChipClick(ev: Event, isFollowing: boolean) {
+/** Plus: expand the circle into the status panel (or follow directly). Check: unfollow. */
+function onChipClick(ev: Event, isFollowing: boolean, hasOptions: boolean) {
   ev.preventDefault()
   ev.stopPropagation()
-  if (isFollowing) emit('follow')
+  if (isFollowing || !hasOptions) emit('follow')
   else if (menuOpen.value) closeMenu()
   else openMenu()
 }
-function choose(status: FollowStatus, ev: Event) {
+function choose(status: S, ev: Event) {
   ev.preventDefault()
   ev.stopPropagation()
   closeMenu()
@@ -91,7 +91,7 @@ const rating = defineModel<number | null>('rating', { default: null })
         <span class="a-show-card__panel" role="menu" :aria-hidden="!menuOpen" @click.prevent.stop>
           <span class="a-show-card__panel-title">Add as</span>
           <button
-            v-for="(o, i) in FOLLOW_OPTIONS"
+            v-for="(o, i) in followOptions ?? []"
             :key="o.value"
             type="button"
             role="menuitem"
@@ -110,7 +110,7 @@ const rating = defineModel<number | null>('rating', { default: null })
           :aria-label="following ? 'Unfollow' : menuOpen ? 'Close' : 'Follow'"
           :aria-expanded="following ? undefined : menuOpen"
           :disabled="followLoading"
-          @click="onChipClick($event, following)"
+          @click="onChipClick($event, following, !!followOptions?.length)"
         >
           <AIcon
             :name="followLoading ? 'spinner' : following ? 'check' : 'plus'"

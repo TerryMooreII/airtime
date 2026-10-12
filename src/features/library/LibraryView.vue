@@ -19,21 +19,22 @@ import {
   ATable,
   type TableColumn,
 } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useLibraryActions } from '@/composables/useLibraryActions'
 import { useQueryParam } from '@/composables/useQueryParam'
 import {
+  channelLabel,
   episodeCode,
   formatAirTime,
+  joinMeta,
+  plural,
   shortDayLabel,
   STATUS_LABELS,
   timeAgo,
   yearOf,
-  channelLabel,
 } from '@/lib/format'
 import { fuzzyFilter } from '@/lib/fuzzy'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
-import { useUiStore } from '@/stores/ui'
 import { useUpcomingStore } from '@/stores/upcoming'
 import { useWatchedStore } from '@/stores/watched'
 import {
@@ -49,7 +50,7 @@ type View = 'grid' | 'table'
 
 const auth = useAuthStore()
 const library = useLibraryStore()
-const ui = useUiStore()
+const actions = useLibraryActions()
 const watched = useWatchedStore()
 const upcoming = useUpcomingStore()
 
@@ -142,12 +143,8 @@ const entries = computed(() => {
 
 const rated = computed(() => library.entries.filter((e) => e.rating).length)
 const subtitle = computed(() => {
-  const parts = [
-    `${library.counts.all} show${library.counts.all === 1 ? '' : 's'}`,
-    `${rated.value} rated`,
-  ]
-  if (searching.value)
-    parts.push(`${entries.value.length} match${entries.value.length === 1 ? '' : 'es'}`)
+  const parts = [plural(library.counts.all, 'show'), `${rated.value} rated`]
+  if (searching.value) parts.push(plural(entries.value.length, 'match', 'matches'))
   return parts.join(' · ')
 })
 
@@ -167,31 +164,18 @@ function unwatched(e: LibraryEntry): number {
 function meta(e: LibraryEntry): string {
   const n = next(e)
   const left = unwatched(e)
-  return [
+  return joinMeta(
     STATUS_LABELS[e.status],
     n ? episodeCode(n.season, n.number) : (e.show.status ?? '—'),
     left ? `${left} unwatched` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
+  )
 }
 function showMeta(e: LibraryEntry): string {
-  return [yearOf(e.show.premiered), channelLabel(e.show)].filter(Boolean).join(' · ')
+  return joinMeta(yearOf(e.show.premiered), channelLabel(e.show))
 }
-async function rate(e: LibraryEntry, rating: number | null) {
-  try {
-    await library.update(e.show_id, { rating }, e.show.tvmaze_id)
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
-}
-async function setStatus(e: LibraryEntry, status: UserShowStatus) {
-  try {
-    await library.update(e.show_id, { status }, e.show.tvmaze_id)
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
-}
+const showRef = (e: LibraryEntry) => ({ id: e.show_id, tvmaze_id: e.show.tvmaze_id })
+const rate = (e: LibraryEntry, rating: number | null) => actions.rate(showRef(e), rating)
+const setStatus = (e: LibraryEntry, status: UserShowStatus) => actions.setStatus(showRef(e), status)
 
 const columns: TableColumn[] = [
   { key: 'show', label: 'Show' },
@@ -202,7 +186,6 @@ const columns: TableColumn[] = [
   { key: 'show_status', label: 'Show' },
   { key: 'added_at', label: 'Added' },
 ]
-const tableRows = computed(() => entries.value.map((e) => ({ id: e.show_id, entry: e })))
 const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.label }))
 </script>
 
@@ -268,38 +251,22 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
         />
       </div>
 
-      <ATable v-else :columns="columns" :rows="tableRows" class="table">
+      <ATable v-else :columns="columns" :rows="entries" row-key="show_id" class="table">
         <template #cell-show="{ row }">
-          <RouterLink
-            :to="{ name: 'show', params: { id: (row.entry as LibraryEntry).show_id } }"
-            class="show-cell"
-          >
-            <APoster
-              :src="(row.entry as LibraryEntry).show.image_medium"
-              radius="sm"
-              class="show-cell__img"
-            />
+          <RouterLink :to="{ name: 'show', params: { id: row.show_id } }" class="show-cell">
+            <APoster :src="row.show.image_medium" radius="sm" class="show-cell__img" />
             <span class="show-cell__text">
-              <span class="show-cell__name truncate">{{
-                (row.entry as LibraryEntry).show.name
-              }}</span>
-              <span class="show-cell__meta truncate">{{
-                showMeta(row.entry as LibraryEntry)
-              }}</span>
+              <span class="show-cell__name truncate">{{ row.show.name }}</span>
+              <span class="show-cell__meta truncate">{{ showMeta(row) }}</span>
             </span>
           </RouterLink>
         </template>
         <template #cell-status="{ row }">
           <select
             class="status-select"
-            :value="(row.entry as LibraryEntry).status"
-            :aria-label="`Status for ${(row.entry as LibraryEntry).show.name}`"
-            @change="
-              setStatus(
-                row.entry as LibraryEntry,
-                ($event.target as HTMLSelectElement).value as UserShowStatus,
-              )
-            "
+            :value="row.status"
+            :aria-label="`Status for ${row.show.name}`"
+            @change="setStatus(row, ($event.target as HTMLSelectElement).value as UserShowStatus)"
           >
             <option v-for="o in statusOptions" :key="o.value" :value="o.value">
               {{ o.label }}
@@ -308,50 +275,41 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
         </template>
         <template #cell-rating="{ row }">
           <AStarRating
-            :model-value="(row.entry as LibraryEntry).rating"
+            :model-value="row.rating"
             size="sm"
-            @update:model-value="rate(row.entry as LibraryEntry, $event)"
+            @update:model-value="rate(row, $event)"
           />
         </template>
         <template #cell-progress="{ row }">
-          <span
-            v-if="watched.progress.get((row.entry as LibraryEntry).show_id)?.aired"
-            class="progress-cell"
-          >
+          <span v-if="watched.progress.get(row.show_id)?.aired" class="progress-cell">
             <AProgressBar
-              :value="watched.progress.get((row.entry as LibraryEntry).show_id)!.watched"
-              :max="watched.progress.get((row.entry as LibraryEntry).show_id)!.aired"
+              :value="watched.progress.get(row.show_id)!.watched"
+              :max="watched.progress.get(row.show_id)!.aired"
               label="Watched"
             />
             <span class="t-muted t-mono progress-cell__label"
-              >{{ watched.progress.get((row.entry as LibraryEntry).show_id)!.watched }} /
-              {{ watched.progress.get((row.entry as LibraryEntry).show_id)!.aired }}</span
+              >{{ watched.progress.get(row.show_id)!.watched }} /
+              {{ watched.progress.get(row.show_id)!.aired }}</span
             >
           </span>
           <span v-else class="t-muted">—</span>
         </template>
         <template #cell-next="{ row }">
-          <span v-if="next(row.entry as LibraryEntry)" class="next-cell">
-            <span class="next-cell__when">{{ badge(row.entry as LibraryEntry) }}</span>
+          <span v-if="next(row)" class="next-cell">
+            <span class="next-cell__when">{{ badge(row) }}</span>
             <span class="t-muted t-mono next-cell__code">{{
-              episodeCode(
-                next(row.entry as LibraryEntry)!.season,
-                next(row.entry as LibraryEntry)!.number,
-              )
+              episodeCode(next(row)!.season, next(row)!.number)
             }}</span>
           </span>
           <span v-else class="t-muted">—</span>
         </template>
         <template #cell-show_status="{ row }">
-          <ABadge
-            :variant="(row.entry as LibraryEntry).show.status === 'Running' ? 'success' : 'muted'"
-            >{{ (row.entry as LibraryEntry).show.status ?? '—' }}</ABadge
-          >
+          <ABadge :variant="row.show.status === 'Running' ? 'success' : 'muted'">{{
+            row.show.status ?? '—'
+          }}</ABadge>
         </template>
         <template #cell-added_at="{ row }"
-          ><span class="t-muted">{{
-            timeAgo((row.entry as LibraryEntry).added_at)
-          }}</span></template
+          ><span class="t-muted">{{ timeAgo(row.added_at) }}</span></template
         >
       </ATable>
     </template>

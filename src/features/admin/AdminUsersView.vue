@@ -2,50 +2,33 @@
 import { onMounted, ref } from 'vue'
 
 import { AAlert, ABadge, AButton, AModal, ATable, type TableColumn } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
+import { useBusyAction } from '@/composables/useBusyAction'
 import { banUser, deleteUser, listUsers, setUserRole } from '@/lib/api/admin'
 import { timeAgo } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
-import { useUiStore } from '@/stores/ui'
 import type { AdminUser } from '@/types/domain'
 
 const auth = useAuthStore()
-const ui = useUiStore()
 const users = ref<AdminUser[]>([])
 const page = ref(1)
 const total = ref<number | null>(null)
-const loading = ref(false)
-const error = ref<string | null>(null)
-const busyId = ref<string | null>(null)
 const confirmDelete = ref<AdminUser | null>(null)
 
-async function load() {
-  loading.value = true
-  error.value = null
-  try {
-    const res = await listUsers(page.value, 50)
-    users.value = res.users
-    total.value = res.total
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  loading,
+  error,
+  run: load,
+} = useAsync(async () => {
+  const res = await listUsers(page.value, 50)
+  users.value = res.users
+  total.value = res.total
+})
 onMounted(load)
 
-async function act(user: AdminUser, fn: () => Promise<unknown>, message: string) {
-  busyId.value = user.id
-  try {
-    await fn()
-    ui.success(message)
-    await load()
-  } catch (err) {
-    ui.error(errorMessage(err))
-  } finally {
-    busyId.value = null
-  }
-}
+const { busy: busyId, run } = useBusyAction<string>()
+const act = (user: AdminUser, fn: () => Promise<unknown>, message: string) =>
+  run(user.id, fn, message, load)
 const toggleRole = (u: AdminUser) =>
   act(
     u,
@@ -92,10 +75,10 @@ const columns: TableColumn[] = [
         ><ABadge :variant="value === 'admin' ? 'soft' : 'muted'">{{ value }}</ABadge></template
       >
       <template #cell-last_sign_in_at="{ value }"
-        ><span class="t-muted">{{ value ? timeAgo(String(value)) : 'never' }}</span></template
+        ><span class="t-muted">{{ timeAgo(value as string | null, 'never') }}</span></template
       >
       <template #cell-state="{ row }">
-        <ABadge v-if="isBanned(row as unknown as AdminUser)" variant="danger">banned</ABadge>
+        <ABadge v-if="isBanned(row)" variant="danger">banned</ABadge>
         <ABadge v-else-if="!row.email_confirmed_at" variant="warning">unverified</ABadge>
         <ABadge v-else variant="success">active</ABadge>
       </template>
@@ -105,22 +88,22 @@ const columns: TableColumn[] = [
             variant="outline"
             size="sm"
             :loading="busyId === row.id"
-            @click="toggleRole(row as unknown as AdminUser)"
+            @click="toggleRole(row)"
             >{{ row.role === 'admin' ? 'Make member' : 'Make admin' }}</AButton
           >
           <AButton
             variant="outline"
             size="sm"
             :loading="busyId === row.id"
-            @click="toggleBan(row as unknown as AdminUser)"
-            >{{ isBanned(row as unknown as AdminUser) ? 'Unban' : 'Ban' }}</AButton
+            @click="toggleBan(row)"
+            >{{ isBanned(row) ? 'Unban' : 'Ban' }}</AButton
           >
           <AButton
             variant="danger"
             size="sm"
             icon="trash"
             :loading="busyId === row.id"
-            @click="confirmDelete = row as unknown as AdminUser"
+            @click="confirmDelete = row"
             >Delete</AButton
           >
         </div>

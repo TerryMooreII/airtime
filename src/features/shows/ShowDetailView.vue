@@ -20,16 +20,20 @@ import {
   type Brand,
   type IconName,
 } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
+import { useLibraryActions } from '@/composables/useLibraryActions'
 import { useNow } from '@/composables/useNow'
 import { fetchShowEpisodes } from '@/lib/api/episodes'
+import { episodeNumberLabel, hasAired, isFuture as episodeIsFuture } from '@/lib/episodes'
 import { fetchShowCast } from '@/lib/tvmaze'
 import { externalLink, fetchShowDetail, RATING_PROVIDER_LABELS, refreshShow } from '@/lib/api/shows'
 import {
   episodeCode,
   formatPlainDate,
   formatRuntime,
+  joinMeta,
+  plural,
   relativeDayLabel,
   formatAirTime,
   stripHtml,
@@ -57,6 +61,7 @@ const auth = useAuthStore()
 const library = useLibraryStore()
 const ui = useUiStore()
 const follow = useFollow()
+const actions = useLibraryActions()
 const watched = useWatchedStore()
 
 const show = ref<Show | null>(null)
@@ -64,31 +69,23 @@ const ratings = ref<ShowRating[]>([])
 const externalIds = ref<ShowExternalId[]>([])
 const episodes = ref<Episode[]>([])
 const episodeRatings = ref(new Map<number, number>())
-const loading = ref(true)
 const episodesLoading = ref(false)
-const error = ref<string | null>(null)
 const season = ref<number | null>(null)
 const openEpisode = ref<Episode | null>(null)
 
 type Tab = 'episodes' | 'cast'
 const tab = ref<Tab>('episodes')
 const cast = ref<CastMember[] | null>(null)
-const castLoading = ref(false)
-const castError = ref<string | null>(null)
 
 /** Cast comes live from TVmaze; fetched the first time the tab opens. */
-async function loadCast() {
-  if (!show.value || castLoading.value) return
-  castLoading.value = true
-  castError.value = null
-  try {
-    cast.value = await fetchShowCast(show.value.tvmaze_id)
-  } catch (err) {
-    castError.value = errorMessage(err)
-  } finally {
-    castLoading.value = false
-  }
-}
+const {
+  loading: castLoading,
+  error: castError,
+  run: loadCast,
+} = useAsync(async () => {
+  if (!show.value) return
+  cast.value = await fetchShowCast(show.value.tvmaze_id)
+})
 watch(tab, (t) => {
   if (t === 'cast' && cast.value === null) void loadCast()
 })
@@ -103,10 +100,12 @@ const tz = computed(() => auth.timezone)
 const now = useNow(60_000)
 
 /** Everything is keyed by the route's show id, so the whole page is one round of requests. */
-async function load() {
-  loading.value = true
-  error.value = null
-  try {
+const {
+  loading,
+  error,
+  run: load,
+} = useAsync(
+  async () => {
     const [detail] = await Promise.all([
       fetchShowDetail(showId.value),
       loadEpisodes(),
@@ -114,8 +113,7 @@ async function load() {
     ])
     if (!detail) {
       show.value = null
-      error.value = 'This show is not in the catalog.'
-      return
+      throw new Error('This show is not in the catalog.')
     }
     show.value = detail.show
     ratings.value = detail.ratings
@@ -123,12 +121,9 @@ async function load() {
     const syncedAt = detail.show.episodes_synced_at
     if (!syncedAt || Date.now() - new Date(syncedAt).getTime() > 6 * 3_600_000)
       void refreshEpisodes()
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+  },
+  { initialLoading: true },
+)
 
 async function loadEpisodes() {
   const [list] = await Promise.all([
@@ -138,7 +133,7 @@ async function loadEpisodes() {
   episodes.value = list.episodes
   episodeRatings.value = list.ratings
   if (season.value === null || !seasons.value.includes(season.value)) {
-    const aired = episodes.value.filter((e) => e.airstamp && new Date(e.airstamp).getTime() < now.value)
+    const aired = episodes.value.filter((e) => e.airstamp && hasAired(e, now.value))
     season.value = (aired[aired.length - 1] ?? episodes.value[0])?.season ?? null
   }
 }
@@ -176,7 +171,9 @@ const seasonOptions = computed(() =>
 )
 const seasonEpisodes = computed(() => episodes.value.filter((e) => e.season === season.value))
 const nextEpisode = computed(() =>
-  episodes.value.find((e) => e.airstamp && new Date(e.airstamp).getTime() > now.value - 30 * 60_000),
+  episodes.value.find(
+    (e) => e.airstamp && new Date(e.airstamp).getTime() > now.value - 30 * 60_000,
+  ),
 )
 
 const genres = computed(() => show.value?.genres ?? [])
@@ -203,7 +200,7 @@ const meta = computed(() => {
     formatRuntime(s.runtime ?? s.average_runtime),
   ]
     .filter(Boolean)
-    .join('  ·  ')
+    .join('  ·  ') // wide dots: this line sits under the title
 })
 const tvmazeRating = computed(() => ratings.value.find((r) => r.provider === 'tvmaze'))
 const otherRatings = computed(() => ratings.value.filter((r) => r.provider !== 'tvmaze'))
@@ -232,55 +229,26 @@ const links = computed<ShowLink[]>(() => {
   return out
 })
 
-async function setRating(rating: number | null) {
-  if (!show.value) return
-  try {
-    // Rating an untracked show adds it as completed; otherwise just update the rating.
-    await library.update(
-      show.value.id,
-      entry.value ? { rating } : { rating, status: 'completed' },
-      show.value.tvmaze_id,
-    )
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
-}
-async function setStatus(status: UserShowStatus) {
-  if (!show.value) return
-  try {
-    await library.update(show.value.id, { status }, show.value.tvmaze_id)
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
-}
-async function setNotify(notify: boolean) {
-  if (!show.value) return
-  try {
-    await library.update(show.value.id, { notify }, show.value.tvmaze_id)
-    ui.toast(notify ? 'Alerts on for this show' : 'Alerts muted for this show')
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
-}
+const setRating = (rating: number | null) => show.value && actions.rate(show.value, rating)
+const setStatus = (status: UserShowStatus) => show.value && actions.setStatus(show.value, status)
+const setNotify = (notify: boolean) => show.value && actions.setNotify(show.value, notify)
 function toggleFollow() {
   if (show.value) void follow.toggle(show.value.id, show.value.tvmaze_id, show.value.name)
 }
 function episodeMeta(e: Episode): string {
   const r = episodeRatings.value.get(e.id)
-  return [
+  return joinMeta(
     e.airdate ? formatPlainDate(e.airdate) : 'TBA',
     formatRuntime(e.runtime),
-    r ? `★ ${r}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
+    r && `★ ${r}`,
+  )
 }
 function openFromDrawer(e: Episode) {
   openEpisode.value = e
   season.value = e.season
 }
 function isFuture(e: Episode): boolean {
-  return !!e.airstamp && new Date(e.airstamp).getTime() > now.value
+  return !!e.airstamp && episodeIsFuture(e, now.value)
 }
 
 // ---------------------------------------------------------------------------
@@ -300,28 +268,19 @@ const overallWatched = computed(
   () => episodes.value.filter((e) => !isFuture(e) && watched.isWatched(e.id)).length,
 )
 
-async function toggleWatched(e: Episode, ev?: Event) {
+function toggleWatched(e: Episode, ev?: Event) {
   ev?.stopPropagation()
   if (isFuture(e)) return
-  try {
-    await watched.toggle(e.id)
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
+  void ui.attempt(() => watched.toggle(e.id))
 }
-async function toggleSeason() {
+function toggleSeason() {
   if (!show.value || season.value === null) return
-  try {
-    await watched.setSeason(
-      show.value.id,
-      season.value,
-      airedSeasonIds.value,
-      !allSeasonWatched.value,
-    )
-    ui.toast(allSeasonWatched.value ? 'Season marked watched' : 'Season marked unwatched')
-  } catch (err) {
-    ui.error(errorMessage(err))
-  }
+  const { id } = show.value
+  const markWatched = !allSeasonWatched.value
+  void ui.attempt(
+    () => watched.setSeason(id, season.value!, airedSeasonIds.value, markWatched),
+    markWatched ? 'Season marked watched' : 'Season marked unwatched',
+  )
 }
 </script>
 
@@ -493,7 +452,7 @@ async function toggleSeason() {
           >
         </div>
         <span class="episodes__count"
-          >{{ seasonEpisodes.length }} episode{{ seasonEpisodes.length === 1 ? '' : 's'
+          >{{ plural(seasonEpisodes.length, 'episode')
           }}<template v-if="overallAired">
             · {{ overallWatched }} of {{ overallAired }} aired episodes watched overall</template
           ></span
@@ -516,9 +475,7 @@ async function toggleSeason() {
             <APoster :src="e.image_medium ?? show.image_medium" ratio="still" radius="md" />
             <span class="episode__text">
               <span class="episode__title">
-                <span class="episode__code t-mono">{{
-                  e.number === null ? 'SP' : `E${String(e.number).padStart(2, '0')}`
-                }}</span>
+                <span class="episode__code t-mono">{{ episodeNumberLabel(e.number) }}</span>
                 <span class="truncate">{{ e.name ?? 'TBA' }}</span>
               </span>
               <span class="episode__meta">{{ episodeMeta(e) }}</span>

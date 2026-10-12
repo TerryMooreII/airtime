@@ -1,51 +1,39 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import { AAlert, AButton, AInput } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
 import { useAuthStore } from '@/stores/auth'
 
 import AuthFormShell from './AuthFormShell.vue'
+import EmailField from './EmailField.vue'
+import { usePasswordPair } from './usePasswordPair'
 
 const auth = useAuthStore()
 const router = useRouter()
 
 const displayName = ref('')
 const email = ref('')
-const password = ref('')
-const confirm = ref('')
-const loading = ref(false)
-const error = ref<string | null>(null)
+const { password, confirm, passwordError, confirmError, valid, hint } = usePasswordPair()
 
-const passwordError = computed(() =>
-  password.value && password.value.length < 8 ? 'Use at least 8 characters.' : null,
-)
-const confirmError = computed(() =>
-  confirm.value && confirm.value !== password.value ? 'Passwords do not match.' : null,
-)
-
-async function submit() {
-  if (passwordError.value || confirmError.value) return
-  loading.value = true
-  error.value = null
-  try {
-    const { needsVerification } = await auth.signUp(
-      email.value.trim(),
-      password.value,
-      displayName.value.trim(),
-    )
-    await router.replace(
-      needsVerification
-        ? { name: 'verify-email', query: { email: email.value.trim() } }
-        : { name: 'home' },
-    )
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  loading,
+  error,
+  run: submit,
+} = useAsync(async () => {
+  if (!valid.value) return
+  const { needsVerification } = await auth.signUp(
+    email.value.trim(),
+    password.value,
+    displayName.value.trim(),
+  )
+  await router.replace(
+    needsVerification
+      ? { name: 'verify-email', query: { email: email.value.trim() } }
+      : { name: 'home' },
+  )
+})
 </script>
 
 <template>
@@ -63,15 +51,7 @@ async function submit() {
         placeholder="How should we call you?"
         required
       />
-      <AInput
-        v-model="email"
-        label="Email"
-        type="email"
-        autocomplete="email"
-        icon="mail"
-        placeholder="you@example.com"
-        required
-      />
+      <EmailField v-model="email" />
       <AInput
         v-model="password"
         label="Password"
@@ -79,7 +59,7 @@ async function submit() {
         autocomplete="new-password"
         icon="lock"
         :error="passwordError"
-        hint="At least 8 characters."
+        :hint="hint"
         required
       />
       <AInput

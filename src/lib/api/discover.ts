@@ -24,7 +24,11 @@ export async function fetchSharedCastRail(
   const byShow = new Map<number, { via: string; credit: (typeof creditLists)[number][number] }>()
   creditLists.forEach((list, i) => {
     for (const credit of list) {
-      if (credit.showTvmazeId === top.tvmaze_id || !credit.showImage || byShow.has(credit.showTvmazeId))
+      if (
+        credit.showTvmazeId === top.tvmaze_id ||
+        !credit.showImage ||
+        byShow.has(credit.showTvmazeId)
+      )
         continue
       byShow.set(credit.showTvmazeId, { via: cast[i]!.name, credit })
     }

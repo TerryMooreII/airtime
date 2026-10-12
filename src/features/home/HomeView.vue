@@ -12,12 +12,20 @@ import {
   ASegmented,
   ASkeleton,
 } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useFollow } from '@/composables/useFollow'
 import { useNow } from '@/composables/useNow'
 import { useQueryParam } from '@/composables/useQueryParam'
-import { dayKey, episodeCode, formatAirTime, formatRuntime, relativeDayLabel } from '@/lib/format'
+import { endsAt, formatCountdown, groupByDay, isLive } from '@/lib/episodes'
+import {
+  dayKey,
+  episodeCode,
+  formatAirTime,
+  formatRuntime,
+  plural,
+  relativeDayLabel,
+} from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useUpcomingStore } from '@/stores/upcoming'
@@ -40,8 +48,6 @@ watch(scope, () => void load())
 const episodes = computed(() =>
   upcomingStore.items(scope.value === 'everything' ? 'everything' : 'mine', range.value),
 )
-const loading = ref(true)
-const error = ref<string | null>(null)
 const range = useQueryParam<7 | 14 | 30>('days', {
   defaultValue: 14,
   parse: (r) => ([7, 14, 30] as const).find((n) => String(n) === r),
@@ -62,65 +68,24 @@ const now = useNow(30_000)
 
 const tz = computed(() => auth.timezone)
 
-async function load() {
-  loading.value = true
-  error.value = null
-  try {
-    await upcomingStore.load(scope.value === 'everything' ? 'everything' : 'mine', range.value)
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  loading,
+  error,
+  run: load,
+} = useAsync(
+  () => upcomingStore.load(scope.value === 'everything' ? 'everything' : 'mine', range.value),
+  { initialLoading: true },
+)
 onMounted(load)
 
-function endOf(e: UpcomingEpisode): number {
-  return new Date(e.airstamp).getTime() + (e.runtime ?? 30) * 60_000
-}
-function rel(e: UpcomingEpisode): string {
-  const t = new Date(e.airstamp).getTime()
-  if (endOf(e) < now.value) return 'Aired'
-  const m = Math.round((t - now.value) / 60_000)
-  if (m <= 0) return 'On now'
-  if (m < 60) return `in ${m}m`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `in ${h}h ${String(m % 60).padStart(2, '0')}m`
-  return `in ${Math.floor(h / 24)}d ${h % 24}h`
-}
+const endOf = (e: UpcomingEpisode) => endsAt(e)
+const rel = (e: UpcomingEpisode) => formatCountdown(e, now.value)
 
 const upcoming = computed(() => episodes.value.filter((e) => endOf(e) >= now.value))
 const hero = computed(() => upcoming.value[0] ?? null)
 const then = computed(() => upcoming.value.slice(1, 5))
 
-interface DayGroup {
-  key: string
-  label: string
-  sub: string
-  items: UpcomingEpisode[]
-}
-const groups = computed<DayGroup[]>(() => {
-  const map = new Map<string, DayGroup>()
-  for (const e of episodes.value) {
-    const key = dayKey(e.airstamp, tz.value)
-    let g = map.get(key)
-    if (!g) {
-      g = {
-        key,
-        label: relativeDayLabel(e.airstamp, tz.value),
-        sub: new Intl.DateTimeFormat(undefined, {
-          month: 'short',
-          day: 'numeric',
-          timeZone: tz.value,
-        }).format(new Date(e.airstamp)),
-        items: [],
-      }
-      map.set(key, g)
-    }
-    g.items.push(e)
-  }
-  return [...map.values()]
-})
+const groups = computed(() => groupByDay(episodes.value, tz.value))
 
 /** One entry per calendar day in the range, including empty days, for the calendar layout. */
 interface CalendarDay {
@@ -175,8 +140,8 @@ const subtitle = computed(() => {
   if (loading.value) return 'Loading your schedule…'
   const shows = new Set(upcoming.value.map((e) => e.show_id)).size
   if (scope.value === 'everything')
-    return `${upcoming.value.length} episode${upcoming.value.length === 1 ? '' : 's'} from ${shows} show${shows === 1 ? '' : 's'} airing · next ${range.value} days`
-  return `${upcoming.value.length} new episode${upcoming.value.length === 1 ? '' : 's'} from ${shows} show${shows === 1 ? '' : 's'} you follow · next ${range.value} days`
+    return `${plural(upcoming.value.length, 'episode')} from ${plural(shows, 'show')} airing · next ${range.value} days`
+  return `${plural(upcoming.value.length, 'new episode')} from ${plural(shows, 'show')} you follow · next ${range.value} days`
 })
 </script>
 
@@ -266,9 +231,7 @@ const subtitle = computed(() => {
           <div class="agenda__head">
             <span class="agenda__label">{{ g.label }}</span>
             <span class="agenda__sub">{{ g.sub }}</span>
-            <span class="agenda__count"
-              >{{ g.items.length }} ep{{ g.items.length === 1 ? '' : 's' }}</span
-            >
+            <span class="agenda__count">{{ plural(g.items.length, 'ep') }}</span>
           </div>
           <RouterLink
             v-for="e in g.items"
@@ -282,11 +245,7 @@ const subtitle = computed(() => {
             <span class="row__text">
               <span class="row__title">
                 <span class="row__name truncate">{{ e.show_name }}</span>
-                <span
-                  v-if="endOf(e) >= now && new Date(e.airstamp).getTime() <= now"
-                  class="row__badge row__badge--live"
-                  >On now</span
-                >
+                <span v-if="isLive(e, now)" class="row__badge row__badge--live">On now</span>
                 <span v-else-if="e.number === 1" class="row__badge">{{
                   e.season === 1 ? 'Series premiere' : 'Season premiere'
                 }}</span>
@@ -376,11 +335,9 @@ const subtitle = computed(() => {
               <span class="agenda__sub"
                 >{{ selectedCalendarDay.monthLabel }} {{ selectedCalendarDay.num }}</span
               >
-              <span class="agenda__count"
-                >{{ selectedCalendarDay.items.length }} ep{{
-                  selectedCalendarDay.items.length === 1 ? '' : 's'
-                }}</span
-              >
+              <span class="agenda__count">{{
+                plural(selectedCalendarDay.items.length, 'ep')
+              }}</span>
             </div>
             <RouterLink
               v-for="e in selectedCalendarDay.items"

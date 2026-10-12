@@ -1,10 +1,19 @@
 import { ref, shallowRef } from 'vue'
 
-/** Tracks loading / error state around an async function. */
+export interface UseAsyncOptions {
+  /** Start in the loading state so the first paint shows a skeleton, not an empty state. */
+  initialLoading?: boolean
+}
+
+/**
+ * Loading / error state around an async function. `run` never throws: failures land in
+ * `error` (as a message) and resolve to undefined, so callers can `void run()` freely.
+ */
 export function useAsync<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
+  opts: UseAsyncOptions = {},
 ) {
-  const loading = ref(false)
+  const loading = ref(opts.initialLoading ?? false)
   const error = ref<string | null>(null)
   const data = shallowRef<TResult | null>(null)
 

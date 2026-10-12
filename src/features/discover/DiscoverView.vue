@@ -12,36 +12,38 @@ import {
   AShowCard,
   ASkeleton,
 } from '@/design-system'
-import { errorMessage } from '@/composables/useAsync'
+import { useAsync } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
 import { fetchDiscoverRails, fetchSharedCastRail } from '@/lib/api/discover'
-import { stripHtml, yearOf } from '@/lib/format'
+import { catalogMeta, joinMeta, starString, stripHtml, yearOf } from '@/lib/format'
 import { useLibraryStore } from '@/stores/library'
-import type { CastRailItem, DiscoverRails, ShowCardData } from '@/types/domain'
+import {
+  FOLLOW_OPTIONS,
+  type CastRailItem,
+  type DiscoverRails,
+  type ShowCardData,
+} from '@/types/domain'
 
 const library = useLibraryStore()
 const follow = useFollow()
 
 const rails = ref<DiscoverRails | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
 
 const castRail = ref<CastRailItem[]>([])
 const castRailLoading = ref(false)
 
-async function load() {
-  loading.value = true
-  error.value = null
-  try {
+const {
+  loading,
+  error,
+  run: load,
+} = useAsync(
+  async () => {
     const [r] = await Promise.all([fetchDiscoverRails(), library.load()])
     rails.value = r
     void loadCastRail(r)
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
+  },
+  { initialLoading: true },
+)
 onMounted(load)
 
 /** "Shares cast with <top-rated show>": built from TVmaze cast + person credits. */
@@ -57,14 +59,8 @@ async function loadCastRail(r: DiscoverRails) {
   }
 }
 
-function meta(s: ShowCardData): string {
-  return [s.rating ? `★ ${s.rating}` : null, s.network_name, s.genres[0] ?? yearOf(s.premiered)]
-    .filter(Boolean)
-    .join(' · ')
-}
-function stars(n: number | null | undefined): string {
-  return n ? '★'.repeat(n) : ''
-}
+const meta = catalogMeta
+const stars = starString
 const pick = computed(() => rails.value?.pick ?? null)
 const pickReason = computed(() => {
   const because = rails.value?.pick_reason
@@ -76,14 +72,12 @@ const pickReason = computed(() => {
 const pickMeta = computed(() => {
   const p = pick.value
   if (!p) return ''
-  return [
+  return joinMeta(
     yearOf(p.premiered),
     p.genres.slice(0, 2).join(' · '),
     p.rating ? `★ ${p.rating}` : null,
     p.network_name,
-  ]
-    .filter(Boolean)
-    .join(' · ')
+  )
 })
 
 interface Rail {
@@ -204,6 +198,7 @@ const railList = computed<Rail[]>(() => {
             :meta="s.via ? `with ${s.via}` : meta(s)"
             :following="library.byShowId.has(s.id)"
             :follow-loading="follow.pending(s.id)"
+            :follow-options="FOLLOW_OPTIONS"
             width="156px"
             @follow="(status) => follow.toggle(s.id, s.tvmaze_id, s.name, status)"
           />
