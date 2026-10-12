@@ -56,7 +56,10 @@ export const useWatchedStore = defineStore('watched', () => {
     watched.add(episodeId)
     const { error } = await supabase
       .from('user_episodes')
-      .upsert({ user_id: userId, episode_id: episodeId }, { onConflict: 'user_id,episode_id' })
+      .upsert(
+        { user_id: userId, episode_id: episodeId },
+        { onConflict: 'user_id,episode_id', ignoreDuplicates: true },
+      )
     if (error) {
       watched.delete(episodeId)
       throw error

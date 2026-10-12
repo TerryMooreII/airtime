@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { invokeFunction, supabase } from '@/lib/supabase'
 import type { Show, ShowExternalId, ShowRating } from '@/types/domain'
 
 const SHOW_SELECT =
@@ -42,6 +42,29 @@ export async function fetchShowExternalIds(showId: number): Promise<ShowExternal
     .eq('show_id', showId)
   if (error) throw error
   return (data ?? []) as ShowExternalId[]
+}
+
+export interface RefreshShowResult {
+  refreshed: boolean
+  reason?: 'fresh' | 'in_progress'
+  episodes?: number
+}
+
+const refreshInFlight = new Map<number, Promise<RefreshShowResult>>()
+
+/**
+ * Pull a show's full episode list from TVmaze right away (the queue is the fallback).
+ * Concurrent calls for the same show share one request; the server also holds a short
+ * per-show lock so two browsers cannot import the same show at once.
+ */
+export function refreshShow(tvmazeId: number): Promise<RefreshShowResult> {
+  const existing = refreshInFlight.get(tvmazeId)
+  if (existing) return existing
+  const p = invokeFunction<RefreshShowResult>('refresh-show', { tvmaze_id: tvmazeId }).finally(
+    () => refreshInFlight.delete(tvmazeId),
+  )
+  refreshInFlight.set(tvmazeId, p)
+  return p
 }
 
 export const RATING_PROVIDER_LABELS: Record<string, string> = {

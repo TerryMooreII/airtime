@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import { AAlert, ABadge, AButton, ACard, ASkeleton, AStat } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
-import { enqueueSync, fetchAdminStats, fetchSyncRuns } from '@/lib/api/admin'
+import { enqueueSync, fetchAdminStats, fetchSyncRuns, syncStatusVariant } from '@/lib/api/admin'
 import { timeAgo } from '@/lib/format'
 import { useUiStore } from '@/stores/ui'
 import type { AdminStats, SyncRun } from '@/types/domain'
@@ -115,10 +115,9 @@ const fmt = (n: number | undefined) => (n ?? 0).toLocaleString()
             >
           </div>
           <div v-if="stats.last_full_schedule" class="dash__last">
-            <ABadge
-              :variant="stats.last_full_schedule.status === 'succeeded' ? 'success' : 'danger'"
-              >{{ stats.last_full_schedule.status }}</ABadge
-            >
+            <ABadge :variant="syncStatusVariant(stats.last_full_schedule.status)">{{
+              stats.last_full_schedule.status
+            }}</ABadge>
             <span class="t-muted"
               >Last schedule import {{ timeAgo(stats.last_full_schedule.finished_at) }}</span
             >
@@ -128,9 +127,7 @@ const fmt = (n: number | undefined) => (n ?? 0).toLocaleString()
           <span class="t-label">Recent runs</span>
           <ul class="runs">
             <li v-for="r in runs" :key="r.id" class="runs__item">
-              <ABadge :variant="r.status === 'succeeded' ? 'success' : 'danger'">{{
-                r.status
-              }}</ABadge>
+              <ABadge :variant="syncStatusVariant(r.status)">{{ r.status }}</ABadge>
               <span class="runs__type t-mono">{{ r.job_type }}</span>
               <span class="runs__when t-muted">{{ timeAgo(r.finished_at) }}</span>
             </li>

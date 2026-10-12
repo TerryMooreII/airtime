@@ -15,6 +15,7 @@ import {
 import { errorMessage } from '@/composables/useAsync'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useFollow } from '@/composables/useFollow'
+import { useNow } from '@/composables/useNow'
 import { useQueryParam } from '@/composables/useQueryParam'
 import { dayKey, episodeCode, formatAirTime, formatRuntime, relativeDayLabel } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
@@ -57,8 +58,7 @@ const selectedDay = ref<string | null>(null)
 function isFollowed(e: UpcomingEpisode): boolean {
   return scope.value === 'mine' ? true : (e.followed ?? library.byShowId.has(e.show_id))
 }
-const now = ref(Date.now())
-setInterval(() => (now.value = Date.now()), 30_000)
+const now = useNow(30_000)
 
 const tz = computed(() => auth.timezone)
 

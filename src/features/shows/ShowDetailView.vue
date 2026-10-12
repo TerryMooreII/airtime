@@ -11,6 +11,7 @@ import {
   ABrandIcon,
   ABadge,
   AButton,
+  AEmptyState,
   AFollowButton,
   APills,
   APoster,
@@ -21,6 +22,7 @@ import {
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
+import { useNow } from '@/composables/useNow'
 import { fetchEpisodeRatings, fetchEpisodesForShow } from '@/lib/api/episodes'
 import { fetchShowCast } from '@/lib/tvmaze'
 import {
@@ -29,6 +31,7 @@ import {
   fetchShowExternalIds,
   fetchShowRatings,
   RATING_PROVIDER_LABELS,
+  refreshShow,
 } from '@/lib/api/shows'
 import {
   episodeCode,
@@ -39,7 +42,6 @@ import {
   stripHtml,
   yearOf,
 } from '@/lib/format'
-import { invokeFunction } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 import { useUiStore } from '@/stores/ui'
@@ -105,7 +107,7 @@ function castRole(c: CastMember): string {
 const showId = computed(() => Number(props.id))
 const entry = computed(() => library.entryFor(showId.value))
 const tz = computed(() => auth.timezone)
-const now = Date.now()
+const now = useNow(60_000)
 
 async function load() {
   loading.value = true
@@ -144,7 +146,7 @@ async function loadEpisodes() {
     )
     .catch(() => undefined)
   if (season.value === null || !seasons.value.includes(season.value)) {
-    const aired = episodes.value.filter((e) => e.airstamp && new Date(e.airstamp).getTime() < now)
+    const aired = episodes.value.filter((e) => e.airstamp && new Date(e.airstamp).getTime() < now.value)
     season.value = (aired[aired.length - 1] ?? episodes.value[0])?.season ?? null
   }
 }
@@ -154,9 +156,7 @@ async function refreshEpisodes() {
   if (!show.value || episodesLoading.value) return
   episodesLoading.value = true
   try {
-    const res = await invokeFunction<{ refreshed: boolean }>('refresh-show', {
-      tvmaze_id: show.value.tvmaze_id,
-    })
+    const res = await refreshShow(show.value.tvmaze_id)
     if (res.refreshed) {
       show.value = (await fetchShow(showId.value)) ?? show.value
       await loadEpisodes()
@@ -184,7 +184,7 @@ const seasonOptions = computed(() =>
 )
 const seasonEpisodes = computed(() => episodes.value.filter((e) => e.season === season.value))
 const nextEpisode = computed(() =>
-  episodes.value.find((e) => e.airstamp && new Date(e.airstamp).getTime() > now - 30 * 60_000),
+  episodes.value.find((e) => e.airstamp && new Date(e.airstamp).getTime() > now.value - 30 * 60_000),
 )
 
 const genres = computed(() => show.value?.genres ?? [])
@@ -288,7 +288,7 @@ function openFromDrawer(e: Episode) {
   season.value = e.season
 }
 function isFuture(e: Episode): boolean {
-  return !!e.airstamp && new Date(e.airstamp).getTime() > now
+  return !!e.airstamp && new Date(e.airstamp).getTime() > now.value
 }
 
 // ---------------------------------------------------------------------------
@@ -441,7 +441,7 @@ async function toggleSeason() {
             <AButton
               variant="outline"
               size="sm"
-              :icon="entry.notify ? 'bell' : 'bell'"
+              :icon="entry.notify ? 'bellOff' : 'bell'"
               @click="setNotify(!entry.notify)"
               >{{ entry.notify ? 'Mute' : 'Unmute' }}</AButton
             >

@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 
 import { supabase } from '@/lib/supabase'
 import { BASE_PATH, publicAsset } from '@/lib/url'
+import { useAuthStore } from '@/stores/auth'
 
 /**
  * Web Push subscription management. The service worker (src/sw.js, registered by
@@ -45,12 +46,42 @@ export function usePushSubscription() {
     )
   }
 
+  /** Attach the browser's subscription to the signed-in user (reassigns it on account switch). */
+  async function register(sub: PushSubscription): Promise<void> {
+    const json = sub.toJSON()
+    const { error: err } = await supabase.rpc('register_push_subscription', {
+      p_endpoint: sub.endpoint,
+      p_p256dh: json.keys?.p256dh ?? '',
+      p_auth: json.keys?.auth ?? '',
+      p_user_agent: navigator.userAgent.slice(0, 200),
+    })
+    if (err) throw err
+  }
+
+  async function browserSubscription(): Promise<PushSubscription | null> {
+    if (!supported.value) return null
+    const reg = await navigator.serviceWorker.getRegistration(BASE_PATH)
+    return (await reg?.pushManager.getSubscription()) ?? null
+  }
+
+  /**
+   * Sync state with the browser. When the profile has push on and the browser still holds a
+   * subscription, re-register it: sign-out removes the server row, so this makes the same
+   * account's next sign-in work without touching the toggle.
+   */
   async function refresh(): Promise<void> {
     if (!supported.value) return
-    const reg = await navigator.serviceWorker.getRegistration(BASE_PATH)
-    const sub = await reg?.pushManager.getSubscription()
+    const sub = await browserSubscription()
     subscribed.value = Boolean(sub)
     permission.value = Notification.permission
+    const auth = useAuthStore()
+    if (sub && auth.user && auth.profile?.notify_push) await register(sub).catch(() => undefined)
+  }
+
+  /** Remove this device's registration for the signed-in user (keeps the browser subscription). */
+  async function forgetDevice(): Promise<void> {
+    const sub = await browserSubscription()
+    if (sub) await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
   }
 
   async function enable(): Promise<boolean> {
@@ -74,21 +105,7 @@ export function usePushSubscription() {
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapidKey),
         }))
-      const json = sub.toJSON()
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData.user) throw new Error('not signed in')
-      const { error: err } = await supabase.from('push_subscriptions').upsert(
-        {
-          user_id: userData.user.id,
-          endpoint: sub.endpoint,
-          p256dh: json.keys?.p256dh ?? '',
-          auth: json.keys?.auth ?? '',
-          user_agent: navigator.userAgent.slice(0, 200),
-          failed_at: null,
-        },
-        { onConflict: 'endpoint' },
-      )
-      if (err) throw err
+      await register(sub)
       subscribed.value = true
       return true
     } catch (err) {
@@ -126,6 +143,7 @@ export function usePushSubscription() {
     busy,
     error,
     refresh,
+    forgetDevice,
     enable,
     disable,
   }

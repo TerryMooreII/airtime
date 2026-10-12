@@ -3,7 +3,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { AAlert, ABadge, AButton, ACard, ATable, type TableColumn } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
-import { enqueueSync, fetchSyncQueue, fetchSyncRuns } from '@/lib/api/admin'
+import { enqueueSync, fetchSyncQueue, fetchSyncRuns, syncStatusVariant } from '@/lib/api/admin'
 import { timeAgo } from '@/lib/format'
 import { useUiStore } from '@/stores/ui'
 import type { Json } from '@/lib/database.types'
@@ -57,8 +57,7 @@ async function enqueue(job: (typeof JOBS)[number]) {
   }
 }
 
-const badge = (s: SyncStatus) =>
-  s === 'succeeded' ? 'success' : s === 'failed' ? 'danger' : s === 'running' ? 'soft' : 'muted'
+const badge = syncStatusVariant
 const queueColumns: TableColumn[] = [
   { key: 'id', label: '#' },
   { key: 'job_type', label: 'Job' },

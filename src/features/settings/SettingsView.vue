@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import {
   AAlert,
@@ -15,19 +14,15 @@ import {
 } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
 import { usePushSubscription } from '@/composables/usePushSubscription'
+import { useSignOut } from '@/composables/useSignOut'
 import { useTheme, type ThemeMode } from '@/composables/useTheme'
 import { sendTestNotification } from '@/lib/api/notifications'
 import { browserTimeZone } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
-import { useLibraryStore } from '@/stores/library'
-import { useNotificationsStore } from '@/stores/notifications'
 import { useUiStore } from '@/stores/ui'
-import { useUpcomingStore } from '@/stores/upcoming'
-import { useWatchedStore } from '@/stores/watched'
 
 const auth = useAuthStore()
 const ui = useUiStore()
-const router = useRouter()
 const theme = useTheme()
 const push = usePushSubscription()
 
@@ -98,14 +93,7 @@ async function togglePush(on: boolean) {
     await save({ notify_push: false }, 'Push notifications disabled')
   }
 }
-async function signOut() {
-  useNotificationsStore().reset()
-  useLibraryStore().reset()
-  useWatchedStore().reset()
-  useUpcomingStore().reset()
-  await auth.signOut()
-  await router.replace({ name: 'login' })
-}
+const signOut = useSignOut()
 </script>
 
 <template>

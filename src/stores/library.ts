@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-import { invokeFunction, supabase } from '@/lib/supabase'
+import { refreshShow } from '@/lib/api/shows'
+import { supabase } from '@/lib/supabase'
 import { useUpcomingStore } from '@/stores/upcoming'
 import type { LibraryEntry, UserShow, UserShowStatus } from '@/types/domain'
 
@@ -74,10 +75,7 @@ export const useLibraryStore = defineStore('library', () => {
 
     // Pull the full episode list right away; the queue is the fallback if this fails.
     const id = tvmazeId ?? (data as unknown as LibraryEntry).show?.tvmaze_id
-    if (id)
-      invokeFunction('refresh-show', { tvmaze_id: id }).catch((err) =>
-        console.warn('refresh-show failed, queue will handle it', err),
-      )
+    if (id) refreshShow(id).catch((err) => console.warn('refresh-show failed, queue will handle it', err))
   }
 
   /**
@@ -103,7 +101,7 @@ export const useLibraryStore = defineStore('library', () => {
 
     // The row was (re)created: make sure its episode list gets fetched.
     if (!existed && (tvmazeId ?? entry.show?.tvmaze_id)) {
-      invokeFunction('refresh-show', { tvmaze_id: tvmazeId ?? entry.show.tvmaze_id }).catch((err) =>
+      refreshShow(tvmazeId ?? entry.show.tvmaze_id).catch((err) =>
         console.warn('refresh-show failed, queue will handle it', err),
       )
     }

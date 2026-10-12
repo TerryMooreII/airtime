@@ -90,16 +90,19 @@ export type Database = {
         Row: {
           computed_at: string
           payload: Json
+          stale: boolean
           user_id: string
         }
         Insert: {
           computed_at?: string
           payload: Json
+          stale?: boolean
           user_id: string
         }
         Update: {
           computed_at?: string
           payload?: Json
+          stale?: boolean
           user_id?: string
         }
         Relationships: [
@@ -435,6 +438,7 @@ export type Database = {
           created_at: string
           dvd_country_code: string | null
           ended: string | null
+          episodes_refreshing_at: string | null
           episodes_synced_at: string | null
           genres: string[]
           id: number
@@ -465,6 +469,7 @@ export type Database = {
           created_at?: string
           dvd_country_code?: string | null
           ended?: string | null
+          episodes_refreshing_at?: string | null
           episodes_synced_at?: string | null
           genres?: string[]
           id?: never
@@ -495,6 +500,7 @@ export type Database = {
           created_at?: string
           dvd_country_code?: string | null
           ended?: string | null
+          episodes_refreshing_at?: string | null
           episodes_synced_at?: string | null
           genres?: string[]
           id?: never
@@ -725,6 +731,13 @@ export type Database = {
         }
         Returns: number
       }
+      admin_set_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["app_role"]
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       admin_shows: {
         Args: { p_limit?: number; p_query?: string }
         Returns: {
@@ -740,14 +753,41 @@ export type Database = {
           tvmaze_updated_at: string
         }[]
       }
-      admin_set_role: {
-        Args: {
-          p_role: Database["public"]["Enums"]["app_role"]
-          p_user_id: string
-        }
-        Returns: undefined
-      }
       admin_stats: { Args: never; Returns: Json }
+      admin_user_summaries: {
+        Args: { p_ids: string[] }
+        Returns: {
+          created_at: string
+          display_name: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          timezone: string
+          tracked_shows: number
+        }[]
+      }
+      begin_show_refresh: { Args: { p_tvmaze_id: number }; Returns: boolean }
+      claim_push_batch: {
+        Args: { p_limit?: number }
+        Returns: {
+          body: string | null
+          created_at: string
+          data: Json
+          episode_id: number | null
+          id: number
+          push_sent_at: string | null
+          read_at: string | null
+          show_id: number | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "notifications"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       claim_sync_jobs: {
         Args: { p_limit?: number; p_worker: string }
         Returns: {
@@ -782,14 +822,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      compute_discover_rails: { Args: never; Returns: Json }
       create_airing_today_notifications: { Args: never; Returns: number }
       create_new_episode_notifications: {
         Args: { p_episode_ids: number[] }
         Returns: number
       }
-      compute_discover_rails: { Args: never; Returns: Json }
       discover_rails: { Args: never; Returns: Json }
       enqueue_nightly_sync: { Args: never; Returns: undefined }
+      enqueue_stale_shows: {
+        Args: { p_max?: number; p_updates: Json }
+        Returns: Json
+      }
       enqueue_sync_job: {
         Args: {
           p_job_type: Database["public"]["Enums"]["sync_job_type"]
@@ -807,6 +851,14 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_notifications_read: { Args: { p_ids: number[] }; Returns: undefined }
+      mark_season_watched: {
+        Args: { p_season: number; p_show_id: number }
+        Returns: number
+      }
+      mark_show_episodes_synced: {
+        Args: { p_tvmaze_id: number }
+        Returns: undefined
+      }
       match_show_candidates: {
         Args: { p_limit?: number; p_names: string[] }
         Returns: {
@@ -822,29 +874,6 @@ export type Database = {
           status: string
           tvmaze_id: number
           type: string
-        }[]
-      }
-      mark_season_watched: {
-        Args: { p_season: number; p_show_id: number }
-        Returns: number
-      }
-      mark_show_episodes_synced: {
-        Args: { p_tvmaze_id: number }
-        Returns: undefined
-      }
-      my_upcoming_episodes_all: {
-        Args: { p_days?: number; p_limit?: number }
-        Returns: {
-          airstamp: string
-          episode_id: number
-          episode_name: string
-          number: number
-          runtime: number
-          season: number
-          show_id: number
-          show_image: string
-          show_name: string
-          status: Database["public"]["Enums"]["user_show_status"]
         }[]
       }
       my_show_progress: {
@@ -871,11 +900,36 @@ export type Database = {
           status: Database["public"]["Enums"]["user_show_status"]
         }[]
       }
+      my_upcoming_episodes_all: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: {
+          airstamp: string
+          episode_id: number
+          episode_name: string
+          number: number
+          runtime: number
+          season: number
+          show_id: number
+          show_image: string
+          show_name: string
+          status: Database["public"]["Enums"]["user_show_status"]
+        }[]
+      }
+      purge_old_records: { Args: never; Returns: undefined }
+      refresh_discover_cache_stale: { Args: never; Returns: number }
+      register_push_subscription: {
+        Args: {
+          p_auth: string
+          p_endpoint: string
+          p_p256dh: string
+          p_user_agent?: string
+        }
+        Returns: number
+      }
       release_stale_sync_jobs: {
         Args: { p_older_than?: string }
         Returns: number
       }
-      send_test_notification: { Args: never; Returns: number }
       search_shows: {
         Args: { p_limit?: number; p_offset?: number; p_query: string }
         Returns: {
@@ -893,17 +947,20 @@ export type Database = {
           type: string
         }[]
       }
+      send_test_notification: { Args: never; Returns: number }
+      show_card: { Args: { p_show_id: number }; Returns: Json }
+      show_cards: { Args: { p_ids: number[] }; Returns: Json }
       stale_shows: {
         Args: { p_updates: Json }
         Returns: {
           episodes_synced: boolean
+          is_new: boolean
           tvmaze_id: number
         }[]
       }
       text_array_to_text: { Args: { arr: string[] }; Returns: string }
       tick_push_dispatch: { Args: never; Returns: undefined }
       tick_sync_worker: { Args: never; Returns: undefined }
-      show_card: { Args: { p_show_id: number }; Returns: Json }
       upcoming_episodes_all: {
         Args: { p_days?: number; p_limit?: number }
         Returns: {
@@ -928,7 +985,11 @@ export type Database = {
     Enums: {
       app_role: "user" | "admin"
       channel_kind: "network" | "web_channel"
-      notification_type: "new_episode" | "airing_today" | "show_status_changed"
+      notification_type:
+        | "new_episode"
+        | "airing_today"
+        | "show_status_changed"
+        | "test"
       sync_job_type:
         | "catalog_page"
         | "full_schedule"
@@ -1066,7 +1127,12 @@ export const Constants = {
     Enums: {
       app_role: ["user", "admin"],
       channel_kind: ["network", "web_channel"],
-      notification_type: ["new_episode", "airing_today", "show_status_changed"],
+      notification_type: [
+        "new_episode",
+        "airing_today",
+        "show_status_changed",
+        "test",
+      ],
       sync_job_type: [
         "catalog_page",
         "full_schedule",

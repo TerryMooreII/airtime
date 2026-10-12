@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { AAppShell, AAvatar, AIcon, ASearchBox, type NavItem } from '@/design-system'
+import { usePushSubscription } from '@/composables/usePushSubscription'
 import { useTheme } from '@/composables/useTheme'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
@@ -74,6 +75,8 @@ onMounted(async () => {
     void library.load()
     void notifications.refreshUnreadCount()
     notifications.subscribe(auth.user.id)
+    // Re-attach this browser's push subscription after a sign-out/sign-in on the same device.
+    if (auth.profile?.notify_push) void usePushSubscription().refresh()
   }
 })
 onBeforeUnmount(() => {

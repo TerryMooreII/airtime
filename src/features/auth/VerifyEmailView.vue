@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 import { AAlert, AButton } from '@/design-system'
 import { errorMessage } from '@/composables/useAsync'
+import { useSignOut } from '@/composables/useSignOut'
 import { useAuthStore } from '@/stores/auth'
 
 import AuthFormShell from './AuthFormShell.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
-const router = useRouter()
 
 const email = computed(
   () => (typeof route.query.email === 'string' ? route.query.email : auth.user?.email) ?? '',
@@ -33,10 +33,7 @@ async function resend() {
   }
 }
 
-async function signOut() {
-  await auth.signOut()
-  await router.replace({ name: 'login' })
-}
+const signOut = useSignOut()
 </script>
 
 <template>
