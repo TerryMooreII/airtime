@@ -2,7 +2,7 @@
 import { onBeforeUnmount, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import AIcon from './AIcon.vue'
+import AFollowButton from './AFollowButton.vue'
 import APoster from './APoster.vue'
 import AStarRating from './AStarRating.vue'
 
@@ -56,9 +56,7 @@ function closeMenu() {
   document.removeEventListener('keydown', onDocumentKey)
 }
 /** Plus: expand the circle into the status panel (or follow directly). Check: unfollow. */
-function onChipClick(ev: Event, isFollowing: boolean, hasOptions: boolean) {
-  ev.preventDefault()
-  ev.stopPropagation()
+function onChip(isFollowing: boolean, hasOptions: boolean) {
   if (isFollowing || !hasOptions) emit('follow')
   else if (menuOpen.value) closeMenu()
   else openMenu()
@@ -103,21 +101,14 @@ const rating = defineModel<number | null>('rating', { default: null })
             {{ o.label }}
           </button>
         </span>
-        <button
-          type="button"
-          class="a-show-card__chip"
-          :class="{ 'a-show-card__chip--on': following, 'a-show-card__chip--open': menuOpen }"
-          :aria-label="following ? 'Unfollow' : menuOpen ? 'Close' : 'Follow'"
-          :aria-expanded="following ? undefined : menuOpen"
-          :disabled="followLoading"
-          @click="onChipClick($event, following, !!followOptions?.length)"
-        >
-          <AIcon
-            :name="followLoading ? 'spinner' : following ? 'check' : 'plus'"
-            :size="16"
-            :stroke-width="2.4"
-          />
-        </button>
+        <AFollowButton
+          appearance="chip"
+          inline
+          :following="following"
+          :loading="followLoading"
+          :open="menuOpen"
+          @toggle="onChip(following, !!followOptions?.length)"
+        />
       </span>
     </APoster>
     <span class="a-show-card__name truncate">{{ name }}</span>
@@ -238,40 +229,6 @@ const rating = defineModel<number | null>('rating', { default: null })
   background: var(--primary);
   color: var(--on-primary);
   outline: none;
-}
-/* The chip stays on top: a plus that turns into an x while the panel is open. */
-.a-show-card__chip {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 0;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(6px);
-  transition:
-    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    background 160ms;
-}
-.a-show-card__chip:hover {
-  transform: scale(1.06);
-}
-.a-show-card__chip--open,
-.a-show-card__chip--open:hover {
-  background: transparent;
-  transform: rotate(135deg);
-}
-.a-show-card__chip--on {
-  background: var(--primary);
-  color: var(--on-primary);
-}
-.a-show-card__chip:disabled {
-  opacity: 0.7;
 }
 .a-show-card__name {
   font-size: 14.5px;

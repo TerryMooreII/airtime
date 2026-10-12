@@ -4,9 +4,9 @@ import { computed, onMounted, ref } from 'vue'
 import {
   AAlert,
   AButton,
+  AChoiceGroup,
+  AHeader,
   AInput,
-  APageHeader,
-  ASegmented,
   ASelect,
   ASettingsGroup,
   ASettingsRow,
@@ -89,7 +89,7 @@ const signOut = useSignOut()
 
 <template>
   <div class="settings">
-    <APageHeader title="Settings" />
+    <AHeader title="Settings" />
 
     <ASettingsGroup title="Account">
       <ASettingsRow title="Name" :description="auth.user?.email ?? ''">
@@ -120,7 +120,12 @@ const signOut = useSignOut()
 
     <ASettingsGroup title="Appearance &amp; time">
       <ASettingsRow title="Theme" description="System follows your device setting.">
-        <ASegmented v-model="theme.mode.value" :options="themeOptions" aria-label="Theme" />
+        <AChoiceGroup
+          v-model="theme.mode.value"
+          variant="segmented"
+          :options="themeOptions"
+          aria-label="Theme"
+        />
       </ASettingsRow>
       <ASettingsRow
         title="Time zone"

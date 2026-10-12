@@ -1,20 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import {
   AAlert,
-  AIcon,
-  AProgressBar,
-  APersonCard,
-  ATabs,
-  ABrandIcon,
   ABadge,
+  ABrandIcon,
   AButton,
+  AChoiceGroup,
   AEmptyState,
   AFollowButton,
-  APills,
+  AIcon,
+  APersonCard,
   APoster,
+  AProgressBar,
   ASkeleton,
   AStarRating,
   type Brand,
@@ -56,7 +54,6 @@ import {
 import EpisodeDrawer from './EpisodeDrawer.vue'
 
 const props = defineProps<{ id: string }>()
-const router = useRouter()
 const auth = useAuthStore()
 const library = useLibraryStore()
 const ui = useUiStore()
@@ -286,70 +283,69 @@ function toggleSeason() {
 
 <template>
   <div class="show">
-    <div><AButton variant="ghost" size="sm" icon="back" @click="router.back()">Back</AButton></div>
+    <ABackButton :fallback="{ name: 'library' }" />
 
     <AAlert v-if="error" variant="error">{{ error }}</AAlert>
     <ASkeleton v-else-if="loading" height="340px" radius="22px" />
 
     <template v-else-if="show">
-      <section class="hero">
-        <img
-          v-if="show.image_original ?? show.image_medium"
-          :src="show.image_original ?? show.image_medium ?? ''"
-          alt=""
-          class="hero__bg"
-        />
-        <div class="hero__inner">
-          <APoster :src="show.image_medium" :alt="show.name" radius="lg" class="hero__poster" />
-          <div class="hero__text">
-            <div v-if="genres.length || channel" class="hero__genres">
-              <ABadge v-if="channel" variant="soft" :mono="false" class="hero__channel">
-                <AIcon :name="channel.kind === 'network' ? 'tv' : 'play'" :size="13" />{{
-                  channel.label
-                }}
-              </ABadge>
-              <ABadge v-for="g in genres" :key="g" variant="outline" :mono="false">{{ g }}</ABadge>
-            </div>
-            <h1 class="hero__title">{{ show.name }}</h1>
-            <div class="hero__meta">{{ meta }}</div>
-            <div class="hero__ratings">
-              <div class="score">
-                <span class="t-label">TVmaze</span>
-                <span class="score__value">★ {{ tvmazeRating ? tvmazeRating.value : '—' }}</span>
-              </div>
-              <div v-for="r in otherRatings" :key="r.provider" class="score">
-                <span class="t-label">{{ RATING_PROVIDER_LABELS[r.provider] ?? r.provider }}</span>
-                <span class="score__value"
-                  >{{ r.value }}<span class="score__scale">/{{ r.scale }}</span></span
-                >
-              </div>
-              <div class="score">
-                <span class="t-label"
-                  >Your rating · {{ entry?.rating ? `${entry.rating}/5` : 'tap to rate' }}</span
-                >
-                <AStarRating
-                  :model-value="entry?.rating ?? null"
-                  size="lg"
-                  @update:model-value="setRating"
-                />
-              </div>
-              <AFollowButton
-                :following="!!entry"
-                :loading="follow.pending(show.id)"
-                size="lg"
-                @toggle="toggleFollow"
-              />
-            </div>
-            <APills
-              :model-value="entry?.status ?? ''"
-              :options="USER_SHOW_STATUSES"
-              aria-label="Watch status"
-              class="hero__status"
-              @update:model-value="setStatus($event as UserShowStatus)"
+      <AMediaHero
+        :title="show.name"
+        :backdrop="show.image_original ?? show.image_medium"
+        :meta="meta"
+        size="xl"
+        :media-width="210"
+      >
+        <template #media
+          ><APoster :src="show.image_medium" :alt="show.name" radius="lg"
+        /></template>
+        <template #above>
+          <div v-if="genres.length || channel" class="hero__genres">
+            <ABadge v-if="channel" variant="soft" :mono="false" class="hero__channel">
+              <AIcon :name="channel.kind === 'network' ? 'tv' : 'play'" :size="13" />{{
+                channel.label
+              }}
+            </ABadge>
+            <ABadge v-for="g in genres" :key="g" variant="outline" :mono="false">{{ g }}</ABadge>
+          </div>
+        </template>
+        <div class="hero__ratings">
+          <div class="score">
+            <span class="t-label">TVmaze</span>
+            <span class="score__value">★ {{ tvmazeRating ? tvmazeRating.value : '—' }}</span>
+          </div>
+          <div v-for="r in otherRatings" :key="r.provider" class="score">
+            <span class="t-label">{{ RATING_PROVIDER_LABELS[r.provider] ?? r.provider }}</span>
+            <span class="score__value"
+              >{{ r.value }}<span class="score__scale">/{{ r.scale }}</span></span
+            >
+          </div>
+          <div class="score">
+            <span class="t-label"
+              >Your rating · {{ entry?.rating ? `${entry.rating}/5` : 'tap to rate' }}</span
+            >
+            <AStarRating
+              :model-value="entry?.rating ?? null"
+              size="lg"
+              @update:model-value="setRating"
             />
           </div>
+          <AFollowButton
+            :following="!!entry"
+            :loading="follow.pending(show.id)"
+            size="lg"
+            @toggle="toggleFollow"
+          />
         </div>
-      </section>
+        <AChoiceGroup
+          variant="pills"
+          :model-value="entry?.status ?? ''"
+          :options="USER_SHOW_STATUSES"
+          aria-label="Watch status"
+          class="hero__status"
+          @update:model-value="setStatus($event as UserShowStatus)"
+        />
+      </AMediaHero>
 
       <section class="about">
         <div class="about__text">
@@ -400,8 +396,9 @@ function toggleSeason() {
         </div>
       </section>
 
-      <ATabs
+      <AChoiceGroup
         v-model="tab"
+        variant="tabs"
         :options="[
           { value: 'episodes', label: 'Episodes', count: episodes.length || undefined },
           { value: 'cast', label: 'Cast', count: cast?.length },
@@ -410,30 +407,31 @@ function toggleSeason() {
       />
 
       <section v-if="tab === 'episodes'" class="episodes">
-        <div class="episodes__head">
-          <span class="t-h2">Episodes</span>
-          <span v-if="episodesLoading" class="episodes__sync t-mono">Syncing from TVmaze…</span>
-          <span class="episodes__actions">
-            <AButton
-              v-if="airedSeasonIds.length"
-              variant="outline"
-              size="sm"
-              :icon="allSeasonWatched ? 'minus' : 'check'"
-              @click="toggleSeason"
-              >{{ allSeasonWatched ? 'Mark season unwatched' : 'Mark season watched' }}</AButton
-            >
-            <AButton
-              v-if="!episodesLoading"
-              variant="ghost"
-              size="sm"
-              icon="refresh"
-              @click="refreshEpisodes"
-              >Refresh</AButton
-            >
-          </span>
-        </div>
-        <APills
+        <AHeader
+          level="section"
+          title="Episodes"
+          :subtitle="episodesLoading ? 'Syncing from TVmaze…' : undefined"
+        >
+          <AButton
+            v-if="airedSeasonIds.length"
+            variant="outline"
+            size="sm"
+            :icon="allSeasonWatched ? 'minus' : 'check'"
+            @click="toggleSeason"
+            >{{ allSeasonWatched ? 'Mark season unwatched' : 'Mark season watched' }}</AButton
+          >
+          <AButton
+            v-if="!episodesLoading"
+            variant="ghost"
+            size="sm"
+            icon="refresh"
+            @click="refreshEpisodes"
+            >Refresh</AButton
+          >
+        </AHeader>
+        <AChoiceGroup
           v-if="seasons.length > 1"
+          variant="pills"
           :model-value="season ?? -1"
           :options="seasonOptions"
           mono
@@ -550,43 +548,7 @@ function toggleSeason() {
   flex-direction: column;
   gap: 28px;
 }
-.hero {
-  position: relative;
-  border-radius: var(--radius-3xl);
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--line);
-}
-.hero__bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(56px) saturate(1.6);
-  opacity: 0.42;
-  transform: scale(1.3);
-}
-.hero__inner {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 28px;
-  align-items: flex-end;
-  padding: 32px;
-}
-.hero__poster {
-  width: 210px;
-  flex: none;
-  box-shadow: var(--shadow-poster);
-}
-.hero__text {
-  flex: 1 1 300px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+
 .hero__channel {
   gap: 6px;
 }
@@ -595,17 +557,7 @@ function toggleSeason() {
   gap: 6px;
   flex-wrap: wrap;
 }
-.hero__title {
-  font-size: 56px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 0.98;
-  text-wrap: balance;
-}
-.hero__meta {
-  font: 500 13px var(--font-mono);
-  color: var(--muted);
-}
+
 .hero__ratings {
   display: flex;
   flex-wrap: wrap;
@@ -714,17 +666,7 @@ function toggleSeason() {
   flex-direction: column;
   gap: 14px;
 }
-.episodes__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.episodes__sync {
-  font-size: 12.5px;
-  color: var(--primary-text);
-}
+
 .episodes__count {
   font-size: 13px;
   color: var(--muted);
@@ -739,11 +681,7 @@ function toggleSeason() {
 .episodes__list {
   gap: 0;
 }
-.episodes__actions {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
+
 .episodes__progress {
   display: flex;
   align-items: center;
@@ -855,15 +793,6 @@ function toggleSeason() {
   font-size: 12.5px;
 }
 @media (max-width: 759px) {
-  .hero__inner {
-    padding: 20px;
-  }
-  .hero__poster {
-    width: 130px;
-  }
-  .hero__title {
-    font-size: 34px;
-  }
   .about {
     grid-template-columns: minmax(0, 1fr);
   }

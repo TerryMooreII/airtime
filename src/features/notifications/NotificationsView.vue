@@ -2,7 +2,7 @@
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { AButton, AEmptyState, AIcon, APageHeader, APoster, ASkeleton } from '@/design-system'
+import { AButton, AEmptyState, AHeader, AIcon, APoster, ASkeleton } from '@/design-system'
 import { timeAgo } from '@/lib/format'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useUiStore } from '@/stores/ui'
@@ -28,7 +28,7 @@ const KIND: Record<AppNotification['type'], string> = {
 
 <template>
   <div class="notifs">
-    <APageHeader
+    <AHeader
       title="Alerts"
       :subtitle="
         notifications.unreadCount ? `${notifications.unreadCount} unread` : 'You are all caught up.'
@@ -42,7 +42,7 @@ const KIND: Record<AppNotification['type'], string> = {
         @click="markAll"
         >Mark all read</AButton
       >
-    </APageHeader>
+    </AHeader>
 
     <div v-if="notifications.loading && !notifications.items.length" class="notifs__list">
       <ASkeleton v-for="i in 5" :key="i" height="76px" />
@@ -77,11 +77,11 @@ const KIND: Record<AppNotification['type'], string> = {
           <AIcon name="close" :size="14" />
         </button>
       </div>
-      <div v-if="notifications.hasMore" class="notifs__more">
-        <AButton variant="outline" :loading="notifications.loading" @click="notifications.load()"
-          >Load more</AButton
-        >
-      </div>
+      <ALoadMore
+        v-if="notifications.hasMore"
+        :loading="notifications.loading"
+        @more="notifications.load()"
+      />
     </div>
 
     <AEmptyState
@@ -169,10 +169,5 @@ const KIND: Record<AppNotification['type'], string> = {
 .item__remove:hover {
   color: var(--fg);
   background: var(--hover);
-}
-.notifs__more {
-  display: flex;
-  justify-content: center;
-  padding-top: 8px;
 }
 </style>

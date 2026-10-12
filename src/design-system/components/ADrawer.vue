@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { onBeforeUnmount, watch } from 'vue'
+import { toRef } from 'vue'
+
+import { useOverlay } from '@/composables/useOverlay'
 
 import AIcon from './AIcon.vue'
 
@@ -8,27 +10,7 @@ const props = withDefaults(defineProps<{ open: boolean; title?: string; width?: 
   width: '460px',
 })
 const emit = defineEmits<{ close: [] }>()
-
-function onKey(e: KeyboardEvent) {
-  if (e.key === 'Escape') emit('close')
-}
-watch(
-  () => props.open,
-  (open) => {
-    if (open) {
-      document.addEventListener('keydown', onKey)
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
-    }
-  },
-  { immediate: true },
-)
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', onKey)
-  document.body.style.overflow = ''
-})
+useOverlay(toRef(props, 'open'), () => emit('close'), { lockScroll: true })
 </script>
 
 <template>

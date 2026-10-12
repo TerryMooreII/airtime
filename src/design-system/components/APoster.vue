@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import AIcon from './AIcon.vue'
+
 withDefaults(
   defineProps<{
     src: string | null | undefined
     alt?: string
     /** Aspect ratio: poster 2/3 or still 16/9. */
-    ratio?: 'poster' | 'still' | 'square'
+    ratio?: 'poster' | 'still'
     radius?: 'sm' | 'md' | 'lg'
   }>(),
   { alt: '', ratio: 'poster', radius: 'md' },
@@ -26,18 +28,7 @@ const failed = ref(false)
       @error="failed = true"
     />
     <div v-else class="a-poster__empty" aria-hidden="true">
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M3 6h18v12H3zM8 22h8" />
-      </svg>
+      <AIcon name="tv" :size="28" :stroke-width="1.6" />
     </div>
     <slot />
   </div>
@@ -55,9 +46,6 @@ const failed = ref(false)
 }
 .a-poster--still {
   aspect-ratio: 16 / 9;
-}
-.a-poster--square {
-  aspect-ratio: 1;
 }
 .a-poster--r-sm {
   border-radius: var(--radius-xs);

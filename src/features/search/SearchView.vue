@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 
-import { AAlert, AButton, AEmptyState, ASearchBox, AShowCard, ASkeleton } from '@/design-system'
+import { AAlert, AEmptyState, ASearchBox, AShowCard, ASkeleton } from '@/design-system'
 import { useFollow } from '@/composables/useFollow'
 import { useQueryParam } from '@/composables/useQueryParam'
 import { useShowSearch } from '@/composables/useShowSearch'
@@ -42,11 +42,11 @@ const meta = catalogMeta
 
     <AAlert v-if="search.error.value" variant="error">{{ search.error.value }}</AAlert>
 
-    <div v-if="search.loading.value && !search.results.value.length" class="grid">
+    <AShowGrid v-if="search.loading.value && !search.results.value.length">
       <ASkeleton v-for="i in 8" :key="i" ratio="2 / 3" />
-    </div>
+    </AShowGrid>
 
-    <div v-else-if="search.results.value.length" class="grid">
+    <AShowGrid v-else-if="search.results.value.length">
       <AShowCard
         v-for="s in search.results.value"
         :key="s.id"
@@ -59,7 +59,7 @@ const meta = catalogMeta
         :follow-options="FOLLOW_OPTIONS"
         @follow="(status) => follow.toggle(s.id, s.tvmaze_id, s.name, status)"
       />
-    </div>
+    </AShowGrid>
 
     <AEmptyState
       v-else-if="search.query.value.trim().length >= 2 && !search.loading.value"
@@ -67,11 +67,11 @@ const meta = catalogMeta
       description="Try a different spelling, or the show's original title."
     />
 
-    <div v-if="search.hasMore.value" class="search__more">
-      <AButton variant="outline" :loading="search.loading.value" @click="search.loadMore"
-        >Load more</AButton
-      >
-    </div>
+    <ALoadMore
+      v-if="search.hasMore.value"
+      :loading="search.loading.value"
+      @more="search.loadMore"
+    />
   </div>
 </template>
 
@@ -87,22 +87,10 @@ const meta = catalogMeta
 .search__sub {
   margin-top: -8px;
 }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
-  gap: var(--grid-gap);
-}
-.search__more {
-  display: flex;
-  justify-content: center;
-}
+
 @media (max-width: 759px) {
   .search__box {
     display: flex;
-  }
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(var(--card-min-mobile), 1fr));
-    gap: var(--grid-gap-mobile);
   }
 }
 </style>

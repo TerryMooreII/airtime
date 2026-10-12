@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { onBeforeUnmount, watch } from 'vue'
+import { toRef } from 'vue'
+
+import { useOverlay } from '@/composables/useOverlay'
 
 import AButton from './AButton.vue'
 
@@ -16,19 +18,7 @@ const props = withDefaults(
   { confirmLabel: 'Confirm', cancelLabel: 'Cancel', danger: false, loading: false },
 )
 const emit = defineEmits<{ close: []; confirm: [] }>()
-
-function onKey(e: KeyboardEvent) {
-  if (e.key === 'Escape') emit('close')
-}
-watch(
-  () => props.open,
-  (open) =>
-    open
-      ? document.addEventListener('keydown', onKey)
-      : document.removeEventListener('keydown', onKey),
-  { immediate: true },
-)
-onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
+useOverlay(toRef(props, 'open'), () => emit('close'))
 </script>
 
 <template>

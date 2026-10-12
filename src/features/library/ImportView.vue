@@ -7,14 +7,18 @@ import {
   ABadge,
   AButton,
   ACard,
+  AChoiceGroup,
   AEmptyState,
-  AIcon,
   AFileDrop,
-  APageHeader,
+  AHeader,
+  AIcon,
+  AMediaRow,
   APoster,
   ASearchBox,
-  ASegmented,
   AStarRating,
+  ATable,
+  ATextarea,
+  type TableColumn,
 } from '@/design-system'
 import { useAsync } from '@/composables/useAsync'
 import { useDebouncedQuery } from '@/composables/useDebouncedQuery'
@@ -62,6 +66,12 @@ const {
   results: manualResults,
   loading: manualLoading,
 } = useDebouncedQuery((q) => searchShows(q, 8), { empty: [] as SearchResult[], minLength: 2 })
+
+const previewColumns: TableColumn[] = [
+  { key: 'line', label: '#', width: '48px' },
+  { key: 'name', label: 'Show' },
+  { key: 'rating', label: 'Rating' },
+]
 
 const current = computed(() => rows.value[index.value] ?? null)
 const counts = computed(() => {
@@ -230,7 +240,7 @@ function meta(c: MatchCandidate): string {
 
 <template>
   <div class="import" tabindex="-1" @keydown="onKey">
-    <APageHeader
+    <AHeader
       title="Import shows"
       :subtitle="
         step === 'upload'
@@ -243,7 +253,7 @@ function meta(c: MatchCandidate): string {
       "
     >
       <AButton variant="ghost" size="sm" icon="back" :to="{ name: 'library' }">Library</AButton>
-    </APageHeader>
+    </AHeader>
 
     <AAlert v-if="error" variant="error">{{ error }}</AAlert>
 
@@ -256,13 +266,13 @@ function meta(c: MatchCandidate): string {
           @file="onFile"
         />
         <div class="upload__or">or paste rows</div>
-        <textarea
+        <ATextarea
           v-model="pasted"
-          class="upload__paste"
-          rows="7"
+          :rows="7"
+          mono
           placeholder="Breaking Bad, 5&#10;The Office, 4&#10;Severance, 5"
-          spellcheck="false"
-          @input="parsed = null"
+          :spellcheck="false"
+          @update:model-value="parsed = null"
         />
         <div class="upload__actions">
           <AButton variant="outline" :disabled="!pasted.trim()" @click="parse">Check rows</AButton>
@@ -278,33 +288,24 @@ function meta(c: MatchCandidate): string {
           </span>
         </div>
         <div v-if="parsed?.rows.length" class="upload__preview">
-          <table class="preview">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Show</th>
-                <th>Rating</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="r in parsed.rows.slice(0, 8)" :key="r.line">
-                <td class="t-mono t-muted">{{ r.line }}</td>
-                <td>{{ r.name }}</td>
-                <td>
-                  <span v-if="r.rating">{{ starString(r.rating) }}</span
-                  ><span v-else class="t-muted">{{ r.ratingText || '—' }}</span>
-                </td>
-              </tr>
-              <tr v-if="parsed.rows.length > 8">
-                <td colspan="3" class="t-muted">… and {{ parsed.rows.length - 8 }} more</td>
-              </tr>
-            </tbody>
-          </table>
+          <ATable :columns="previewColumns" :rows="parsed.rows.slice(0, 8)" row-key="line">
+            <template #cell-line="{ value }"
+              ><span class="t-mono t-muted">{{ value }}</span></template
+            >
+            <template #cell-rating="{ row }">
+              <span v-if="row.rating">{{ starString(row.rating) }}</span
+              ><span v-else class="t-muted">{{ row.ratingText || '—' }}</span>
+            </template>
+          </ATable>
+          <p v-if="parsed.rows.length > 8" class="t-muted upload__more">
+            … and {{ plural(parsed.rows.length - 8, 'more row') }}
+          </p>
           <div class="upload__go">
             <div class="upload__status">
               <span class="t-label">Import as</span>
-              <ASegmented
+              <AChoiceGroup
                 v-model="importStatus"
+                variant="segmented"
                 :options="USER_SHOW_STATUSES"
                 aria-label="Status for imported shows"
               />
@@ -382,21 +383,16 @@ function meta(c: MatchCandidate): string {
               placeholder="Search the catalog for a different match"
             />
             <div v-if="manualResults.length" class="manual__results">
-              <button
+              <AMediaRow
                 v-for="r in manualResults"
                 :key="r.id"
-                type="button"
-                class="manual__item"
+                button
+                :image="r.image_medium"
+                :image-width="28"
+                :title="r.name"
+                :subtitle="joinMeta(yearOf(r.premiered), r.network_name)"
                 @click="useManual(r)"
-              >
-                <APoster :src="r.image_medium" radius="sm" class="manual__img" />
-                <span class="manual__text"
-                  ><span class="manual__name truncate">{{ r.name }}</span
-                  ><span class="t-muted t-mono manual__meta">{{
-                    joinMeta(yearOf(r.premiered), r.network_name)
-                  }}</span></span
-                >
-              </button>
+              />
             </div>
             <span v-else-if="manualLoading" class="t-muted">Searching…</span>
           </div>
@@ -472,8 +468,9 @@ function meta(c: MatchCandidate): string {
           </div>
           <div class="summary__status">
             <span class="t-label">Import as</span>
-            <ASegmented
+            <AChoiceGroup
               v-model="importStatus"
+              variant="segmented"
               :options="USER_SHOW_STATUSES"
               aria-label="Status for imported shows"
             />
@@ -498,17 +495,21 @@ function meta(c: MatchCandidate): string {
           <span class="t-label">Will be imported ({{ confirmedRows.length }})</span>
           <ul class="summary__list">
             <li v-for="r in confirmedRows" :key="r.line">
-              <APoster :src="r.selected?.image_medium" radius="sm" class="summary__img" />
-              <span class="summary__text">
-                <span class="summary__name truncate">{{ r.selected?.name }}</span>
-                <span
-                  v-if="r.selected && r.selected.name.toLowerCase() !== r.name.trim().toLowerCase()"
-                  class="t-muted summary__from truncate"
-                  >from “{{ r.name }}”</span
-                >
-              </span>
-              <span class="summary__stars">{{ starString(r.rating) || '—' }}</span>
-              <AButton variant="ghost" size="sm" @click="reviewRow(r)">Change</AButton>
+              <AMediaRow
+                :image="r.selected?.image_medium"
+                :image-width="32"
+                :title="r.selected?.name ?? r.name"
+                :subtitle="
+                  r.selected && r.selected.name.toLowerCase() !== r.name.trim().toLowerCase()
+                    ? `from “${r.name}”`
+                    : undefined
+                "
+              >
+                <template #trailing>
+                  <span class="summary__stars">{{ starString(r.rating) || '—' }}</span>
+                  <AButton variant="ghost" size="sm" @click="reviewRow(r)">Change</AButton>
+                </template>
+              </AMediaRow>
             </li>
           </ul>
         </ACard>
@@ -590,20 +591,7 @@ function meta(c: MatchCandidate): string {
   text-transform: uppercase;
   color: var(--muted);
 }
-.upload__paste {
-  width: 100%;
-  border-radius: var(--radius-lg);
-  background: var(--surface2);
-  border: 1px solid transparent;
-  color: var(--fg);
-  padding: 12px 14px;
-  font: 500 13.5px var(--font-mono);
-  resize: vertical;
-  outline: none;
-}
-.upload__paste:focus {
-  border-color: var(--line2);
-}
+
 .upload__actions {
   display: flex;
   align-items: center;
@@ -620,27 +608,7 @@ function meta(c: MatchCandidate): string {
   flex-direction: column;
   gap: 16px;
 }
-.preview {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13.5px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-.preview th {
-  text-align: left;
-  font: 600 11px var(--font-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-}
-.preview td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--line);
-}
+
 .upload__go {
   display: flex;
   flex-wrap: wrap;
@@ -751,36 +719,7 @@ function meta(c: MatchCandidate): string {
   max-height: 260px;
   overflow: auto;
 }
-.manual__item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--fg);
-  text-align: left;
-}
-.manual__item:hover {
-  background: var(--hover);
-}
-.manual__img {
-  width: 28px;
-  flex: none;
-}
-.manual__text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.manual__name {
-  font-size: 13.5px;
-  font-weight: 600;
-}
-.manual__meta {
-  font-size: 11.5px;
-}
+
 .review__actions {
   display: flex;
   align-items: center;
@@ -927,21 +866,7 @@ kbd {
 .summary__list li:last-child {
   border-bottom: 0;
 }
-.summary__img {
-  width: 32px;
-}
-.summary__text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.summary__name {
-  font-size: 14px;
-  font-weight: 600;
-}
-.summary__from {
-  font-size: 12px;
-}
+
 .summary__stars {
   color: var(--star);
   font-size: 14px;

@@ -6,9 +6,8 @@ import {
   AButton,
   AEmptyState,
   AFollowButton,
-  APageHeader,
+  AHeader,
   APoster,
-  ASectionHeader,
   AShowCard,
   ASkeleton,
 } from '@/design-system'
@@ -137,10 +136,7 @@ const railList = computed<Rail[]>(() => {
 
 <template>
   <div class="discover">
-    <APageHeader
-      title="Discover"
-      subtitle="Picked from your star ratings and what's on this week."
-    />
+    <AHeader title="Discover" subtitle="Picked from your star ratings and what's on this week." />
 
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
 
@@ -155,39 +151,38 @@ const railList = computed<Rail[]>(() => {
     </template>
 
     <template v-else-if="rails">
-      <section v-if="pick" class="pick">
-        <img
-          v-if="pick.image_original ?? pick.image_medium"
-          :src="pick.image_original ?? pick.image_medium ?? ''"
-          alt=""
-          class="pick__bg"
-        />
-        <div class="pick__inner">
-          <RouterLink :to="{ name: 'show', params: { id: pick.id } }" class="pick__poster">
+      <AMediaHero
+        v-if="pick"
+        :title="pick.name"
+        :backdrop="pick.image_original ?? pick.image_medium"
+        kicker="Top pick for you"
+        :meta="pickMeta"
+        size="md"
+        title-tag="h2"
+        align="center"
+        :media-width-mobile="130"
+      >
+        <template #media>
+          <RouterLink :to="{ name: 'show', params: { id: pick.id } }">
             <APoster :src="pick.image_medium" :alt="pick.name" radius="lg" />
           </RouterLink>
-          <div class="pick__text">
-            <span class="t-label pick__kicker">Top pick for you</span>
-            <h2 class="pick__title">{{ pick.name }}</h2>
-            <div class="pick__meta">{{ pickMeta }}</div>
-            <p class="pick__summary">{{ stripHtml(pick.summary_html).slice(0, 320) }}</p>
-            <div class="pick__reason">{{ pickReason }}</div>
-            <div class="pick__actions">
-              <AFollowButton
-                :following="library.byShowId.has(pick.id)"
-                :loading="follow.pending(pick.id)"
-                @toggle="follow.toggle(pick.id, pick.tvmaze_id, pick.name)"
-              />
-              <AButton variant="outline" :to="{ name: 'show', params: { id: pick.id } }"
-                >Details</AButton
-              >
-            </div>
-          </div>
+        </template>
+        <p class="pick__summary">{{ stripHtml(pick.summary_html).slice(0, 320) }}</p>
+        <div class="pick__reason">{{ pickReason }}</div>
+        <div class="pick__actions">
+          <AFollowButton
+            :following="library.byShowId.has(pick.id)"
+            :loading="follow.pending(pick.id)"
+            @toggle="follow.toggle(pick.id, pick.tvmaze_id, pick.name)"
+          />
+          <AButton variant="outline" :to="{ name: 'show', params: { id: pick.id } }"
+            >Details</AButton
+          >
         </div>
-      </section>
+      </AMediaHero>
 
       <section v-for="rail in railList" :key="rail.key" class="rail">
-        <ASectionHeader :title="rail.title" :subtitle="rail.reason" />
+        <AHeader level="section" :title="rail.title" :subtitle="rail.reason" />
         <div class="rail__track">
           <AShowCard
             v-for="s in rail.items"
@@ -225,57 +220,7 @@ const railList = computed<Rail[]>(() => {
   flex-direction: column;
   gap: 32px;
 }
-.pick {
-  position: relative;
-  border-radius: var(--radius-2xl);
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--line);
-}
-.pick__bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(48px) saturate(1.5);
-  opacity: 0.4;
-  transform: scale(1.3);
-}
-.pick__inner {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 28px;
-  padding: 32px;
-  align-items: center;
-}
-.pick__poster {
-  width: 180px;
-  flex: none;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-  border-radius: var(--radius-lg);
-}
-.pick__text {
-  flex: 1 1 280px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.pick__kicker {
-  color: var(--primary-text);
-}
-.pick__title {
-  font-size: var(--text-hero);
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1;
-}
-.pick__meta {
-  font: 500 13px var(--font-mono);
-  color: var(--muted);
-}
+
 .pick__summary {
   font-size: 15px;
   line-height: 1.55;
@@ -308,16 +253,5 @@ const railList = computed<Rail[]>(() => {
 .discover__note {
   font-size: 13px;
   margin-top: -16px;
-}
-@media (max-width: 759px) {
-  .pick__inner {
-    padding: 20px;
-  }
-  .pick__poster {
-    width: 130px;
-  }
-  .pick__title {
-    font-size: var(--text-hero-mobile);
-  }
 }
 </style>

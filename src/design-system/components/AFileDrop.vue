@@ -40,7 +40,7 @@ function onDrop(e: DragEvent) {
     @drop.prevent="onDrop"
   >
     <input ref="input" type="file" :accept="accept" class="a-drop__input" @change="onChange" />
-    <AIcon name="calendar" :size="22" class="a-drop__icon" />
+    <AIcon name="upload" :size="22" class="a-drop__icon" />
     <span class="a-drop__label">{{ label }}</span>
     <span v-if="hint" class="a-drop__hint">{{ hint }}</span>
   </div>

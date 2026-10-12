@@ -12,8 +12,10 @@ withDefaults(
     inline?: boolean
     /** Chip only: 26px instead of 34px. */
     small?: boolean
+    /** Chip only: a menu is open behind it, so the plus turns into an x. */
+    open?: boolean
   }>(),
-  { appearance: 'button', size: 'md', loading: false, inline: false, small: false },
+  { appearance: 'button', size: 'md', loading: false, inline: false, small: false, open: false },
 )
 const emit = defineEmits<{ toggle: [] }>()
 
@@ -33,9 +35,11 @@ function onClick(ev: Event) {
       'a-follow-chip--on': following,
       'a-follow-chip--inline': inline,
       'a-follow-chip--small': small,
+      'a-follow-chip--open': open,
     }"
-    :aria-label="following ? 'Unfollow' : 'Follow'"
+    :aria-label="following ? 'Unfollow' : open ? 'Close' : 'Follow'"
     :aria-pressed="following"
+    :aria-expanded="following ? undefined : open || undefined"
     :disabled="loading"
     @click="onClick"
   >
@@ -115,7 +119,7 @@ function onClick(ev: Event) {
   backdrop-filter: blur(6px);
   transition:
     background var(--dur-fast),
-    transform var(--dur-fast) var(--ease);
+    transform var(--dur) var(--ease);
   z-index: 1;
 }
 .a-follow-chip:hover {
@@ -125,9 +129,17 @@ function onClick(ev: Event) {
   background: var(--primary);
   color: var(--on-primary);
 }
+.a-follow-chip--open,
+.a-follow-chip--open:hover {
+  background: transparent;
+  transform: rotate(135deg);
+}
 .a-follow-chip--inline {
-  position: static;
+  position: relative;
   flex: none;
+}
+.a-follow-chip:disabled {
+  opacity: 0.7;
 }
 .a-follow-chip--small {
   width: 26px;

@@ -1,13 +1,22 @@
 <script setup lang="ts">
 import { useId } from 'vue'
 
+import AIcon from './AIcon.vue'
+
 export interface SelectOption {
   value: string | number
   label: string
 }
 
 withDefaults(
-  defineProps<{ label?: string; options: SelectOption[]; disabled?: boolean; hint?: string }>(),
+  defineProps<{
+    label?: string
+    options: SelectOption[]
+    disabled?: boolean
+    hint?: string
+    /** For selects without a visible label (table cells). */
+    ariaLabel?: string
+  }>(),
   {
     disabled: false,
   },
@@ -20,22 +29,16 @@ const id = useId()
   <div class="a-select">
     <label v-if="label" :for="id" class="a-select__label">{{ label }}</label>
     <div class="a-select__box">
-      <select :id="id" v-model="model" class="a-select__el" :disabled="disabled">
+      <select
+        :id="id"
+        v-model="model"
+        class="a-select__el"
+        :disabled="disabled"
+        :aria-label="ariaLabel"
+      >
         <option v-for="o in options" :key="o.value" :value="o.value">{{ o.label }}</option>
       </select>
-      <svg
-        class="a-select__chev"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M6 9l6 6 6-6" />
-      </svg>
+      <AIcon name="chevronDown" :size="14" :stroke-width="2.2" class="a-select__chev" />
     </div>
     <p v-if="hint" class="a-select__hint">{{ hint }}</p>
   </div>
@@ -66,6 +69,7 @@ const id = useId()
 }
 .a-select__el {
   appearance: none;
+  text-overflow: ellipsis;
   flex: 1;
   height: 100%;
   border: 0;

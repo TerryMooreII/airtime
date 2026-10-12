@@ -4,12 +4,12 @@ import { RouterLink } from 'vue-router'
 
 import {
   AAlert,
-  AFollowButton,
   AButton,
+  AChoiceGroup,
   AEmptyState,
-  APageHeader,
+  AFollowButton,
+  AHeader,
   APoster,
-  ASegmented,
   ASkeleton,
 } from '@/design-system'
 import { useAsync } from '@/composables/useAsync'
@@ -147,9 +147,10 @@ const subtitle = computed(() => {
 
 <template>
   <div class="guide">
-    <APageHeader title="Your week on TV" :subtitle="subtitle">
-      <ASegmented
+    <AHeader title="Your week on TV" :subtitle="subtitle">
+      <AChoiceGroup
         v-model="range"
+        variant="segmented"
         :options="[
           { value: 7, label: '7 days' },
           { value: 14, label: '14 days' },
@@ -157,7 +158,7 @@ const subtitle = computed(() => {
         ]"
         aria-label="Range"
       />
-    </APageHeader>
+    </AHeader>
 
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
 
@@ -187,37 +188,35 @@ const subtitle = computed(() => {
         </RouterLink>
         <div class="then">
           <div class="t-label then__title">Then</div>
-          <RouterLink
+          <AMediaRow
             v-for="e in then"
             :key="e.episode_id"
             :to="{ name: 'show', params: { id: e.show_id } }"
-            class="then__item"
+            :image="e.show_image"
+            :image-width="40"
+            :title="e.show_name"
+            :subtitle="`${relativeDayLabel(e.airstamp, tz)} · ${formatAirTime(e.airstamp, tz)}`"
           >
-            <APoster :src="e.show_image" radius="sm" class="then__img" />
-            <span class="then__text">
-              <span class="then__name truncate">{{ e.show_name }}</span>
-              <span class="then__when"
-                >{{ relativeDayLabel(e.airstamp, tz) }} · {{ formatAirTime(e.airstamp, tz) }}</span
-              >
-              <span class="then__rel">{{ rel(e) }}</span>
-            </span>
-          </RouterLink>
+            <span class="then__rel">{{ rel(e) }}</span>
+          </AMediaRow>
           <AEmptyState v-if="!then.length" title="Nothing else yet" compact :dashed="false" />
         </div>
       </div>
 
       <!-- Scope and layout sit right above the list they change. -->
       <div class="guide__tools">
-        <ASegmented
+        <AChoiceGroup
           v-model="scope"
+          variant="segmented"
           :options="[
             { value: 'mine', label: 'My shows' },
             { value: 'everything', label: 'Everything' },
           ]"
           aria-label="Scope"
         />
-        <ASegmented
+        <AChoiceGroup
           v-model="layout"
+          variant="segmented"
           :options="[
             { value: 'agenda', label: 'Agenda' },
             { value: 'calendar', label: 'Calendar' },
@@ -493,32 +492,7 @@ const subtitle = computed(() => {
 .then__title {
   padding: 0 6px 8px;
 }
-.then__item {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  padding: 8px 6px;
-  border-radius: var(--radius-md);
-  color: var(--fg);
-}
-.then__item:hover {
-  background: var(--hover);
-}
-.then__text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.then__name {
-  font-size: 14.5px;
-  font-weight: 600;
-}
-.then__when {
-  font: 500 12px var(--font-mono);
-  color: var(--muted);
-}
+
 .then__rel {
   font: 500 12px var(--font-mono);
   color: var(--primary-text);

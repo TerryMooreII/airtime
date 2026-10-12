@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
 
 import {
   ABadge,
-  ASelect,
-  AProgressBar,
   AButton,
+  AChoiceGroup,
   AEmptyState,
-  APageHeader,
-  APills,
-  APoster,
+  AHeader,
+  AProgressBar,
   ASearchBox,
-  ASegmented,
+  ASelect,
   AShowCard,
   ASkeleton,
   AStarRating,
@@ -186,14 +183,14 @@ const columns: TableColumn[] = [
   { key: 'show_status', label: 'Show' },
   { key: 'added_at', label: 'Added' },
 ]
-const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.label }))
 </script>
 
 <template>
   <div class="library">
-    <APageHeader title="Library" :subtitle="subtitle">
-      <ASegmented
+    <AHeader title="Library" :subtitle="subtitle">
+      <AChoiceGroup
         v-model="sort"
+        variant="segmented"
         :options="[
           { value: 'next', label: 'Airing next' },
           { value: 'rating', label: 'Rating' },
@@ -202,19 +199,21 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
         ]"
         aria-label="Sort"
       />
-      <ASegmented
+      <AChoiceGroup
         v-model="view"
+        variant="segmented"
         :options="[
           { value: 'grid', label: 'Grid' },
           { value: 'table', label: 'Table' },
         ]"
         aria-label="View"
       />
-    </APageHeader>
+    </AHeader>
 
     <div class="library__tools">
-      <APills
+      <AChoiceGroup
         v-model="filter"
+        variant="pills"
         :options="filters"
         aria-label="Status filter"
         class="library__filters"
@@ -230,12 +229,12 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
       </div>
     </div>
 
-    <div v-if="library.loading && !library.loaded" class="grid">
+    <AShowGrid v-if="library.loading && !library.loaded">
       <ASkeleton v-for="i in 8" :key="i" ratio="2 / 3" />
-    </div>
+    </AShowGrid>
 
     <template v-else-if="entries.length">
-      <div v-if="view === 'grid'" class="grid">
+      <AShowGrid v-if="view === 'grid'">
         <AShowCard
           v-for="e in entries"
           :key="e.show_id"
@@ -249,29 +248,27 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
           :show-follow="false"
           @update:rating="rate(e, $event)"
         />
-      </div>
+      </AShowGrid>
 
       <ATable v-else :columns="columns" :rows="entries" row-key="show_id" class="table">
         <template #cell-show="{ row }">
-          <RouterLink :to="{ name: 'show', params: { id: row.show_id } }" class="show-cell">
-            <APoster :src="row.show.image_medium" radius="sm" class="show-cell__img" />
-            <span class="show-cell__text">
-              <span class="show-cell__name truncate">{{ row.show.name }}</span>
-              <span class="show-cell__meta truncate">{{ showMeta(row) }}</span>
-            </span>
-          </RouterLink>
+          <AMediaRow
+            :to="{ name: 'show', params: { id: row.show_id } }"
+            :image="row.show.image_medium"
+            :image-width="36"
+            :title="row.show.name"
+            :subtitle="showMeta(row)"
+            class="show-cell"
+          />
         </template>
         <template #cell-status="{ row }">
-          <select
-            class="status-select"
-            :value="row.status"
+          <ASelect
+            :model-value="row.status"
+            :options="USER_SHOW_STATUSES"
             :aria-label="`Status for ${row.show.name}`"
-            @change="setStatus(row, ($event.target as HTMLSelectElement).value as UserShowStatus)"
-          >
-            <option v-for="o in statusOptions" :key="o.value" :value="o.value">
-              {{ o.label }}
-            </option>
-          </select>
+            class="status-select"
+            @update:model-value="setStatus(row, $event as UserShowStatus)"
+          />
         </template>
         <template #cell-rating="{ row }">
           <AStarRating
@@ -377,53 +374,15 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
   width: 260px;
   flex: none;
 }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
-  gap: var(--grid-gap);
-}
+
 .show-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--fg);
   min-width: 220px;
 }
-.show-cell__img {
-  width: 36px;
-  flex: none;
-}
-.show-cell__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.show-cell__name {
-  font-weight: 600;
-  font-size: 14px;
-}
-.show-cell__meta {
-  font: 500 11.5px var(--font-mono);
-  color: var(--muted);
-}
+
 .status-select {
-  appearance: none;
-  border: 1px solid var(--line2);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--fg);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 6px 28px 6px 12px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239d9da4' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  cursor: pointer;
+  min-width: 150px;
 }
-.status-select:hover {
-  background-color: var(--hover);
-}
+
 .progress-cell {
   display: flex;
   flex-direction: column;
@@ -447,10 +406,6 @@ const statusOptions = USER_SHOW_STATUSES.map((s) => ({ value: s.value, label: s.
   font-size: 11.5px;
 }
 @media (max-width: 759px) {
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(var(--card-min-mobile), 1fr));
-    gap: var(--grid-gap-mobile);
-  }
   .library__right {
     width: 100%;
     min-width: 0;

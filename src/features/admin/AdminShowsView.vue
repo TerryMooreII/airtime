@@ -1,20 +1,11 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
 
-import {
-  AAlert,
-  ABadge,
-  AButton,
-  APoster,
-  ASearchBox,
-  ATable,
-  type TableColumn,
-} from '@/design-system'
+import { AAlert, ABadge, AButton, ASearchBox, ATable, type TableColumn } from '@/design-system'
 import { useBusyAction } from '@/composables/useBusyAction'
 import { useDebouncedQuery } from '@/composables/useDebouncedQuery'
 import { enqueueSync, searchAdminShows, type AdminShowRow } from '@/lib/api/admin'
-import { timeAgo } from '@/lib/format'
+import { joinMeta, timeAgo, yearOf } from '@/lib/format'
 
 const {
   query,
@@ -49,18 +40,14 @@ const columns: TableColumn[] = [
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
     <ATable :columns="columns" :rows="rows" :loading="loading" empty-text="No shows match.">
       <template #cell-name="{ row }">
-        <RouterLink :to="{ name: 'show', params: { id: row.id } }" class="show-cell">
-          <APoster :src="row.image_medium" radius="sm" class="show-cell__img" />
-          <span class="show-cell__text">
-            <span class="show-cell__name">{{ row.name }}</span>
-            <span class="t-muted t-mono show-cell__meta"
-              >tvmaze #{{ row.tvmaze_id
-              }}<template v-if="row.premiered">
-                · {{ String(row.premiered).slice(0, 4) }}</template
-              ></span
-            >
-          </span>
-        </RouterLink>
+        <AMediaRow
+          :to="{ name: 'show', params: { id: row.id } }"
+          :image="row.image_medium"
+          :image-width="32"
+          :title="row.name"
+          :subtitle="joinMeta(`tvmaze #${row.tvmaze_id}`, yearOf(row.premiered))"
+          class="show-cell"
+        />
       </template>
       <template #cell-status="{ value }"
         ><ABadge variant="muted">{{ value ?? '—' }}</ABadge></template
@@ -93,26 +80,6 @@ const columns: TableColumn[] = [
   gap: 16px;
 }
 .show-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--fg);
   min-width: 220px;
-}
-.show-cell__img {
-  width: 32px;
-  flex: none;
-}
-.show-cell__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.show-cell__name {
-  font-weight: 600;
-}
-.show-cell__meta {
-  font-size: 11.5px;
 }
 </style>

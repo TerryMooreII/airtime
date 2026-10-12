@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import {
   AAlert,
@@ -22,7 +21,6 @@ import { useLibraryStore } from '@/stores/library'
 import { FOLLOW_OPTIONS, type Credit, type Person } from '@/types/domain'
 
 const props = defineProps<{ id: string }>()
-const router = useRouter()
 const library = useLibraryStore()
 const follow = useFollow()
 
@@ -83,7 +81,7 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
 
 <template>
   <div class="person">
-    <div><AButton variant="ghost" size="sm" icon="back" @click="router.back()">Back</AButton></div>
+    <ABackButton />
 
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
     <ASkeleton v-else-if="loading" height="300px" radius="22px" />
@@ -94,36 +92,31 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
     />
 
     <template v-else>
-      <section class="hero">
-        <img v-if="person.imageOriginal" :src="person.imageOriginal" alt="" class="hero__bg" />
-        <div class="hero__inner">
-          <APoster :src="person.image" :alt="person.name" radius="lg" class="hero__photo" />
-          <div class="hero__text">
-            <span class="t-label hero__kicker">Cast member</span>
-            <h1 class="hero__title">{{ person.name }}</h1>
-            <div v-if="meta.length" class="hero__meta">{{ meta.join('  ·  ') }}</div>
-            <div class="hero__links">
-              <AButton v-if="person.url" :href="person.url" variant="outline" size="sm">
-                <template #icon><ABrandIcon brand="tvmaze" :size="18" /></template>
-                TVmaze<AIcon name="external" :size="13" class="hero__ext" />
-              </AButton>
-            </div>
-          </div>
+      <AMediaHero
+        :title="person.name"
+        :backdrop="person.imageOriginal"
+        kicker="Cast member"
+        :meta="meta.join('  ·  ')"
+        size="lg"
+      >
+        <template #media><APoster :src="person.image" :alt="person.name" radius="lg" /></template>
+        <div class="hero__links">
+          <AButton v-if="person.url" :href="person.url" variant="outline" size="sm">
+            <template #icon><ABrandIcon brand="tvmaze" :size="18" /></template>
+            TVmaze<AIcon name="external" :size="13" class="hero__ext" />
+          </AButton>
         </div>
-      </section>
+      </AMediaHero>
 
       <section class="credits">
-        <div class="credits__head">
-          <span class="t-h2">Shows</span>
-          <span class="t-muted credits__count">{{ plural(credits.length, 'credit') }}</span>
-        </div>
+        <AHeader level="section" title="Shows" :subtitle="plural(credits.length, 'credit')" />
         <AEmptyState
           v-if="!credits.length"
           title="No credits listed"
           description="TVmaze doesn't list any shows for this person yet."
           compact
         />
-        <div v-if="inCatalog.length" class="grid">
+        <AShowGrid v-if="inCatalog.length">
           <AShowCard
             v-for="c in inCatalog"
             :key="c.showTvmazeId"
@@ -139,13 +132,13 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
                 follow.toggle(localIds.get(c.showTvmazeId)!, c.showTvmazeId, c.showName, status)
             "
           />
-        </div>
+        </AShowGrid>
         <template v-if="elsewhere.length">
           <div class="credits__sub">
             <span class="t-label">Not in the catalog yet</span>
             <ABadge variant="muted">opens on TVmaze</ABadge>
           </div>
-          <div class="grid">
+          <AShowGrid>
             <a
               v-for="c in elsewhere"
               :key="c.showTvmazeId"
@@ -158,7 +151,7 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
               <span class="ext-card__name truncate">{{ c.showName }}</span>
               <span class="ext-card__meta truncate">{{ roleLabel(c) }}</span>
             </a>
-          </div>
+          </AShowGrid>
         </template>
       </section>
     </template>
@@ -171,57 +164,7 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
   flex-direction: column;
   gap: 28px;
 }
-.hero {
-  position: relative;
-  border-radius: var(--radius-3xl);
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--line);
-}
-.hero__bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(56px) saturate(1.4);
-  opacity: 0.35;
-  transform: scale(1.3);
-}
-.hero__inner {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 28px;
-  align-items: flex-end;
-  padding: 32px;
-}
-.hero__photo {
-  width: 180px;
-  flex: none;
-  box-shadow: var(--shadow-poster);
-}
-.hero__text {
-  flex: 1 1 300px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.hero__kicker {
-  color: var(--primary-text);
-}
-.hero__title {
-  font-size: 48px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 0.98;
-  text-wrap: balance;
-}
-.hero__meta {
-  font: 500 13px var(--font-mono);
-  color: var(--muted);
-}
+
 .hero__links {
   display: flex;
   gap: 8px;
@@ -236,25 +179,14 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
   flex-direction: column;
   gap: 14px;
 }
-.credits__head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-.credits__count {
-  font: 500 13px var(--font-mono);
-}
+
 .credits__sub {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 10px;
 }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
-  gap: var(--grid-gap);
-}
+
 .ext-card {
   display: flex;
   flex-direction: column;
@@ -271,20 +203,5 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
   font: 500 12px var(--font-mono);
   color: var(--muted);
   margin-top: -3px;
-}
-@media (max-width: 759px) {
-  .hero__inner {
-    padding: 20px;
-  }
-  .hero__photo {
-    width: 120px;
-  }
-  .hero__title {
-    font-size: 32px;
-  }
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(var(--card-min-mobile), 1fr));
-    gap: var(--grid-gap-mobile);
-  }
 }
 </style>

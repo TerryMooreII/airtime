@@ -1,23 +1,12 @@
 <script setup lang="ts">
-withDefaults(
-  defineProps<{
-    padding?: 'none' | 'sm' | 'md' | 'lg'
-    radius?: 'lg' | 'xl' | '2xl'
-    interactive?: boolean
-  }>(),
-  {
-    padding: 'md',
-    radius: 'xl',
-    interactive: false,
-  },
-)
+withDefaults(defineProps<{ padding?: 'md' | 'lg'; radius?: 'xl' | '2xl' }>(), {
+  padding: 'md',
+  radius: 'xl',
+})
 </script>
 
 <template>
-  <div
-    class="a-card"
-    :class="[`a-card--p-${padding}`, `a-card--r-${radius}`, { 'a-card--interactive': interactive }]"
-  >
+  <div class="a-card" :class="[`a-card--p-${padding}`, `a-card--r-${radius}`]">
     <slot />
   </div>
 </template>
@@ -29,28 +18,12 @@ withDefaults(
   display: flex;
   flex-direction: column;
   min-width: 0;
-  transition: border-color var(--dur-fast);
-}
-.a-card--interactive {
-  cursor: pointer;
-}
-.a-card--interactive:hover {
-  border-color: var(--line2);
-}
-.a-card--p-none {
-  padding: 0;
-}
-.a-card--p-sm {
-  padding: 12px;
 }
 .a-card--p-md {
   padding: 16px;
 }
 .a-card--p-lg {
   padding: 18px 20px;
-}
-.a-card--r-lg {
-  border-radius: var(--radius-lg);
 }
 .a-card--r-xl {
   border-radius: var(--radius-xl);

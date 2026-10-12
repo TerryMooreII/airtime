@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { ADrawer, AButton, APoster } from '@/design-system'
+import { AButton, ADrawer, APoster } from '@/design-system'
 import { episodeCode, formatDateTime, formatRuntime, stripHtml } from '@/lib/format'
 import type { Episode } from '@/types/domain'
 

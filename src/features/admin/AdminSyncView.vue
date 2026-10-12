@@ -93,12 +93,11 @@ function summarize(stats: unknown): string {
     </div>
 
     <section class="sync__section">
-      <div class="sync__head">
-        <span class="t-h2">Queue</span
-        ><AButton variant="ghost" size="sm" icon="refresh" :loading="loading" @click="load"
+      <AHeader level="section" title="Queue">
+        <AButton variant="ghost" size="sm" icon="refresh" :loading="loading" @click="load"
           >Refresh</AButton
         >
-      </div>
+      </AHeader>
       <ATable :columns="queueColumns" :rows="queue" empty-text="Queue is empty.">
         <template #cell-job_type="{ value }"
           ><span class="t-mono">{{ value }}</span></template
@@ -120,7 +119,7 @@ function summarize(stats: unknown): string {
     </section>
 
     <section class="sync__section">
-      <span class="t-h2">Run history</span>
+      <AHeader level="section" title="Run history" />
       <ATable :columns="runColumns" :rows="runs" empty-text="No runs yet.">
         <template #cell-job_type="{ value }"
           ><span class="t-mono">{{ value }}</span></template
@@ -167,11 +166,7 @@ function summarize(stats: unknown): string {
   flex-direction: column;
   gap: 12px;
 }
-.sync__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+
 .payload {
   font-size: 12px;
   word-break: break-all;
