@@ -950,6 +950,10 @@ export type Database = {
       send_test_notification: { Args: never; Returns: number }
       show_card: { Args: { p_show_id: number }; Returns: Json }
       show_cards: { Args: { p_ids: number[] }; Returns: Json }
+      similar_shows: {
+        Args: { p_limit?: number; p_show_id: number }
+        Returns: Json
+      }
       stale_shows: {
         Args: { p_updates: Json }
         Returns: {

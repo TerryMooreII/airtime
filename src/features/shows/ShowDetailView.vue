@@ -6,6 +6,7 @@ import { useAsync } from '@/composables/useAsync'
 import { useFollow } from '@/composables/useFollow'
 import { useLibraryActions } from '@/composables/useLibraryActions'
 import { useNow } from '@/composables/useNow'
+import { useQueryParam } from '@/composables/useQueryParam'
 import { fetchShowDetail, refreshShow } from '@/lib/api/shows'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
@@ -16,6 +17,7 @@ import ShowAbout from './ShowAbout.vue'
 import ShowCast from './ShowCast.vue'
 import ShowEpisodes from './ShowEpisodes.vue'
 import ShowHero from './ShowHero.vue'
+import ShowRecommendations from './ShowRecommendations.vue'
 import { useShowEpisodes } from './useShowEpisodes'
 
 const props = defineProps<{ id: string }>()
@@ -36,8 +38,13 @@ const episodes = useShowEpisodes(showId, now)
 const episodesSyncing = ref(false)
 const openEpisode = ref<Episode | null>(null)
 
-type Tab = 'episodes' | 'cast'
-const tab = ref<Tab>('episodes')
+const TABS = ['episodes', 'cast', 'recommended'] as const
+type Tab = (typeof TABS)[number]
+/** Mirrored into ?tab= so a refresh or the back button lands on the same section. */
+const tab = useQueryParam<Tab>('tab', {
+  defaultValue: 'episodes',
+  parse: (raw) => TABS.find((t) => t === raw),
+})
 const castCount = ref<number | undefined>(undefined)
 
 /** Everything is keyed by the route's show id, so the whole page is one round of requests. */
@@ -133,6 +140,7 @@ function openFromDrawer(e: Episode) {
         :options="[
           { value: 'episodes', label: 'Episodes', count: episodes.episodes.length || undefined },
           { value: 'cast', label: 'Cast', count: castCount },
+          { value: 'recommended', label: 'Recommended' },
         ]"
         aria-label="Show sections"
       />
@@ -145,7 +153,12 @@ function openFromDrawer(e: Episode) {
         @open="openEpisode = $event"
         @refresh="refreshEpisodes"
       />
-      <ShowCast v-else :tvmaze-id="show.tvmaze_id" @loaded="castCount = $event" />
+      <ShowCast
+        v-else-if="tab === 'cast'"
+        :tvmaze-id="show.tvmaze_id"
+        @loaded="castCount = $event"
+      />
+      <ShowRecommendations v-else-if="tab === 'recommended'" :show="show" />
     </template>
 
     <EpisodeDrawer

@@ -1,6 +1,6 @@
 import { CHANNEL_EMBEDS, many, mapChunks, num, one } from '@/lib/api/_query'
 import { invokeFunction, supabase } from '@/lib/supabase'
-import type { SearchResult, Show, ShowExternalId, ShowRating } from '@/types/domain'
+import type { SearchResult, Show, ShowCardData, ShowExternalId, ShowRating } from '@/types/domain'
 
 const SHOW_SELECT = `id, tvmaze_id, name, type, language, genres, status, runtime, average_runtime, premiered, ended, official_site, schedule_time, schedule_days, weight, image_medium, image_original, summary_html, tvmaze_url, episodes_synced_at, ${CHANNEL_EMBEDS}`
 
@@ -91,6 +91,17 @@ export function externalLink(provider: string, id: string): string | null {
     default:
       return null
   }
+}
+
+/**
+ * "More like this": the best-rated catalog shows sharing a genre with the given show, ranked by
+ * genre overlap, same type / language / network and rating. Shows the user follows are left out.
+ */
+export async function fetchSimilarShows(showId: number, limit = 24): Promise<ShowCardData[]> {
+  const cards = await one<ShowCardData[]>(
+    supabase.rpc('similar_shows', { p_show_id: showId, p_limit: limit }),
+  )
+  return cards ?? []
 }
 
 /** Map TVmaze show ids to local catalog ids (only ids present locally are returned). */
