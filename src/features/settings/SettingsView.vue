@@ -127,16 +127,7 @@ const signOut = useSignOut()
           aria-label="Theme"
         />
       </ASettingsRow>
-      <ASettingsRow
-        title="Time zone"
-        description="Air times and daily digests use this zone."
-        stacked
-      >
-        <ASelect
-          :model-value="auth.timezone"
-          :options="timezones"
-          @update:model-value="save({ timezone: String($event) }, 'Time zone updated')"
-        />
+      <ASettingsRow title="Time zone" description="Air times and daily digests use this zone.">
         <AButton
           v-if="browserTimeZone() !== auth.timezone"
           variant="ghost"
@@ -144,6 +135,13 @@ const signOut = useSignOut()
           @click="save({ timezone: browserTimeZone() }, 'Time zone updated')"
           >Use {{ browserTimeZone() }}</AButton
         >
+        <ASelect
+          class="tz-select"
+          :model-value="auth.timezone"
+          :options="timezones"
+          aria-label="Time zone"
+          @update:model-value="save({ timezone: String($event) }, 'Time zone updated')"
+        />
       </ASettingsRow>
     </ASettingsGroup>
 
@@ -213,6 +211,11 @@ const signOut = useSignOut()
   border-radius: 6px;
   background: var(--primary-soft);
   color: var(--primary-text);
+}
+/* Fixed width so long zone names ellipsize instead of stretching the row. */
+.tz-select {
+  width: 240px;
+  max-width: 100%;
 }
 .push-error {
   margin: 0 18px 14px;
