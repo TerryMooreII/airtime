@@ -44,7 +44,7 @@ const fmt = (n: number | undefined) => (n ?? 0).toLocaleString()
 </script>
 
 <template>
-  <div class="dash">
+  <div class="page dash">
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
     <div v-if="loading && !stats" class="dash__stats">
       <ASkeleton v-for="i in 6" :key="i" height="96px" />
@@ -88,7 +88,7 @@ const fmt = (n: number | undefined) => (n ?? 0).toLocaleString()
             The full TVMaze schedule and show updates import every night at 06:00 UTC. Trigger
             either job now:
           </p>
-          <div class="dash__actions">
+          <div class="cluster dash__actions">
             <AButton
               variant="outline"
               icon="refresh"
@@ -131,37 +131,27 @@ const fmt = (n: number | undefined) => (n ?? 0).toLocaleString()
 </template>
 
 <style scoped>
-.dash {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
 .dash__stats {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
+  gap: var(--space-3);
 }
 .dash__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 .dash__p {
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--text-base);
   margin: 8px 0 14px;
-}
-.dash__actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 .dash__last {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 14px;
-  font-size: 13px;
+  gap: var(--space-2_5);
+  margin-top: var(--space-3_5);
+  font-size: var(--text-sm);
 }
 .runs {
   list-style: none;
@@ -169,19 +159,19 @@ const fmt = (n: number | undefined) => (n ?? 0).toLocaleString()
   margin: 10px 0 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .runs__item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 13px;
+  gap: var(--space-2_5);
+  font-size: var(--text-sm);
 }
 .runs__type {
   font-weight: 500;
 }
 .runs__when {
   margin-left: auto;
-  font-size: 12.5px;
+  font-size: var(--text-xs);
 }
 </style>

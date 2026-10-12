@@ -37,42 +37,44 @@ const id = useId()
 .a-textarea {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1_5);
   min-width: 0;
 }
 .a-textarea__label {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 .a-textarea__el {
   width: 100%;
   resize: vertical;
-  padding: 12px 14px;
+  padding: var(--space-3) var(--space-3_5);
   border-radius: var(--radius-md);
   background: var(--surface2);
   border: 1px solid transparent;
   color: var(--fg);
-  font-size: 14px;
+  font-size: var(--text-base);
   line-height: 1.5;
   outline: 0;
   transition: border-color var(--dur-fast) var(--ease);
 }
 .a-textarea__el--mono {
-  font: 500 13px/1.6 var(--font-mono);
+  font: 500 var(--text-sm)/1.6 var(--font-mono);
 }
 .a-textarea__el:focus {
   border-color: var(--line2);
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
 }
 .a-textarea__el::placeholder {
   color: var(--muted);
 }
 .a-textarea__hint {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 @media (max-width: 759px) {
   .a-textarea__el {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 }
 </style>

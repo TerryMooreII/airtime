@@ -50,11 +50,11 @@ const failed = ref(false)
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1_5);
   text-align: center;
   color: var(--fg);
   min-width: 0;
-  padding: 8px 4px;
+  padding: var(--space-2) var(--space-1);
   border-radius: var(--radius-lg);
 }
 .a-person--link:hover {
@@ -75,17 +75,17 @@ const failed = ref(false)
   display: block;
 }
 .a-person__name {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   line-height: 1.25;
 }
 .a-person__role {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
   line-height: 1.25;
   margin-top: -3px;
 }
 .a-person__tag {
-  margin-top: 2px;
+  margin-top: var(--space-0_5);
 }
 </style>

@@ -78,7 +78,7 @@ function onKey(e: KeyboardEvent) {
   color: var(--muted);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1_5);
   white-space: nowrap;
   text-decoration: none;
   transition:
@@ -87,20 +87,20 @@ function onKey(e: KeyboardEvent) {
     border-color var(--dur-fast) var(--ease);
 }
 .a-choice__count {
-  font: 500 11.5px var(--font-mono);
+  font: 500 var(--text-2xs) var(--font-mono);
 }
 
 /* Segmented: a pill-shaped track with the active option raised. */
 .a-choice--segmented {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: var(--space-0_5);
   padding: 3px;
   background: var(--surface2);
   border-radius: var(--radius-md);
 }
 .a-choice--segmented .a-choice__opt {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   padding: 7px 12px;
   border-radius: var(--radius-sm);
@@ -114,9 +114,9 @@ function onKey(e: KeyboardEvent) {
 /* Pills: outlined chips in a horizontally scrolling row. */
 .a-choice--pills {
   display: flex;
-  gap: 6px;
+  gap: var(--space-1_5);
   overflow-x: auto;
-  padding-bottom: 2px;
+  padding-bottom: var(--space-0_5);
   scrollbar-width: none;
 }
 .a-choice--pills .a-choice__opt {
@@ -126,11 +126,11 @@ function onKey(e: KeyboardEvent) {
   border-radius: var(--radius-pill);
   border: 1px solid var(--line2);
   color: var(--fg);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
 }
 .a-choice--pills.a-choice--mono .a-choice__opt {
-  font: 600 12.5px var(--font-mono);
+  font: 600 var(--text-xs) var(--font-mono);
 }
 .a-choice--pills .a-choice__opt:not(.a-choice__opt--on):hover {
   background: var(--hover);
@@ -156,11 +156,11 @@ function onKey(e: KeyboardEvent) {
 }
 .a-choice--tabs .a-choice__opt {
   position: relative;
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 600;
-  padding: 10px 2px 12px;
+  padding: var(--space-2_5) var(--space-0_5) var(--space-3);
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .a-choice--tabs .a-choice__opt:hover,
 .a-choice--tabs .a-choice__opt--on {

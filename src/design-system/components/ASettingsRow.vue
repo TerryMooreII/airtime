@@ -20,36 +20,36 @@ withDefaults(defineProps<{ title: string; description?: string; stacked?: boolea
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 18px;
+  gap: var(--space-3);
+  padding: var(--space-3_5) var(--space-4_5);
   border-bottom: 1px solid var(--line);
 }
 .a-settings-row--stacked {
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: var(--space-2_5);
 }
 .a-settings-row__text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-0_5);
   min-width: 0;
   flex: 1 1 200px;
   overflow-wrap: anywhere;
 }
 .a-settings-row__title {
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 600;
 }
 .a-settings-row__desc {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--muted);
 }
 .a-settings-row__control {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
   max-width: 100%;
 }

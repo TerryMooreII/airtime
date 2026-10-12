@@ -9,7 +9,7 @@ withDefaults(
     alt?: string
     /** Aspect ratio: poster 2/3 or still 16/9. */
     ratio?: 'poster' | 'still'
-    radius?: 'sm' | 'md' | 'lg'
+    radius?: 'none' | 'sm' | 'md' | 'lg'
   }>(),
   { alt: '', ratio: 'poster', radius: 'md' },
 )
@@ -46,6 +46,9 @@ const failed = ref(false)
 }
 .a-poster--still {
   aspect-ratio: 16 / 9;
+}
+.a-poster--r-none {
+  border-radius: 0;
 }
 .a-poster--r-sm {
   border-radius: var(--radius-xs);

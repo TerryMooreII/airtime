@@ -282,7 +282,7 @@ function toggleSeason() {
 </script>
 
 <template>
-  <div class="show">
+  <div class="page show">
     <ABackButton :fallback="{ name: 'library' }" />
 
     <AAlert v-if="error" variant="error">{{ error }}</AAlert>
@@ -300,7 +300,7 @@ function toggleSeason() {
           ><APoster :src="show.image_medium" :alt="show.name" radius="lg"
         /></template>
         <template #above>
-          <div v-if="genres.length || channel" class="hero__genres">
+          <div v-if="genres.length || channel" class="cluster hero__genres">
             <ABadge v-if="channel" variant="soft" :mono="false" class="hero__channel">
               <AIcon :name="channel.kind === 'network' ? 'tv' : 'play'" :size="13" />{{
                 channel.label
@@ -369,17 +369,17 @@ function toggleSeason() {
         </div>
         <div class="about__side">
           <div v-if="nextEpisode" class="next">
-            <span class="next__kicker"
+            <span class="t-kicker"
               >Next episode · {{ relativeDayLabel(nextEpisode.airstamp!, tz) }}</span
             >
             <span class="next__title">{{ nextEpisode.name ?? 'TBA' }}</span>
-            <span class="next__meta"
+            <span class="t-meta"
               >{{ episodeCode(nextEpisode.season, nextEpisode.number) }} ·
               {{ formatAirTime(nextEpisode.airstamp, tz) }}</span
             >
           </div>
           <div v-if="entry" class="alerts">
-            <div class="alerts__text">
+            <div class="stack-tight alerts__text">
               <span class="alerts__title">Episode alerts</span>
               <span class="alerts__desc">{{
                 entry.notify ? 'You will be told when new episodes air.' : 'Muted for this show.'
@@ -471,7 +471,7 @@ function toggleSeason() {
             @keydown.enter="openEpisode = e"
           >
             <APoster :src="e.image_medium ?? show.image_medium" ratio="still" radius="md" />
-            <span class="episode__text">
+            <span class="stack-tight episode__text">
               <span class="episode__title">
                 <span class="episode__code t-mono">{{ episodeNumberLabel(e.number) }}</span>
                 <span class="truncate">{{ e.name ?? 'TBA' }}</span>
@@ -543,68 +543,60 @@ function toggleSeason() {
 </template>
 
 <style scoped>
-.show {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
 .hero__channel {
-  gap: 6px;
+  gap: var(--space-1_5);
 }
 .hero__genres {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  --cluster-gap: var(--space-1_5);
 }
 
 .hero__ratings {
   display: flex;
   flex-wrap: wrap;
-  gap: 24px;
+  gap: var(--space-6);
   align-items: flex-end;
-  margin-top: 6px;
+  margin-top: var(--space-1_5);
 }
 .score {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 .score__value {
-  font-size: 26px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 .score__scale {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--muted);
   font-weight: 500;
 }
 .hero__status {
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 .about {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
+  gap: var(--space-6);
   align-items: start;
 }
 .about__text {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-2_5);
 }
 .about__summary {
-  font-size: 16px;
+  font-size: var(--text-md);
   line-height: 1.6;
   text-wrap: pretty;
   max-width: 68ch;
 }
 .about__links {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   flex-wrap: wrap;
-  margin-top: 6px;
+  margin-top: var(--space-1_5);
 }
 .about__ext {
   color: var(--muted);
@@ -613,82 +605,66 @@ function toggleSeason() {
 .about__side {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 .next {
   border-radius: var(--radius-xl);
   background: var(--primary-soft);
-  padding: 18px;
+  padding: var(--space-4_5);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-.next__kicker {
-  font: 600 11px var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--primary-text);
+  gap: var(--space-1_5);
 }
 .next__title {
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 600;
-}
-.next__meta {
-  font: 500 13px var(--font-mono);
-  color: var(--muted);
 }
 .alerts {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: var(--space-3);
+  padding: var(--space-3_5) var(--space-4);
   border-radius: var(--radius-xl);
   border: 1px solid var(--line);
   background: var(--surface);
 }
-.alerts__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
 .alerts__title {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
 }
 .alerts__desc {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 .episodes {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3_5);
 }
 
 .episodes__count {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--muted);
   margin-top: -6px;
 }
-.episodes__skeleton,
+.episodes__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
 .episodes__list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-.episodes__list {
-  gap: 0;
 }
 
 .episodes__progress {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 .episodes__progress-label {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   font-weight: 500;
   color: var(--muted);
   white-space: nowrap;
@@ -727,9 +703,9 @@ function toggleSeason() {
 .episode {
   display: grid;
   grid-template-columns: 160px minmax(0, 1fr) 36px;
-  gap: 16px;
+  gap: var(--space-4);
   align-items: center;
-  padding: 10px 8px;
+  padding: var(--space-2_5) var(--space-2);
   margin: 0 -8px;
   border-radius: var(--radius-lg);
   background: transparent;
@@ -743,54 +719,48 @@ function toggleSeason() {
 .episode--future {
   opacity: 0.55;
 }
-.episode__text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
 .episode__title {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
-  font-size: 15.5px;
+  font-size: var(--text-md);
   font-weight: 600;
 }
 .episode__code {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--primary-text);
   flex: none;
 }
 .episode__meta {
-  font: 500 12.5px var(--font-mono);
+  font: 500 var(--text-xs) var(--font-mono);
   color: var(--muted);
 }
 .episode__sum {
-  font-size: 13.5px;
+  font-size: var(--text-sm);
   color: var(--muted);
   line-height: 1.45;
 }
 .cast {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3_5);
 }
 .cast__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 10px 6px;
+  gap: var(--space-2_5) var(--space-1_5);
 }
 .cast__skeleton {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 8px 4px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-1);
 }
 .cast__credit {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
 }
 @media (max-width: 759px) {
   .about {

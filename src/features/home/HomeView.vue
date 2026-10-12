@@ -146,7 +146,7 @@ const subtitle = computed(() => {
 </script>
 
 <template>
-  <div class="guide">
+  <div class="page guide">
     <AHeader title="Your week on TV" :subtitle="subtitle">
       <AChoiceGroup
         v-model="range"
@@ -229,8 +229,8 @@ const subtitle = computed(() => {
         <section v-for="g in groups" :key="g.key" class="agenda__day">
           <div class="agenda__head">
             <span class="agenda__label">{{ g.label }}</span>
-            <span class="agenda__sub">{{ g.sub }}</span>
-            <span class="agenda__count">{{ plural(g.items.length, 'ep') }}</span>
+            <span class="t-meta">{{ g.sub }}</span>
+            <span class="t-meta agenda__count">{{ plural(g.items.length, 'ep') }}</span>
           </div>
           <RouterLink
             v-for="e in g.items"
@@ -241,7 +241,7 @@ const subtitle = computed(() => {
           >
             <span class="row__time t-mono">{{ formatAirTime(e.airstamp, tz) }}</span>
             <APoster :src="e.show_image" radius="sm" />
-            <span class="row__text">
+            <span class="stack-tight row__text">
               <span class="row__title">
                 <span class="row__name truncate">{{ e.show_name }}</span>
                 <span v-if="isLive(e, now)" class="row__badge row__badge--live">On now</span>
@@ -296,9 +296,9 @@ const subtitle = computed(() => {
                   class="cal__follow"
                   @toggle="follow.toggle(e.show_id, undefined, e.show_name)"
                 />
-                <span class="cal__text">
+                <span class="stack-tight cal__text">
                   <span class="cal__time">{{ formatAirTime(e.airstamp, tz) }}</span>
-                  <span class="cal__name">{{ e.show_name }}</span>
+                  <span class="cal__name clamp-2">{{ e.show_name }}</span>
                   <span class="cal__code">{{ episodeCode(e.season, e.number) }}</span>
                 </span>
               </RouterLink>
@@ -331,10 +331,10 @@ const subtitle = computed(() => {
               <span class="agenda__label">{{
                 selectedCalendarDay.isToday ? 'Today' : selectedCalendarDay.dow
               }}</span>
-              <span class="agenda__sub"
+              <span class="t-meta"
                 >{{ selectedCalendarDay.monthLabel }} {{ selectedCalendarDay.num }}</span
               >
-              <span class="agenda__count">{{
+              <span class="t-meta agenda__count">{{
                 plural(selectedCalendarDay.items.length, 'ep')
               }}</span>
             </div>
@@ -347,7 +347,7 @@ const subtitle = computed(() => {
             >
               <span class="row__time t-mono">{{ formatAirTime(e.airstamp, tz) }}</span>
               <APoster :src="e.show_image" radius="sm" />
-              <span class="row__text">
+              <span class="stack-tight row__text">
                 <span class="row__title"
                   ><span class="row__name truncate">{{ e.show_name }}</span></span
                 >
@@ -391,37 +391,32 @@ const subtitle = computed(() => {
 </template>
 
 <style scoped>
-.guide {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 .guide__tools {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   flex-wrap: wrap;
   margin-bottom: -8px;
 }
 .guide__skeleton {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 .hero-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-  gap: 16px;
+  gap: var(--space-4);
 }
 .hero {
   position: relative;
   min-height: 340px;
   border-radius: var(--radius-2xl);
   overflow: hidden;
-  background: #111;
+  background: var(--image-bg);
   display: flex;
-  color: #fff;
+  color: var(--on-image);
 }
 .hero__bg {
   position: absolute;
@@ -429,7 +424,7 @@ const subtitle = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 600ms var(--ease);
+  transition: transform var(--dur-slow) var(--ease);
 }
 .hero:hover .hero__bg {
   transform: scale(1.03);
@@ -450,36 +445,37 @@ const subtitle = computed(() => {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 32px;
-  gap: 8px;
+  padding: var(--space-8);
+  gap: var(--space-2);
 }
 .hero__badge {
   align-self: flex-start;
-  font: 600 11px var(--font-mono);
-  letter-spacing: 0.08em;
+  font: 600 var(--text-2xs) var(--font-mono);
+  letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   background: var(--primary);
   color: var(--on-primary);
   padding: 5px 9px;
-  border-radius: 6px;
+  border-radius: var(--radius-badge);
 }
 .hero__name {
   font-size: var(--text-hero);
   font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: var(--tracking-tight);
   line-height: 1;
   text-wrap: balance;
 }
 .hero__ep {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.88);
+  font-size: var(--text-md);
+  color: var(--on-image);
+  opacity: 0.88;
 }
 .hero__code {
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 .hero__when {
-  font: 500 13px var(--font-mono);
-  color: rgba(255, 255, 255, 0.75);
+  font: 500 var(--text-sm) var(--font-mono);
+  color: var(--on-image-muted);
 }
 .then {
   display: flex;
@@ -487,20 +483,20 @@ const subtitle = computed(() => {
   border-radius: var(--radius-2xl);
   background: var(--surface);
   border: 1px solid var(--line);
-  padding: 18px 14px 10px;
+  padding: var(--space-4_5) var(--space-3_5) var(--space-2_5);
 }
 .then__title {
   padding: 0 6px 8px;
 }
 
 .then__rel {
-  font: 500 12px var(--font-mono);
+  font: 500 var(--text-xs) var(--font-mono);
   color: var(--primary-text);
 }
 .agenda {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-4_5);
 }
 .agenda__day {
   display: flex;
@@ -508,36 +504,31 @@ const subtitle = computed(() => {
 }
 .agenda__head {
   position: sticky;
-  top: 67px;
+  top: var(--header-h);
   z-index: var(--z-sticky);
   background: var(--bg);
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: var(--space-2_5);
   padding: 12px 0 10px;
   border-bottom: 1px solid var(--line);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-1_5);
 }
 .agenda__label {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 650;
   letter-spacing: -0.02em;
 }
-.agenda__sub,
-.agenda__count {
-  font: 500 13px var(--font-mono);
-  color: var(--muted);
-}
 .agenda__count {
   margin-left: auto;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 .row {
   display: grid;
   grid-template-columns: 76px 44px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
-  padding: 10px 8px;
+  gap: var(--space-3_5);
+  padding: var(--space-2_5) var(--space-2);
   margin: 0 -8px;
   border-radius: var(--radius-lg);
   color: var(--fg);
@@ -550,27 +541,21 @@ const subtitle = computed(() => {
 }
 .row__time {
   font-weight: 500;
-  font-size: 13.5px;
-}
-.row__text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  font-size: var(--text-sm);
 }
 .row__title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
 }
 .row__name {
   font-weight: 600;
-  font-size: 16px;
+  font-size: var(--text-md);
 }
 .row__badge {
   flex: none;
-  font: 600 10px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 3px 6px;
@@ -583,75 +568,72 @@ const subtitle = computed(() => {
   color: var(--on-primary);
 }
 .row__ep {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--muted);
 }
 .row__code {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
 }
 .row__end {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2_5);
 }
 .row__rel {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   color: var(--primary-text);
   white-space: nowrap;
 }
-.cal__item {
-  position: relative;
-}
 .cal__follow {
-  top: 6px;
-  right: 6px;
+  --chip-offset: 6px;
 }
 .cal {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3_5);
 }
 .cal__week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--space-2);
   align-items: start;
 }
 .cal__col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1_5);
   min-width: 0;
 }
 .cal__head {
-  padding: 10px 12px;
+  padding: var(--space-2_5) var(--space-3);
   border-radius: var(--radius-lg);
   background: var(--surface2);
   color: var(--fg);
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 4px;
+  gap: var(--space-1);
 }
 .cal__head--today {
   background: var(--primary);
   color: var(--on-primary);
 }
 .cal__dow {
-  font: 600 11px var(--font-mono);
-  letter-spacing: 0.08em;
+  font: 600 var(--text-2xs) var(--font-mono);
+  letter-spacing: var(--tracking-label);
   text-transform: uppercase;
 }
 .cal__num {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 .cal__item {
+  position: relative;
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
-  gap: 8px;
-  padding: 8px;
+  gap: var(--space-2);
+  padding: var(--space-2);
   border-radius: var(--radius-md);
   background: var(--surface);
   border: 1px solid var(--line);
@@ -667,51 +649,41 @@ const subtitle = computed(() => {
 .cal__img {
   width: 30px;
 }
-.cal__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
 .cal__time {
-  font: 600 11.5px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   color: var(--primary-text);
 }
 .cal__name {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   line-height: 1.25;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 .cal__code {
-  font: 400 11.5px var(--font-mono);
+  font: 400 var(--text-2xs) var(--font-mono);
   color: var(--muted);
 }
 .cal__more {
-  font: 500 11.5px var(--font-mono);
+  font: 500 var(--text-2xs) var(--font-mono);
   color: var(--muted);
   padding: 0 4px;
 }
 .cal__empty {
   border: 1px dashed var(--line2);
   border-radius: var(--radius-md);
-  padding: 18px 8px;
+  padding: var(--space-4_5) var(--space-2);
   text-align: center;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 .strip-view {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 .strip {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
+  gap: var(--space-1);
 }
 .strip__day {
   border: 0;
@@ -730,12 +702,12 @@ const subtitle = computed(() => {
   color: var(--on-primary);
 }
 .strip__dow {
-  font: 600 10.5px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 .strip__num {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
 }
 .strip__dot {
@@ -758,13 +730,10 @@ const subtitle = computed(() => {
     min-height: 260px;
   }
   .hero__content {
-    padding: 20px;
+    padding: var(--space-5);
   }
   .hero__name {
     font-size: var(--text-hero-mobile);
-  }
-  .agenda__head {
-    top: 65px;
   }
   .row {
     grid-template-columns: 56px 38px minmax(0, 1fr) auto;

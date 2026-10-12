@@ -70,14 +70,14 @@ const keyOf = (row: T) => String(field(row, props.rowKey ?? 'id'))
 .a-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13.5px;
+  font-size: var(--text-sm);
 }
 .a-table th {
-  font: 600 11px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
-  padding: 12px 14px;
+  padding: var(--space-3) var(--space-3_5);
   border-bottom: 1px solid var(--line);
   white-space: nowrap;
 }
@@ -95,6 +95,6 @@ const keyOf = (row: T) => String(field(row, props.rowKey ?? 'id'))
 .a-table__state td {
   text-align: center;
   color: var(--muted);
-  padding: 28px;
+  padding: var(--space-7);
 }
 </style>

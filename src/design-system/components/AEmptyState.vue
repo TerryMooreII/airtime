@@ -19,37 +19,37 @@ withDefaults(
 <style scoped>
 .a-empty {
   border-radius: var(--radius-xl);
-  padding: 40px 20px;
+  padding: var(--space-10) var(--space-5);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2_5);
   text-align: center;
 }
 .a-empty--dashed {
   border: 1px dashed var(--line2);
 }
 .a-empty--compact {
-  padding: 24px 16px;
+  padding: var(--space-6) var(--space-4);
 }
 .a-empty__title {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 600;
 }
 .a-empty--compact .a-empty__title {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--muted);
 }
 .a-empty__desc {
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--text-base);
   max-width: 340px;
   text-wrap: pretty;
 }
 .a-empty__actions {
   display: flex;
-  gap: 8px;
-  margin-top: 6px;
+  gap: var(--space-2);
+  margin-top: var(--space-1_5);
 }
 </style>

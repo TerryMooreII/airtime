@@ -2,8 +2,7 @@
 
 Tokens live in `tokens.css` (colors, type, radii, spacing, layout) and are the only
 source of color in the app — components never hard-code hex values. Dark is the
-default; set `data-theme="light"` on `<html>` for light mode and `data-accent="violet"`
-(or teal/blue/emerald/amber) to change the accent. `useTheme()` manages this.
+default; set `data-theme="light"` on `<html>` for light mode. `useTheme()` manages this.
 
 All components are prefixed `A` and exported from `@/design-system`:
 

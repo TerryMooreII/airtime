@@ -239,7 +239,7 @@ function meta(c: MatchCandidate): string {
 </script>
 
 <template>
-  <div class="import" tabindex="-1" @keydown="onKey">
+  <div class="page import" tabindex="-1" @keydown="onKey">
     <AHeader
       title="Import shows"
       :subtitle="
@@ -265,7 +265,7 @@ function meta(c: MatchCandidate): string {
           hint="Columns: show name, rating (1–5). A header row is optional."
           @file="onFile"
         />
-        <div class="upload__or">or paste rows</div>
+        <div class="t-label upload__or">or paste rows</div>
         <ATextarea
           v-model="pasted"
           :rows="7"
@@ -274,9 +274,9 @@ function meta(c: MatchCandidate): string {
           :spellcheck="false"
           @update:model-value="parsed = null"
         />
-        <div class="upload__actions">
+        <div class="cluster upload__actions">
           <AButton variant="outline" :disabled="!pasted.trim()" @click="parse">Check rows</AButton>
-          <span v-if="parsed" class="upload__summary">
+          <span v-if="parsed" class="cluster upload__summary">
             <ABadge variant="success">{{ parsed.rows.length }} rows</ABadge>
             <ABadge v-if="parsed.skipped.length" variant="warning"
               >{{ parsed.skipped.length }} skipped</ABadge
@@ -340,7 +340,7 @@ function meta(c: MatchCandidate): string {
             >
           </div>
           <h2 class="review__name">{{ current.name }}</h2>
-          <div class="review__rating">
+          <div class="cluster review__rating">
             <span class="t-label">Your rating</span>
             <AStarRating v-model="current.rating" size="md" />
             <span v-if="current.rating === null && current.ratingText" class="t-muted review__raw"
@@ -411,7 +411,7 @@ function meta(c: MatchCandidate): string {
         </ACard>
 
         <aside class="review__side">
-          <div class="tally">
+          <div class="cluster tally">
             <ABadge variant="success">{{ counts.confirmed }} confirmed</ABadge>
             <ABadge variant="muted">{{ counts.skipped }} skipped</ABadge>
             <ABadge variant="warning">{{ counts.unknown }} unknown</ABadge>
@@ -475,7 +475,7 @@ function meta(c: MatchCandidate): string {
               aria-label="Status for imported shows"
             />
           </div>
-          <div class="summary__actions">
+          <div class="cluster summary__actions">
             <AButton
               size="lg"
               icon="library"
@@ -559,7 +559,7 @@ function meta(c: MatchCandidate): string {
             </li>
           </ul>
         </ACard>
-        <div class="done__actions">
+        <div class="cluster done__actions">
           <AButton :to="{ name: 'library' }" icon="library">Open library</AButton>
           <AButton variant="outline" @click="reset">Import another file</AButton>
           <RouterLink :to="{ name: 'search' }" class="done__link"
@@ -573,40 +573,27 @@ function meta(c: MatchCandidate): string {
 
 <style scoped>
 .import {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
   outline: none;
 }
 .upload {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3_5);
   max-width: 760px;
 }
 .upload__or {
   text-align: center;
-  font: 600 11px var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
 }
-
 .upload__actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  --cluster-gap: var(--space-3);
 }
 .upload__summary {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  --cluster-gap: var(--space-1_5);
 }
 .upload__preview {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .upload__go {
@@ -614,22 +601,22 @@ function meta(c: MatchCandidate): string {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 14px;
+  gap: var(--space-3_5);
 }
 .upload__status {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1_5);
 }
 
 .review {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 20px;
+  gap: var(--space-5);
   align-items: start;
 }
 .review__card {
-  gap: 16px;
+  gap: var(--space-4);
 }
 .review__head {
   display: flex;
@@ -637,36 +624,33 @@ function meta(c: MatchCandidate): string {
   align-items: center;
 }
 .review__name {
-  font-size: 30px;
+  font-size: var(--text-3xl);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.05;
 }
 .review__rating {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  --cluster-gap: var(--space-3);
 }
 .review__raw {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
 }
 .cands {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-2_5);
 }
 .cands__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 12px;
+  gap: var(--space-3);
 }
 .cand {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  padding: 6px;
+  padding: var(--space-1_5);
   border-radius: var(--radius-lg);
   border: 2px solid transparent;
   background: transparent;
@@ -682,26 +666,26 @@ function meta(c: MatchCandidate): string {
   background: var(--primary-soft);
 }
 .cand__name {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 .cand__meta {
-  font: 500 11px var(--font-mono);
+  font: 500 var(--text-2xs) var(--font-mono);
   color: var(--muted);
 }
 .cand__tag {
   align-self: flex-start;
-  font: 600 10.5px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 4px 7px;
-  border-radius: 6px;
+  border-radius: var(--radius-badge);
   background: var(--surface2);
   color: var(--muted);
 }
 .cand__tag--exact {
   background: var(--success);
-  color: #0a0a0b;
+  color: var(--on-success);
 }
 .cand--on .cand__tag:not(.cand__tag--exact) {
   background: var(--primary);
@@ -710,12 +694,12 @@ function meta(c: MatchCandidate): string {
 .manual {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .manual__results {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-0_5);
   max-height: 260px;
   overflow: auto;
 }
@@ -723,33 +707,31 @@ function meta(c: MatchCandidate): string {
 .review__actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   flex-wrap: wrap;
-  padding-top: 6px;
+  padding-top: var(--space-1_5);
   border-top: 1px solid var(--line);
 }
 .review__spacer {
   flex: 1;
 }
 kbd {
-  font: 600 10.5px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   border: 1px solid currentColor;
   border-radius: 4px;
   padding: 1px 5px;
   opacity: 0.6;
-  margin-left: 4px;
+  margin-left: var(--space-1);
 }
 .review__side {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   position: sticky;
-  top: 84px;
+  top: calc(var(--header-h) + 16px);
 }
 .tally {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  --cluster-gap: var(--space-1_5);
 }
 .list {
   list-style: none;
@@ -757,7 +739,7 @@ kbd {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-0_5);
   max-height: 50vh;
   overflow: auto;
   border: 1px solid var(--line);
@@ -768,14 +750,14 @@ kbd {
   width: 100%;
   display: grid;
   grid-template-columns: 8px minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
   padding: 7px 10px;
   border: 0;
   background: transparent;
   color: var(--fg);
   text-align: left;
-  font-size: 12.5px;
+  font-size: var(--text-xs);
 }
 .list__item:hover,
 .list__item--on {
@@ -801,21 +783,21 @@ kbd {
 }
 .list__match {
   color: var(--muted);
-  font: 500 11.5px var(--font-mono);
+  font: 500 var(--text-2xs) var(--font-mono);
 }
 .summary {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
   max-width: 820px;
 }
 .summary__card {
-  gap: 18px;
+  gap: var(--space-4_5);
 }
 .summary__hero {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
 }
 .summary__check {
   width: 52px;
@@ -829,21 +811,19 @@ kbd {
   flex: none;
 }
 .summary__title {
-  font-size: 26px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 .summary__status {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1_5);
 }
 .summary__actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  --cluster-gap: var(--space-2_5);
 }
 .summary__list {
   list-style: none;
@@ -855,7 +835,7 @@ kbd {
 .summary__list li {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) auto auto;
-  gap: 12px;
+  gap: var(--space-3);
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
@@ -869,17 +849,17 @@ kbd {
 
 .summary__stars {
   color: var(--star);
-  font-size: 14px;
+  font-size: var(--text-base);
   letter-spacing: 1px;
 }
 .done {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
   max-width: 760px;
 }
 .done__p {
-  font-size: 14px;
+  font-size: var(--text-base);
   margin: 6px 0 10px;
 }
 .done__list {
@@ -888,24 +868,21 @@ kbd {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
+  gap: var(--space-1_5);
+  font-size: var(--text-base);
 }
 .done__list li {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 6px 0;
   border-bottom: 1px solid var(--line);
 }
 .done__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  --cluster-gap: var(--space-2_5);
 }
 .done__link {
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 @media (max-width: 899px) {
   .review {

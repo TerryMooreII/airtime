@@ -48,11 +48,11 @@ const id = useId()
 .a-select {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1_5);
   min-width: 0;
 }
 .a-select__label {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 .a-select__box {
@@ -63,9 +63,16 @@ const id = useId()
   border-radius: var(--radius-md);
   background: var(--surface2);
   border: 1px solid transparent;
+  transition: border-color var(--dur-fast) var(--ease);
 }
 .a-select__box:focus-within {
   border-color: var(--line2);
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+.a-select__box:has(.a-select__el:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .a-select__el {
   appearance: none;
@@ -77,7 +84,7 @@ const id = useId()
   background: transparent;
   color: var(--fg);
   padding: 0 34px 0 12px;
-  font-size: 14px;
+  font-size: var(--text-base);
   min-width: 0;
 }
 .a-select__chev {
@@ -87,13 +94,13 @@ const id = useId()
   pointer-events: none;
 }
 .a-select__hint {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 
 @media (max-width: 759px) {
   .a-select__el {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 }
 </style>

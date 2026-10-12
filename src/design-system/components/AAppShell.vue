@@ -32,7 +32,7 @@ const emit = defineEmits<{ toggleTheme: [] }>()
   <div class="a-shell">
     <aside class="a-shell__sidebar">
       <RouterLink :to="{ name: 'home' }" class="a-shell__brand"><ALogo /></RouterLink>
-      <nav class="a-shell__nav" aria-label="Primary">
+      <nav class="stack-tight a-shell__nav" aria-label="Primary">
         <RouterLink
           v-for="n in nav"
           :key="n.id"
@@ -116,7 +116,7 @@ const emit = defineEmits<{ toggleTheme: [] }>()
   display: flex;
   flex-direction: column;
   padding: 22px 14px 16px;
-  gap: 28px;
+  gap: var(--space-7);
   overflow: auto;
   /* Pinned to the viewport while the page scrolls. */
   position: sticky;
@@ -128,25 +128,20 @@ const emit = defineEmits<{ toggleTheme: [] }>()
 .a-shell__brand {
   display: flex;
   align-items: center;
-  padding: 2px 10px;
+  padding: var(--space-0_5) var(--space-2_5);
   color: var(--fg);
 }
 .a-shell__brand--mobile {
   display: none;
   padding: 0;
 }
-.a-shell__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
 .a-shell__navitem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 14.5px;
+  gap: var(--space-3);
+  font-size: var(--text-base);
   font-weight: 500;
-  padding: 10px 12px;
+  padding: var(--space-2_5) var(--space-3);
   border-radius: var(--radius-md);
   color: var(--muted);
   transition:
@@ -165,18 +160,18 @@ const emit = defineEmits<{ toggleTheme: [] }>()
   flex: 1;
 }
 .a-shell__navbadge {
-  font: 600 11px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   background: var(--primary);
   color: var(--on-primary);
-  padding: 2px 6px;
-  border-radius: 999px;
+  padding: var(--space-0_5) var(--space-1_5);
+  border-radius: var(--radius-pill);
   min-width: 20px;
   text-align: center;
 }
 .a-shell__rail {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1_5);
 }
 .a-shell__spacer {
   flex: 1;
@@ -184,9 +179,9 @@ const emit = defineEmits<{ toggleTheme: [] }>()
 .a-shell__theme {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2_5);
   border: 1px solid var(--line);
-  font-size: 13.5px;
+  font-size: var(--text-sm);
   font-weight: 500;
   padding: 9px 12px;
   border-radius: var(--radius-md);
@@ -216,7 +211,7 @@ const emit = defineEmits<{ toggleTheme: [] }>()
   flex: none;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   padding: var(--head-pad);
   border-bottom: 1px solid var(--line);
   position: sticky;
@@ -282,7 +277,7 @@ const emit = defineEmits<{ toggleTheme: [] }>()
     padding: var(--page-pad-mobile);
   }
   .a-shell__body {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: var(--bottom-nav-h);
     /* No sideways page scroll; wide content (tables) scrolls inside its own wrapper. */
     overflow-x: clip;
   }
@@ -305,11 +300,11 @@ const emit = defineEmits<{ toggleTheme: [] }>()
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
     min-height: 52px;
     justify-content: center;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--text-2xs);
     font-weight: 500;
   }
   .a-shell__bottomitem--on {

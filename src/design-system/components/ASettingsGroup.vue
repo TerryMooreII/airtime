@@ -18,7 +18,7 @@ defineProps<{ title: string }>()
   border: 1px solid var(--line);
 }
 .a-settings__title {
-  padding: 14px 18px 6px;
+  padding: var(--space-3_5) var(--space-4_5) var(--space-1_5);
 }
 .a-settings > :deep(.a-settings-row:last-child) {
   border-bottom: 0;

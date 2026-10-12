@@ -29,7 +29,7 @@ const meta = catalogMeta
 </script>
 
 <template>
-  <div class="search">
+  <div class="page search">
     <h1 class="t-h1">{{ title }}</h1>
     <ASearchBox
       v-model="search.query.value"
@@ -76,11 +76,6 @@ const meta = catalogMeta
 </template>
 
 <style scoped>
-.search {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
 .search__box {
   display: none;
 }

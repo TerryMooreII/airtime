@@ -12,7 +12,7 @@ const tabs = [
 </script>
 
 <template>
-  <div class="admin">
+  <div class="page admin">
     <AHeader title="Management" kicker="Admin">
       <AChoiceGroup variant="segmented" :options="tabs" aria-label="Admin sections" />
     </AHeader>
@@ -20,10 +20,4 @@ const tabs = [
   </div>
 </template>
 
-<style scoped>
-.admin {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-</style>
+<style scoped></style>

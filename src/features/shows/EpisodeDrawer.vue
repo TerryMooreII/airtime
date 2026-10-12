@@ -36,13 +36,18 @@ const meta = computed(() => {
 <template>
   <ADrawer :open="!!episode" :title="episode?.name ?? 'Episode'" @close="emit('close')">
     <template v-if="episode">
-      <APoster :src="episode.image_medium ?? showImage" ratio="still" radius="sm" class="ep__img" />
+      <APoster
+        :src="episode.image_medium ?? showImage"
+        ratio="still"
+        radius="none"
+        class="ep__img"
+      />
       <div class="ep__body">
-        <span class="ep__kicker"
+        <span class="t-kicker"
           >{{ showName }} · {{ episodeCode(episode.season, episode.number) }}</span
         >
         <h2 class="ep__title">{{ episode.name ?? 'TBA' }}</h2>
-        <span class="ep__meta">{{ meta }}</span>
+        <span class="t-meta">{{ meta }}</span>
         <span class="ep__avg">{{
           rating ? `★ ${rating} average on TVmaze` : 'Not yet rated on TVmaze'
         }}</span>
@@ -74,45 +79,34 @@ const meta = computed(() => {
 
 <style scoped>
 .ep__img {
-  border-radius: 0;
   flex: none;
 }
 .ep__body {
-  padding: 24px;
+  padding: var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-.ep__kicker {
-  font: 600 11.5px var(--font-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--primary-text);
+  gap: var(--space-3_5);
 }
 .ep__title {
-  font-size: 28px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.08;
 }
-.ep__meta {
-  font: 500 13px var(--font-mono);
-  color: var(--muted);
-}
 .ep__avg {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--muted);
 }
 .ep__summary {
-  margin-top: 4px;
-  font-size: 15.5px;
+  margin-top: var(--space-1);
+  font-size: var(--text-md);
   line-height: 1.6;
   text-wrap: pretty;
 }
 .ep__nav {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 .ep__nav > * {
   flex: 1;

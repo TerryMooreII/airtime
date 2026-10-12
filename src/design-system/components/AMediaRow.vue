@@ -59,7 +59,7 @@ const emit = defineEmits<{ click: [] }>()
 .a-media {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   min-width: 0;
   width: 100%;
   text-align: left;
@@ -71,7 +71,7 @@ const emit = defineEmits<{ click: [] }>()
   border-radius: var(--radius-md);
 }
 .a-media--hover {
-  padding: 6px;
+  padding: var(--space-1_5);
   margin: 0 -6px;
   width: calc(100% + 12px);
   transition: background var(--dur-fast) var(--ease);
@@ -86,7 +86,7 @@ const emit = defineEmits<{ click: [] }>()
 .a-media__text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-0_5);
   min-width: 0;
   flex: 1;
 }
@@ -95,7 +95,7 @@ const emit = defineEmits<{ click: [] }>()
   line-height: 1.25;
 }
 .a-media__sub {
-  font: 500 12px var(--font-mono);
+  font: 500 var(--text-xs) var(--font-mono);
   color: var(--muted);
 }
 </style>

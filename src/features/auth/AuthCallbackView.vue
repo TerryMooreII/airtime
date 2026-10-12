@@ -37,7 +37,7 @@ onMounted(async () => {
 .spin {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2_5);
   color: var(--muted);
 }
 </style>

@@ -1,7 +1,11 @@
 /*
  * Airtime design tokens — derived from the Airdate mock (Airdate.dc.html).
- * Dark is the default theme; light is opted into via data-theme="light".
- * Accent defaults to "coral"; alternative accents are listed at the bottom.
+ * Dark is the default theme; light is opted into via data-theme="light" (set before first
+ * paint by the inline script in index.html, then kept current by useTheme()).
+ *
+ * Breakpoints (CSS cannot read custom properties in media queries, so these are by convention):
+ *   759px  phone layout: bottom nav, single column, 16px gutters (useBreakpoint.ts matches it)
+ *   899px  the two-column layouts stack (auth art panel, import review sidebar)
  */
 :root {
   /* Surfaces & lines */
@@ -26,25 +30,42 @@
   /* Semantic */
   --star: #f5b83d;
   --danger: #ff5d5d;
+  --on-danger: #ffffff;
   --danger-soft: rgba(255, 93, 93, 0.14);
   --success: #3ccf8e;
+  --on-success: #0a0a0b;
   --success-soft: rgba(60, 207, 142, 0.14);
   --warning: #f5b83d;
   --warning-soft: rgba(245, 184, 61, 0.14);
 
+  /* Content drawn over artwork: the same in both themes. */
+  --image-bg: #111111;
+  --on-image: #ffffff;
+  --on-image-muted: rgba(255, 255, 255, 0.75);
+  --image-scrim: rgba(0, 0, 0, 0.55);
+  --glass-bg: rgba(20, 20, 22, 0.92);
+  --glass-fg: #f3f3f1;
+
   /* Typography */
   --font-sans: Geist, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --text-xs: 11px;
-  --text-sm: 13px;
+  /* Type scale: nine steps from captions to display titles. */
+  --text-2xs: 11px;
+  --text-xs: 12.5px;
+  --text-sm: 13.5px;
   --text-base: 14.5px;
   --text-md: 16px;
-  --text-lg: 20px;
-  --text-xl: 22px;
-  --text-h1: 44px;
-  --text-h1-mobile: 30px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 28px;
+  --text-3xl: 32px;
   --text-hero: 40px;
   --text-hero-mobile: 28px;
+  --text-h1: 44px;
+  --text-h1-mobile: 30px;
+  --text-display-sm: 48px;
+  --text-display: 56px;
+  --text-display-mobile: 34px;
   --tracking-tight: -0.035em;
   --tracking-label: 0.08em;
 
@@ -57,17 +78,30 @@
   --radius-2xl: 20px;
   --radius-3xl: 22px;
   --radius-pill: 999px;
+  --radius-badge: 6px;
 
-  /* Space */
+  /* Space: a 4px grid with the half steps the UI actually uses. */
+  --space-0_5: 2px;
   --space-1: 4px;
+  --space-1_5: 6px;
   --space-2: 8px;
+  --space-2_5: 10px;
   --space-3: 12px;
+  --space-3_5: 14px;
   --space-4: 16px;
+  --space-4_5: 18px;
   --space-5: 20px;
   --space-6: 24px;
   --space-7: 28px;
   --space-8: 32px;
   --space-10: 40px;
+  --page-gap: 24px;
+  --section-gap: 14px;
+
+  /* Controls */
+  --control-h-sm: 34px;
+  --control-h-md: 42px;
+  --control-h-lg: 48px;
 
   /* Layout */
   --sidebar-w: 236px;
@@ -82,6 +116,9 @@
   --grid-gap-mobile: 18px 14px;
   --rail-w: 156px;
   --rail-w-mobile: 132px;
+  /* Set by the app shell: the sticky header and the fixed bottom nav (phones only). */
+  --header-h: 67px;
+  --bottom-nav-h: 0px;
 
   /* Elevation & motion */
   --shadow-seg: 0 1px 2px rgba(0, 0, 0, 0.18);
@@ -90,6 +127,7 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --dur-fast: 120ms;
   --dur: 200ms;
+  --dur-slow: 360ms;
 
   --z-sticky: 2;
   --z-header: 5;
@@ -121,66 +159,16 @@
   --success-soft: rgba(23, 138, 82, 0.1);
   --warning: #9a5b00;
   --warning-soft: rgba(154, 91, 0, 0.1);
+  --on-success: #ffffff;
   --shadow-seg: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-poster: 0 24px 60px rgba(0, 0, 0, 0.18);
+  --shadow-drawer: 0 0 60px rgba(0, 0, 0, 0.16);
   color-scheme: light;
 }
 
-/* Optional accents from the mock. Apply with data-accent="violet" on <html>. */
-:root[data-accent='violet'] {
-  --primary: #6e5fff;
-  --on-primary: #fff;
-  --primary-text: #ada4ff;
-  --primary-soft: rgba(110, 95, 255, 0.18);
-}
-:root[data-accent='violet'][data-theme='light'] {
-  --primary: #5847f0;
-  --primary-text: #4533de;
-  --primary-soft: rgba(88, 71, 240, 0.11);
-}
-:root[data-accent='teal'] {
-  --primary: #1fcbaa;
-  --on-primary: #0a0a0b;
-  --primary-text: #55ddc4;
-  --primary-soft: rgba(31, 203, 170, 0.15);
-}
-:root[data-accent='teal'][data-theme='light'] {
-  --primary: #0a8672;
-  --on-primary: #fff;
-  --primary-text: #087563;
-  --primary-soft: rgba(10, 134, 114, 0.1);
-}
-:root[data-accent='blue'] {
-  --primary: #2f6bff;
-  --on-primary: #fff;
-  --primary-text: #86a9ff;
-  --primary-soft: rgba(47, 107, 255, 0.18);
-}
-:root[data-accent='blue'][data-theme='light'] {
-  --primary: #1f57e8;
-  --primary-text: #1a4bcc;
-  --primary-soft: rgba(31, 87, 232, 0.1);
-}
-:root[data-accent='emerald'] {
-  --primary: #22c55e;
-  --on-primary: #0a0a0b;
-  --primary-text: #5edc8c;
-  --primary-soft: rgba(34, 197, 94, 0.15);
-}
-:root[data-accent='emerald'][data-theme='light'] {
-  --primary: #11783a;
-  --on-primary: #fff;
-  --primary-text: #0f6b34;
-  --primary-soft: rgba(17, 120, 58, 0.1);
-}
-:root[data-accent='amber'] {
-  --primary: #ffb21e;
-  --on-primary: #0a0a0b;
-  --primary-text: #ffc95c;
-  --primary-soft: rgba(255, 178, 30, 0.15);
-}
-:root[data-accent='amber'][data-theme='light'] {
-  --primary: #9a5b00;
-  --on-primary: #fff;
-  --primary-text: #8a5100;
-  --primary-soft: rgba(154, 91, 0, 0.1);
+@media (max-width: 759px) {
+  :root {
+    --header-h: calc(63px + env(safe-area-inset-top, 0px));
+    --bottom-nav-h: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 }

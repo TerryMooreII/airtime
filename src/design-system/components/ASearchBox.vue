@@ -41,17 +41,19 @@ const emit = defineEmits<{ focus: []; submit: [] }>()
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2_5);
   background: var(--surface2);
   border-radius: var(--radius-md);
   padding: 0 12px;
   height: 38px;
   color: var(--muted);
   border: 1px solid transparent;
-  transition: border-color var(--dur-fast);
+  transition: border-color var(--dur-fast) var(--ease);
 }
 .a-search:focus-within {
   border-color: var(--line2);
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
 }
 .a-search--lg {
   height: 48px;
@@ -66,10 +68,10 @@ const emit = defineEmits<{ focus: []; submit: [] }>()
   outline: 0;
   background: transparent;
   color: var(--fg);
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 .a-search--lg .a-search__input {
-  font-size: 16px;
+  font-size: var(--text-md);
 }
 .a-search__input::placeholder {
   color: var(--muted);
@@ -82,7 +84,7 @@ const emit = defineEmits<{ focus: []; submit: [] }>()
   background: transparent;
   color: var(--muted);
   display: flex;
-  padding: 4px;
+  padding: var(--space-1);
   border-radius: var(--radius-xs);
 }
 .a-search__clear:hover {
@@ -92,7 +94,7 @@ const emit = defineEmits<{ focus: []; submit: [] }>()
 /* iOS zooms into inputs smaller than 16px; keep phones at 16px. */
 @media (max-width: 759px) {
   .a-search__input {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 }
 </style>

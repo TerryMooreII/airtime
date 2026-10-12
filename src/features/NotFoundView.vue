@@ -6,7 +6,7 @@ useTheme()
 </script>
 
 <template>
-  <div class="nf">
+  <div class="page nf">
     <ALogo />
     <AEmptyState
       title="Page not found"
@@ -20,11 +20,8 @@ useTheme()
 <style scoped>
 .nf {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 32px;
-  padding: 24px;
+  padding: var(--space-6);
 }
 </style>

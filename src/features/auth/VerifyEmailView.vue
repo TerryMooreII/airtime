@@ -37,7 +37,7 @@ const signOut = useSignOut()
   >
     <AAlert v-if="sent" variant="success">A new link is on its way.</AAlert>
     <AAlert v-if="error" variant="error">{{ error }}</AAlert>
-    <div class="actions">
+    <div class="cluster actions">
       <AButton variant="outline" :loading="sending" :disabled="!email" @click="resend"
         >Resend email</AButton
       >
@@ -51,10 +51,4 @@ const signOut = useSignOut()
   </AuthFormShell>
 </template>
 
-<style scoped>
-.actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-</style>
+<style scoped></style>

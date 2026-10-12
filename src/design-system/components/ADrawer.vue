@@ -45,7 +45,7 @@ useOverlay(toRef(props, 'open'), () => emit('close'), { lockScroll: true })
 }
 .a-drawer__panel {
   position: relative;
-  width: var(--drawer-w);
+  width: var(--drawer-w, 460px);
   height: 100%;
   background: var(--surface);
   overflow: auto;
@@ -61,8 +61,8 @@ useOverlay(toRef(props, 'open'), () => emit('close'), { lockScroll: true })
   height: 40px;
   border-radius: 50%;
   border: 0;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
+  background: var(--image-scrim);
+  color: var(--on-image);
   display: flex;
   align-items: center;
   justify-content: center;

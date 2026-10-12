@@ -16,17 +16,17 @@ withDefaults(
 .a-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   flex: none;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-badge);
   line-height: 1.2;
   white-space: nowrap;
 }
 .a-badge--mono {
-  font: 600 10.5px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 4px 7px;

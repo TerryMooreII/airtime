@@ -62,7 +62,7 @@ const columns: TableColumn[] = [
 </script>
 
 <template>
-  <div class="users">
+  <div class="page users">
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
     <ATable :columns="columns" :rows="users" :loading="loading">
       <template #cell-email="{ row }">
@@ -138,15 +138,10 @@ const columns: TableColumn[] = [
 </template>
 
 <style scoped>
-.users {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 .user-cell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-0_5);
   min-width: 180px;
 }
 .user-cell__name {
@@ -154,7 +149,7 @@ const columns: TableColumn[] = [
 }
 .actions {
   display: flex;
-  gap: 6px;
+  gap: var(--space-1_5);
   justify-content: flex-end;
   flex-wrap: wrap;
 }
@@ -162,11 +157,11 @@ const columns: TableColumn[] = [
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
 }
 .pager__btns {
   display: flex;
-  gap: 6px;
+  gap: var(--space-1_5);
 }
 </style>

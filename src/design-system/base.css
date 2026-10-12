@@ -56,10 +56,10 @@ p {
   margin: 0;
 }
 
+/* The ring follows each element's own radius; never reshape a control on focus. */
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
 
 ::selection {
@@ -79,9 +79,21 @@ p {
   letter-spacing: -0.02em;
 }
 .t-label {
-  font: 600 var(--text-xs) var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
+  color: var(--muted);
+}
+/* A label in the accent colour: "Next episode", "Top pick for you". */
+.t-kicker {
+  font: 600 var(--text-2xs) var(--font-mono);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--primary-text);
+}
+/* Secondary line under a title: dates, codes, networks. */
+.t-meta {
+  font: 500 var(--text-sm) var(--font-mono);
   color: var(--muted);
 }
 .t-mono {
@@ -92,7 +104,7 @@ p {
 }
 .t-sub {
   color: var(--muted);
-  font-size: 15px;
+  font-size: var(--text-base);
   text-wrap: pretty;
 }
 .truncate {
@@ -106,13 +118,39 @@ p {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+
+/* ---- Layout utilities ---------------------------------------------------- */
+/* A page's root: sections stacked with the page gap. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-gap);
+}
+/* Vertical stack; set --stack-gap to change the spacing. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap, var(--space-3));
+}
+/* Title + meta lines inside a row or cell. */
+.stack-tight {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0_5);
+  min-width: 0;
+}
+/* Buttons, badges or links side by side, wrapping; set --cluster-gap to change the spacing. */
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cluster-gap, var(--space-2));
+}
+/* A bordered surface panel. */
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
 }
 
 @media (max-width: 759px) {

@@ -20,10 +20,10 @@ withDefaults(defineProps<{ padding?: 'md' | 'lg'; radius?: 'xl' | '2xl' }>(), {
   min-width: 0;
 }
 .a-card--p-md {
-  padding: 16px;
+  padding: var(--space-4);
 }
 .a-card--p-lg {
-  padding: 18px 20px;
+  padding: var(--space-4_5) var(--space-5);
 }
 .a-card--r-xl {
   border-radius: var(--radius-xl);

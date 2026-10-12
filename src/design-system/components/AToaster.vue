@@ -37,7 +37,7 @@ const ui = useUiStore()
   z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   width: min(420px, calc(100vw - 32px));
   pointer-events: none;
 }
@@ -45,13 +45,13 @@ const ui = useUiStore()
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: var(--space-2_5);
+  padding: var(--space-3) var(--space-3_5);
   border-radius: var(--radius-lg);
   background: var(--surface);
   border: 1px solid var(--line2);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-  font-size: 14px;
+  box-shadow: var(--shadow-drawer);
+  font-size: var(--text-base);
 }
 .a-toast--success {
   color: var(--success);
@@ -67,7 +67,7 @@ const ui = useUiStore()
   border: 0;
   background: transparent;
   color: var(--muted);
-  padding: 4px;
+  padding: var(--space-1);
   display: flex;
   border-radius: var(--radius-xs);
 }
@@ -84,7 +84,7 @@ const ui = useUiStore()
 }
 @media (max-width: 759px) {
   .a-toaster {
-    bottom: 90px;
+    bottom: calc(var(--bottom-nav-h) + 16px);
   }
 }
 </style>

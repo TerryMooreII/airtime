@@ -80,7 +80,7 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
 </script>
 
 <template>
-  <div class="person">
+  <div class="page person">
     <ABackButton />
 
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
@@ -159,16 +159,10 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
 </template>
 
 <style scoped>
-.person {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
 .hero__links {
   display: flex;
-  gap: 8px;
-  margin-top: 6px;
+  gap: var(--space-2);
+  margin-top: var(--space-1_5);
 }
 .hero__ext {
   color: var(--muted);
@@ -177,14 +171,14 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
 .credits {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3_5);
 }
 
 .credits__sub {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: var(--space-2_5);
+  margin-top: var(--space-2_5);
 }
 
 .ext-card {
@@ -195,12 +189,12 @@ const elsewhere = computed(() => credits.value.filter((c) => !localIds.value.has
   color: var(--fg);
 }
 .ext-card__name {
-  font-size: 14.5px;
+  font-size: var(--text-base);
   font-weight: 600;
   line-height: 1.25;
 }
 .ext-card__meta {
-  font: 500 12px var(--font-mono);
+  font: 500 var(--text-xs) var(--font-mono);
   color: var(--muted);
   margin-top: -3px;
 }

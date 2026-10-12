@@ -29,8 +29,8 @@ withDefaults(
     /** Statuses offered in the "Add as" menu; without them the plus follows directly. */
     followOptions?: FollowOption<S>[]
     showRating?: boolean
-    /** Fixed width for horizontal rails. */
-    width?: string
+    /** Fixed-width card for horizontal rails (var(--rail-w)). */
+    rail?: boolean
   }>(),
   { following: false, followLoading: false, showFollow: true, showRating: false },
 )
@@ -75,8 +75,7 @@ const rating = defineModel<number | null>('rating', { default: null })
   <RouterLink
     :to="{ name: 'show', params: { id: showId } }"
     class="a-show-card"
-    :class="{ 'a-show-card--no-follow': !showFollow }"
-    :style="width ? { width, flex: 'none' } : undefined"
+    :class="{ 'a-show-card--no-follow': !showFollow, 'a-show-card--rail': rail }"
   >
     <APoster :src="image" :alt="name" radius="lg">
       <span v-if="badge" class="a-show-card__badge">{{ badge }}</span>
@@ -135,6 +134,10 @@ const rating = defineModel<number | null>('rating', { default: null })
 .a-show-card:hover {
   color: var(--fg);
 }
+.a-show-card--rail {
+  width: var(--rail-w);
+  flex: none;
+}
 .a-show-card:hover :deep(.a-poster__img) {
   filter: brightness(1.06);
 }
@@ -147,11 +150,11 @@ const rating = defineModel<number | null>('rating', { default: null })
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font: 600 11px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   background: var(--primary);
   color: var(--on-primary);
   padding: 4px 7px;
-  border-radius: 6px;
+  border-radius: var(--radius-badge);
   z-index: 1;
 }
 .a-show-card--no-follow .a-show-card__badge {
@@ -173,16 +176,17 @@ const rating = defineModel<number | null>('rating', { default: null })
   width: 168px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-0_5);
   padding: 0 6px 6px;
   border-radius: 17px;
-  background: rgba(20, 20, 22, 0.92);
+  /* Always dark glass: it sits on top of artwork in either theme. */
+  background: var(--glass-bg);
   backdrop-filter: blur(10px);
-  color: #f3f3f1;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  color: var(--glass-fg);
+  box-shadow: var(--shadow-drawer);
   clip-path: circle(17px at calc(100% - 17px) 17px);
   pointer-events: none;
-  transition: clip-path 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: clip-path var(--dur-slow) var(--ease);
 }
 .a-show-card__follow--open .a-show-card__panel {
   clip-path: circle(230px at calc(100% - 17px) 17px);
@@ -194,9 +198,9 @@ const rating = defineModel<number | null>('rating', { default: null })
   display: flex;
   align-items: center;
   padding: 0 40px 0 10px;
-  margin-bottom: 2px;
-  font: 600 10.5px var(--font-mono);
-  letter-spacing: 0.08em;
+  margin-bottom: var(--space-0_5);
+  font: 600 var(--text-2xs) var(--font-mono);
+  letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: rgba(243, 243, 241, 0.6);
   white-space: nowrap;
@@ -206,19 +210,19 @@ const rating = defineModel<number | null>('rating', { default: null })
   background: transparent;
   color: inherit;
   text-align: left;
-  font-size: 13.5px;
+  font-size: var(--text-sm);
   font-weight: 500;
-  padding: 8px 10px;
+  padding: var(--space-2) var(--space-2_5);
   border-radius: 10px;
   white-space: nowrap;
   opacity: 0;
   transform: translateX(8px);
   /* Entrance is staggered per item; hover colors switch together with no delay. */
   transition:
-    opacity 220ms var(--ease) var(--stagger, 0ms),
-    transform 220ms var(--ease) var(--stagger, 0ms),
-    background-color 100ms linear 0ms,
-    color 100ms linear 0ms;
+    opacity var(--dur) var(--ease) var(--stagger, 0ms),
+    transform var(--dur) var(--ease) var(--stagger, 0ms),
+    background-color var(--dur-fast) linear 0ms,
+    color var(--dur-fast) linear 0ms;
 }
 .a-show-card__follow--open .a-show-card__panel-item {
   opacity: 1;
@@ -231,7 +235,7 @@ const rating = defineModel<number | null>('rating', { default: null })
   outline: none;
 }
 .a-show-card__name {
-  font-size: 14.5px;
+  font-size: var(--text-base);
   font-weight: 600;
   line-height: 1.25;
 }
@@ -239,8 +243,13 @@ const rating = defineModel<number | null>('rating', { default: null })
   margin: -4px 0 -2px;
 }
 .a-show-card__meta {
-  font: 500 12px var(--font-mono);
+  font: 500 var(--text-xs) var(--font-mono);
   color: var(--muted);
   margin-top: -3px;
+}
+@media (max-width: 759px) {
+  .a-show-card--rail {
+    width: var(--rail-w-mobile);
+  }
 }
 </style>

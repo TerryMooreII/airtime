@@ -71,14 +71,14 @@ function onClick(ev: Event) {
 .a-follow {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   height: 42px;
   padding: 0 18px;
   border-radius: var(--radius-md);
   border: 1px solid var(--primary);
   background: var(--primary);
   color: var(--on-primary);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   transition:
     background var(--dur-fast),
@@ -89,7 +89,7 @@ function onClick(ev: Event) {
   height: 44px;
   padding: 0 20px;
   border-radius: var(--radius-lg);
-  font-size: 14.5px;
+  font-size: var(--text-base);
 }
 .a-follow--on {
   background: transparent;
@@ -100,19 +100,21 @@ function onClick(ev: Event) {
   background: var(--hover);
 }
 .a-follow:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
+/* Overlay chip on a poster; --chip-offset moves it in from the corner. */
 .a-follow-chip {
   position: absolute;
-  right: 8px;
-  top: 8px;
+  right: var(--chip-offset, 8px);
+  top: var(--chip-offset, 8px);
   width: 34px;
   height: 34px;
   border-radius: 50%;
   border: 0;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
+  background: var(--image-scrim);
+  color: var(--on-image);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -139,7 +141,8 @@ function onClick(ev: Event) {
   flex: none;
 }
 .a-follow-chip:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .a-follow-chip--small {
   width: 26px;

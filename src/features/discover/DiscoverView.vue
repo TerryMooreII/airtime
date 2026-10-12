@@ -135,7 +135,7 @@ const railList = computed<Rail[]>(() => {
 </script>
 
 <template>
-  <div class="discover">
+  <div class="page discover">
     <AHeader title="Discover" subtitle="Picked from your star ratings and what's on this week." />
 
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
@@ -145,7 +145,7 @@ const railList = computed<Rail[]>(() => {
       <div v-for="i in 3" :key="i" class="rail">
         <ASkeleton width="220px" height="22px" />
         <div class="rail__track">
-          <ASkeleton v-for="j in 6" :key="j" width="156px" ratio="2 / 3" />
+          <ASkeleton v-for="j in 6" :key="j" width="var(--rail-w)" ratio="2 / 3" />
         </div>
       </div>
     </template>
@@ -194,7 +194,7 @@ const railList = computed<Rail[]>(() => {
             :following="library.byShowId.has(s.id)"
             :follow-loading="follow.pending(s.id)"
             :follow-options="FOLLOW_OPTIONS"
-            width="156px"
+            rail
             @follow="(status) => follow.toggle(s.id, s.tvmaze_id, s.name, status)"
           />
         </div>
@@ -215,43 +215,36 @@ const railList = computed<Rail[]>(() => {
 </template>
 
 <style scoped>
-.discover {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
 .pick__summary {
-  font-size: 15px;
+  font-size: var(--text-md);
   line-height: 1.55;
   max-width: 60ch;
   text-wrap: pretty;
 }
 .pick__reason {
-  font-size: 13.5px;
+  font-size: var(--text-sm);
   color: var(--muted);
 }
 .pick__actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 .rail {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3_5);
 }
 .rail__track {
   display: flex;
-  gap: 14px;
+  gap: var(--space-3_5);
   overflow-x: auto;
-  padding: 4px 4px 10px;
+  padding: var(--space-1) var(--space-1) var(--space-2_5);
   margin: 0 -4px;
-  scrollbar-width: thin;
 }
 .discover__note {
-  font-size: 13px;
+  font-size: var(--text-sm);
   margin-top: -16px;
 }
 </style>

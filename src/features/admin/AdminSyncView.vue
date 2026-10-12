@@ -75,7 +75,7 @@ function summarize(stats: unknown): string {
 </script>
 
 <template>
-  <div class="sync">
+  <div class="page sync">
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
     <div class="sync__jobs">
       <ACard v-for="j in JOBS" :key="j.type" padding="md" class="job">
@@ -113,7 +113,7 @@ function summarize(stats: unknown): string {
           ><span class="t-muted">{{ timeAgo(String(value)) }}</span></template
         >
         <template #cell-last_error="{ value }"
-          ><span class="t-muted err">{{ value ?? '' }}</span></template
+          ><span class="t-muted err clamp-2">{{ value ?? '' }}</span></template
         >
       </ATable>
     </section>
@@ -126,7 +126,7 @@ function summarize(stats: unknown): string {
         >
         <template #cell-status="{ row }">
           <ABadge :variant="badge(row.status as SyncStatus)">{{ row.status }}</ABadge>
-          <span v-if="row.error" class="t-muted err"> {{ row.error }}</span>
+          <span v-if="row.error" class="t-muted err clamp-2"> {{ row.error }}</span>
         </template>
         <template #cell-finished_at="{ value }"
           ><span class="t-muted">{{ timeAgo(String(value)) }}</span></template
@@ -140,43 +140,34 @@ function summarize(stats: unknown): string {
 </template>
 
 <style scoped>
-.sync {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 .sync__jobs {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
+  gap: var(--space-3);
 }
 .job {
-  gap: 6px;
+  gap: var(--space-1_5);
 }
 .job__label {
   font-weight: 600;
 }
 .job__hint {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   color: var(--muted);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 .sync__section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .payload {
-  font-size: 12px;
+  font-size: var(--text-xs);
   word-break: break-all;
 }
 .err {
-  font-size: 12px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: var(--text-xs);
   max-width: 320px;
 }
 </style>

@@ -35,7 +35,7 @@ const columns: TableColumn[] = [
 </script>
 
 <template>
-  <div class="shows">
+  <div class="page shows">
     <ASearchBox v-model="query" placeholder="Search the catalog by name" size="lg" />
     <AAlert v-if="error" variant="error" @retry="load">{{ error }}</AAlert>
     <ATable :columns="columns" :rows="rows" :loading="loading" empty-text="No shows match.">
@@ -74,11 +74,6 @@ const columns: TableColumn[] = [
 </template>
 
 <style scoped>
-.shows {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 .show-cell {
   min-width: 220px;
 }

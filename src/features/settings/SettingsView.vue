@@ -88,7 +88,7 @@ const signOut = useSignOut()
 </script>
 
 <template>
-  <div class="settings">
+  <div class="page settings">
     <AHeader title="Settings" />
 
     <ASettingsGroup title="Account">
@@ -198,21 +198,18 @@ const signOut = useSignOut()
 
 <style scoped>
 .settings {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
   max-width: 760px;
 }
 .name-form {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: flex-start;
 }
 .role {
-  font: 600 12px var(--font-mono);
+  font: 600 var(--text-xs) var(--font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 6px 10px;
+  padding: var(--space-1_5) var(--space-2_5);
   border-radius: 6px;
   background: var(--primary-soft);
   color: var(--primary-text);
@@ -221,7 +218,7 @@ const signOut = useSignOut()
   margin: 0 18px 14px;
 }
 .foot {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--muted);
 }
 </style>

@@ -35,7 +35,7 @@ withDefaults(
         <slot name="above" />
         <span v-if="kicker" class="t-label a-hero__kicker">{{ kicker }}</span>
         <component :is="titleTag" class="a-hero__title">{{ title }}</component>
-        <div v-if="meta" class="a-hero__meta">{{ meta }}</div>
+        <div v-if="meta" class="t-meta">{{ meta }}</div>
         <slot />
       </div>
     </div>
@@ -64,8 +64,8 @@ withDefaults(
   position: relative;
   display: flex;
   flex-wrap: wrap;
-  gap: 28px;
-  padding: 32px;
+  gap: var(--space-7);
+  padding: var(--space-8);
   align-items: flex-end;
 }
 .a-hero--center .a-hero__inner {
@@ -82,7 +82,7 @@ withDefaults(
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 .a-hero__kicker {
   color: var(--primary-text);
@@ -94,32 +94,28 @@ withDefaults(
   text-wrap: balance;
 }
 .a-hero--xl .a-hero__title {
-  font-size: 56px;
+  font-size: var(--text-display);
 }
 .a-hero--lg .a-hero__title {
-  font-size: 48px;
+  font-size: var(--text-display-sm);
 }
 .a-hero--md .a-hero__title {
   font-size: var(--text-hero);
-  letter-spacing: -0.035em;
+  letter-spacing: var(--tracking-tight);
   line-height: 1;
-}
-.a-hero__meta {
-  font: 500 13px var(--font-mono);
-  color: var(--muted);
 }
 @media (max-width: 759px) {
   .a-hero__inner {
-    padding: 20px;
+    padding: var(--space-5);
   }
   .a-hero__media {
     width: var(--hero-media-mobile);
   }
   .a-hero--xl .a-hero__title {
-    font-size: 34px;
+    font-size: var(--text-display-mobile);
   }
   .a-hero--lg .a-hero__title {
-    font-size: 32px;
+    font-size: var(--text-3xl);
   }
   .a-hero--md .a-hero__title {
     font-size: var(--text-hero-mobile);

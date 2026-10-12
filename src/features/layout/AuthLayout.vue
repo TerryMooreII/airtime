@@ -36,8 +36,8 @@ useTheme()
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 28px;
-  padding: 40px 32px;
+  gap: var(--space-7);
+  padding: var(--space-10) var(--space-8);
   max-width: 480px;
   width: 100%;
   margin: 0 auto;
@@ -48,10 +48,10 @@ useTheme()
 .auth__card {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-4_5);
 }
 .auth__foot {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 .auth__art {
@@ -75,16 +75,16 @@ useTheme()
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-2_5);
   max-width: 420px;
 }
 .auth__tagline {
   color: var(--primary-text);
 }
 .auth__h {
-  font-size: 40px;
+  font-size: var(--text-hero);
   font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: var(--tracking-tight);
   line-height: 1.02;
   text-wrap: balance;
 }

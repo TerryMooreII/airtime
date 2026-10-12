@@ -56,7 +56,7 @@ function pick(n: number, ev?: Event) {
 .a-stars__star {
   border: 0;
   background: transparent;
-  padding: 2px;
+  padding: var(--space-0_5);
   line-height: 1;
   color: var(--line2);
   transition:
@@ -64,14 +64,14 @@ function pick(n: number, ev?: Event) {
     transform var(--dur-fast) var(--ease);
 }
 .a-stars--sm .a-stars__star {
-  font-size: 19px;
+  font-size: var(--text-xl);
 }
 .a-stars--md .a-stars__star {
-  font-size: 26px;
+  font-size: var(--text-2xl);
   padding: 3px;
 }
 .a-stars--lg .a-stars__star {
-  font-size: 30px;
+  font-size: var(--text-3xl);
   padding: 0 3px;
   line-height: 1.1;
 }

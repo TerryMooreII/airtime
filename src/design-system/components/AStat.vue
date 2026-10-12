@@ -14,20 +14,20 @@ defineProps<{ label: string; value: string | number; hint?: string }>()
 .a-stat {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 16px 18px;
+  gap: var(--space-1_5);
+  padding: var(--space-4) var(--space-4_5);
   border-radius: var(--radius-xl);
   background: var(--surface);
   border: 1px solid var(--line);
   min-width: 0;
 }
 .a-stat__value {
-  font: 600 30px var(--font-mono);
+  font: 600 var(--text-3xl) var(--font-mono);
   letter-spacing: -0.03em;
   line-height: 1;
 }
 .a-stat__hint {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 </style>

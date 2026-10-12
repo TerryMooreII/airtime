@@ -53,7 +53,7 @@ useOverlay(toRef(props, 'open'), () => emit('close'))
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: var(--space-4);
 }
 .a-modal__scrim {
   position: absolute;
@@ -66,27 +66,27 @@ useOverlay(toRef(props, 'open'), () => emit('close'))
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-2xl);
-  padding: 24px;
+  padding: var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   box-shadow: var(--shadow-drawer);
 }
 .a-modal__title {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 .a-modal__desc {
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--text-base);
   line-height: 1.5;
 }
 .a-modal__actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 .a-modal-enter-active,
 .a-modal-leave-active {

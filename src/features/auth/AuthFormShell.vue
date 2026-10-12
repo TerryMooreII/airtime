@@ -3,7 +3,7 @@ defineProps<{ title: string; subtitle?: string }>()
 </script>
 
 <template>
-  <div class="form-shell">
+  <div class="page form-shell">
     <div class="form-shell__head">
       <h1 class="form-shell__title">{{ title }}</h1>
       <p v-if="subtitle" class="t-sub">{{ subtitle }}</p>
@@ -14,32 +14,27 @@ defineProps<{ title: string; subtitle?: string }>()
 </template>
 
 <style scoped>
-.form-shell {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
 .form-shell__head {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1_5);
 }
 .form-shell__title {
-  font-size: 32px;
+  font-size: var(--text-3xl);
   font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: var(--tracking-tight);
   line-height: 1.05;
 }
 .form-shell__foot {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--muted);
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
+  gap: var(--space-1_5) var(--space-3_5);
 }
-:deep(form) {
+.form-shell > :deep(form) {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3_5);
 }
 </style>

@@ -135,11 +135,11 @@ onBeforeUnmount(() => {
   position: absolute;
   top: -5px;
   right: -5px;
-  font: 600 10px var(--font-mono);
+  font: 600 var(--text-2xs) var(--font-mono);
   background: var(--primary);
   color: var(--on-primary);
   padding: 2px 5px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   min-width: 18px;
   text-align: center;
 }

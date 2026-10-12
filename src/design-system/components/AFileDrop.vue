@@ -51,16 +51,16 @@ function onDrop(e: DragEvent) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 32px 20px;
+  gap: var(--space-1_5);
+  padding: var(--space-8) var(--space-5);
   border: 1px dashed var(--line2);
   border-radius: var(--radius-xl);
   background: var(--surface);
   cursor: pointer;
   text-align: center;
   transition:
-    border-color var(--dur-fast),
-    background var(--dur-fast);
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
 }
 .a-drop:hover,
 .a-drop--over {
@@ -74,11 +74,11 @@ function onDrop(e: DragEvent) {
   color: var(--primary-text);
 }
 .a-drop__label {
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 600;
 }
 .a-drop__hint {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--muted);
 }
 </style>

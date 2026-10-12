@@ -186,7 +186,7 @@ const columns: TableColumn[] = [
 </script>
 
 <template>
-  <div class="library">
+  <div class="page library">
     <AHeader title="Library" :subtitle="subtitle">
       <AChoiceGroup
         v-model="sort"
@@ -292,7 +292,7 @@ const columns: TableColumn[] = [
           <span v-else class="t-muted">—</span>
         </template>
         <template #cell-next="{ row }">
-          <span v-if="next(row)" class="next-cell">
+          <span v-if="next(row)" class="stack-tight next-cell">
             <span class="next-cell__when">{{ badge(row) }}</span>
             <span class="t-muted t-mono next-cell__code">{{
               episodeCode(next(row)!.season, next(row)!.number)
@@ -338,16 +338,11 @@ const columns: TableColumn[] = [
 </template>
 
 <style scoped>
-.library {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 .library__tools {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
   flex-wrap: wrap;
   margin-top: -8px;
 }
@@ -356,7 +351,7 @@ const columns: TableColumn[] = [
 }
 .library__right {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   flex-wrap: nowrap;
   align-items: center;
 }
@@ -386,24 +381,19 @@ const columns: TableColumn[] = [
 .progress-cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 110px;
 }
 .progress-cell__label {
-  font-size: 11.5px;
-}
-.next-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  font-size: var(--text-2xs);
 }
 .next-cell__when {
-  font: 600 12.5px var(--font-mono);
+  font: 600 var(--text-xs) var(--font-mono);
   color: var(--primary-text);
   white-space: nowrap;
 }
 .next-cell__code {
-  font-size: 11.5px;
+  font-size: var(--text-2xs);
 }
 @media (max-width: 759px) {
   .library__right {

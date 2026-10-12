@@ -27,7 +27,7 @@ const KIND: Record<AppNotification['type'], string> = {
 </script>
 
 <template>
-  <div class="notifs">
+  <div class="page notifs">
     <AHeader
       title="Alerts"
       :subtitle="
@@ -61,8 +61,8 @@ const KIND: Record<AppNotification['type'], string> = {
           @click="open(n)"
         >
           <APoster :src="n.data.image" radius="sm" class="item__img" />
-          <span class="item__text">
-            <span class="item__kicker">{{ KIND[n.type] }} · {{ timeAgo(n.created_at) }}</span>
+          <span class="stack-tight item__text">
+            <span class="t-kicker">{{ KIND[n.type] }} · {{ timeAgo(n.created_at) }}</span>
             <span class="item__title truncate">{{ n.title }}</span>
             <span v-if="n.body" class="item__body">{{ n.body }}</span>
           </span>
@@ -93,24 +93,19 @@ const KIND: Record<AppNotification['type'], string> = {
 </template>
 
 <style scoped>
-.notifs {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 .notifs__list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2_5);
   border-radius: var(--radius-xl);
   border: 1px solid var(--line);
   background: var(--surface);
-  padding: 10px 12px;
+  padding: var(--space-2_5) var(--space-3);
   transition: border-color var(--dur-fast);
 }
 .item:hover {
@@ -123,7 +118,7 @@ const KIND: Record<AppNotification['type'], string> = {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-3_5);
   min-width: 0;
   color: var(--fg);
 }
@@ -131,24 +126,12 @@ const KIND: Record<AppNotification['type'], string> = {
   width: 40px;
   flex: none;
 }
-.item__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.item__kicker {
-  font: 600 11px var(--font-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--primary-text);
-}
 .item__title {
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 600;
 }
 .item__body {
-  font-size: 13.5px;
+  font-size: var(--text-sm);
   color: var(--muted);
 }
 .item__dot {
@@ -162,7 +145,7 @@ const KIND: Record<AppNotification['type'], string> = {
   border: 0;
   background: transparent;
   color: var(--muted);
-  padding: 8px;
+  padding: var(--space-2);
   border-radius: var(--radius-sm);
   display: flex;
 }

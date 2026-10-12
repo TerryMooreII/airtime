@@ -66,17 +66,17 @@ const inputType = computed(() => (props.type === 'password' && reveal.value ? 't
 .a-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1_5);
   min-width: 0;
 }
 .a-field__label {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 .a-field__box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2_5);
   height: 42px;
   padding: 0 12px;
   border-radius: var(--radius-md);
@@ -92,6 +92,8 @@ const inputType = computed(() => (props.type === 'password' && reveal.value ? 't
 }
 .a-field__box:focus-within {
   border-color: var(--line2);
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
 }
 .a-field--error .a-field__box {
   border-color: var(--danger);
@@ -103,22 +105,23 @@ const inputType = computed(() => (props.type === 'password' && reveal.value ? 't
   outline: 0;
   background: transparent;
   color: var(--fg);
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 .a-field--lg .a-field__input {
-  font-size: 16px;
+  font-size: var(--text-md);
 }
 .a-field__input::placeholder {
   color: var(--muted);
 }
-.a-field__input:disabled {
-  opacity: 0.6;
+.a-field__box:has(.a-field__input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .a-field__reveal {
   border: 0;
   background: transparent;
   color: var(--muted);
-  padding: 4px;
+  padding: var(--space-1);
   display: flex;
   border-radius: var(--radius-xs);
 }
@@ -126,7 +129,7 @@ const inputType = computed(() => (props.type === 'password' && reveal.value ? 't
   color: var(--fg);
 }
 .a-field__msg {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 .a-field__msg--error {
@@ -135,7 +138,7 @@ const inputType = computed(() => (props.type === 'password' && reveal.value ? 't
 
 @media (max-width: 759px) {
   .a-field__input {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 }
 </style>

@@ -16,7 +16,7 @@ withDefaults(defineProps<{ compact?: boolean; name?: string }>(), {
 .a-logo {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2_5);
 }
 .a-logo__mark {
   width: 22px;
@@ -34,7 +34,7 @@ withDefaults(defineProps<{ compact?: boolean; name?: string }>(), {
   background: var(--primary);
 }
 .a-logo__name {
-  font-size: 19px;
+  font-size: var(--text-xl);
   font-weight: 700;
   letter-spacing: -0.03em;
 }

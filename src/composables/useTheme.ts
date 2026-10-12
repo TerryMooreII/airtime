@@ -26,10 +26,9 @@ function init() {
   watchEffect(() => {
     const resolved = mode.value === 'system' ? (systemDark.value ? 'dark' : 'light') : mode.value
     document.documentElement.dataset.theme = resolved
-    // Status bar / title bar colour for the installed app follows the page background.
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', resolved === 'dark' ? '#0a0a0b' : '#fafaf7')
+    // Status bar / title bar colour for the installed app follows the page background token.
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
+    if (bg) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg)
     try {
       localStorage.setItem(STORAGE_KEY, mode.value)
     } catch {

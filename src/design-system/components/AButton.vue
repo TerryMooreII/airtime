@@ -74,7 +74,7 @@ const isDisabled = computed(() => props.disabled || props.loading)
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   font-weight: 600;
@@ -94,17 +94,17 @@ const isDisabled = computed(() => props.disabled || props.loading)
 .a-btn--sm {
   height: 34px;
   padding: 0 14px;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 .a-btn--md {
   height: 42px;
   padding: 0 18px;
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 .a-btn--lg {
   height: 46px;
   padding: 0 22px;
-  font-size: 14.5px;
+  font-size: var(--text-base);
   border-radius: var(--radius-lg);
 }
 .a-btn--block {
@@ -155,6 +155,6 @@ const isDisabled = computed(() => props.disabled || props.loading)
 }
 .a-btn--danger:not(:disabled):hover {
   background: var(--danger);
-  color: #fff;
+  color: var(--on-danger);
 }
 </style>
