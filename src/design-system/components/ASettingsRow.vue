@@ -53,7 +53,11 @@ withDefaults(defineProps<{ title: string; description?: string; stacked?: boolea
   min-width: 0;
   max-width: 100%;
 }
+/* In a column the 200px basis would apply to height and leave a gap under the text. */
+.a-settings-row--stacked .a-settings-row__text {
+  flex: none;
+}
 .a-settings-row--stacked .a-settings-row__control {
-  align-self: flex-start;
+  align-self: stretch;
 }
 </style>

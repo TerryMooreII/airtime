@@ -20,6 +20,8 @@ import { browserTimeZone } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 
+import PushDevicesList from './PushDevicesList.vue'
+
 const auth = useAuthStore()
 const ui = useUiStore()
 const theme = useTheme()
@@ -175,6 +177,7 @@ const signOut = useSignOut()
       <AAlert v-if="push.error.value" variant="warning" class="push-error">{{
         push.error.value
       }}</AAlert>
+      <PushDevicesList :current-endpoint="push.endpoint.value" />
       <ASettingsRow
         title="Daily reminder time"
         description="When to tell you about episodes airing that day."

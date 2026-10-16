@@ -21,6 +21,11 @@ export const FOLLOW_OPTIONS = USER_SHOW_STATUSES.filter((s) => s.value !== 'drop
 
 export type Profile = Tables<'profiles'>
 
+/** A browser registered for Web Push. The keys stay server-side; the endpoint identifies this device. */
+export type PushDevice = Pick<
+  Tables<'push_subscriptions'>,
+  'id' | 'endpoint' | 'user_agent' | 'created_at' | 'last_success_at' | 'failed_at'
+>
 export type Channel = Pick<Tables<'channels'>, 'id' | 'kind' | 'name' | 'country_code' | 'timezone'>
 
 export interface Show {

@@ -35,6 +35,8 @@ export function usePushSubscription() {
     typeof Notification !== 'undefined' ? Notification.permission : 'default',
   )
   const subscribed = ref(false)
+  /** This browser's push endpoint, used to mark "This device" in the devices list. */
+  const endpoint = ref<string | null>(null)
   const busy = ref(false)
   const error = ref<string | null>(null)
 
@@ -76,6 +78,7 @@ export function usePushSubscription() {
     permission.value = Notification.permission
     const auth = useAuthStore()
     if (sub && auth.user && auth.profile?.notify_push) await register(sub).catch(() => undefined)
+    endpoint.value = sub?.endpoint ?? null
   }
 
   /** Remove this device's registration for the signed-in user (keeps the browser subscription). */
@@ -107,6 +110,7 @@ export function usePushSubscription() {
         }))
       await register(sub)
       subscribed.value = true
+      endpoint.value = sub.endpoint
       return true
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Could not enable push notifications'
@@ -127,6 +131,7 @@ export function usePushSubscription() {
         await sub.unsubscribe()
       }
       subscribed.value = false
+      endpoint.value = null
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Could not disable push notifications'
     } finally {
@@ -140,6 +145,7 @@ export function usePushSubscription() {
     needsHomeScreen,
     permission,
     subscribed,
+    endpoint,
     busy,
     error,
     refresh,
